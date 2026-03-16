@@ -1,0 +1,64 @@
+<h5>Risk Matrix</h5>
+
+<style>
+  .matrix {
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  .matrix th,
+  .matrix td {
+    padding: 10px;
+    width: 60px;
+    text-align: center;
+    font-weight: bold;
+  }
+  .low {
+    background-color: #4caf50;
+    color: white;
+  }
+  .medium {
+    background-color: #ffc107;
+  }
+  .high {
+    background-color: #ff9800;
+    color: white;
+  }
+  .extreme {
+    background-color: #f44336;
+    color: white;
+  }
+  .active-cell {
+    border: 3px solid black;
+  }
+</style>
+
+<table class="matrix" border="1">
+  <tr>
+    <th>LoF \ CoF</th>
+    {{ range $j := seq 1 5 }}
+    <th>{{ $j }}</th>
+    {{ end }}
+  </tr>
+
+  {{ range $i := seq 1 5 }}
+  <tr>
+    <th>{{ $i }}</th>
+    {{ range $j := seq 1 5 }} {{ $risk := mul $i $j }}
+
+    <td
+      class="
+        {{ if le $risk 5 }}low
+        {{ else if le $risk 10 }}medium
+        {{ else if le $risk 15 }}high
+        {{ else }}extreme{{ end }}
+
+        {{ if and (eq $i $.LoF) (eq $j $.CoF) }} active-cell {{ end }}
+        "
+    >
+      {{ $risk }}
+    </td>
+
+    {{ end }}
+  </tr>
+  {{ end }}
+</table>
