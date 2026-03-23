@@ -1,0 +1,179 @@
+{{ define "partials/assessment_form_step_6" }}
+<div id="step-6" class="content">
+  <div
+    class="section-header mb-4 pb-3 border-bottom d-flex justify-content-between align-items-center"
+  >
+    <div>
+      <h4 class="fw-bolder text-primary mb-1">
+        <i class="mdi mdi-calendar-clock text-primary me-2"></i>Step 6. Final
+        Inspection Strategy
+      </h4>
+      <p class="text-muted mb-0">
+        Recommended inspection schedule and NDT methods based on RBI assessment.
+      </p>
+    </div>
+    <button
+      type="button"
+      class="btn btn-sm btn-outline-primary"
+      id="recalc-step6"
+    >
+      <i class="mdi mdi-refresh me-1"></i> Recalculate
+    </button>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card h-100 border-danger shadow-sm rounded-4 text-center">
+        <div class="card-header bg-danger-subtle py-2 border-bottom-0">
+          <h6 class="text-danger fw-bold mb-0">Next Inspection Due</h6>
+        </div>
+        <div class="card-body d-flex justify-content-center align-items-center">
+          <h1 class="display-3 fw-bolder text-danger mb-0" id="insp_next_year">
+            ----
+          </h1>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-8">
+      <div class="row g-4 h-100">
+        <div class="col-sm-6">
+          <div class="card h-100 border-0 shadow-sm rounded-4 bg-label-primary">
+            <div
+              class="card-body p-4 d-flex flex-column justify-content-center"
+            >
+              <h6 class="text-primary fw-bold mb-2">
+                <i class="mdi mdi-timer-sand me-1"></i> Maximum Interval
+              </h6>
+              <h2 class="fw-bolder text-dark mb-0" id="insp_interval">
+                - years
+              </h2>
+              <small class="text-muted mt-2"
+                >Capped at max 10 years per API rules.</small
+              >
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div
+            class="card h-100 border-0 shadow-sm rounded-4 bg-label-secondary"
+          >
+            <div
+              class="card-body p-4 d-flex flex-column justify-content-center"
+            >
+              <h6 class="text-dark fw-bold mb-2">
+                <i class="mdi mdi-bullseye-arrow me-1"></i> Governing Component
+              </h6>
+              <h3 class="fw-bolder text-dark mb-0" id="insp_governing">----</h3>
+              <small class="text-muted mt-2"
+                >Component with the lowest remaining life.</small
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-7">
+      <div class="card h-100 border-0 shadow-sm rounded-4">
+        <div class="card-header bg-dark py-3">
+          <h6 class="text-white fw-bold mb-0">
+            <i class="mdi mdi-tools me-1"></i> Recommended NDT Methods
+          </h6>
+        </div>
+        <div class="card-body p-4 bg-light">
+          <label class="form-label text-muted fw-bold text-uppercase small"
+            >Primary Inspection Technique</label
+          >
+          <div class="p-3 bg-white border border-primary rounded-3 mb-3">
+            <h5 class="text-primary fw-bolder mb-0" id="insp_method">
+              Awaiting Calculation...
+            </h5>
+          </div>
+
+          <label class="form-label text-muted fw-bold text-uppercase small"
+            >General Scope of Work</label
+          >
+          <ul class="list-unstyled mb-0 text-dark">
+            <li class="mb-2">
+              <i class="mdi mdi-check-circle text-success me-2"></i>100%
+              External Visual Inspection.
+            </li>
+            <li class="mb-2">
+              <i class="mdi mdi-check-circle text-success me-2"></i>Thickness
+              measurement (UT) on all quadrants.
+            </li>
+            <li>
+              <i class="mdi mdi-check-circle text-success me-2"></i>Focus on
+              susceptible zones based on active damage mechanisms.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-5">
+      <div class="card h-100 border-0 shadow-sm rounded-4 bg-label-secondary">
+        <div class="card-body p-4">
+          <h6 class="fw-bold text-dark mb-4">
+            <i class="mdi mdi-calculator me-1"></i> Factor Breakdown
+          </h6>
+
+          <ul class="list-group list-group-flush bg-transparent">
+            <li
+              class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0 py-2 border-bottom border-secondary"
+            >
+              <span class="text-muted">Overall Risk Level</span>
+              <span
+                class="badge bg-secondary rounded-pill"
+                id="ui_factor_risklevel"
+                >-</span
+              >
+            </li>
+            <li
+              class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0 py-2 border-bottom border-secondary"
+            >
+              <span class="text-muted">Risk Multiplier</span>
+              <span class="fw-bold text-dark" id="ui_factor_risk">x 1.0</span>
+            </li>
+            <li
+              class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0 py-2 border-bottom border-secondary"
+            >
+              <span class="text-muted">Worst Damage Severity</span>
+              <span
+                class="badge bg-secondary rounded-pill"
+                id="ui_factor_worst_dm"
+                >-</span
+              >
+            </li>
+            <li
+              class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0 py-2 border-bottom border-secondary"
+            >
+              <span class="text-muted">Damage Multiplier</span>
+              <span class="fw-bold text-dark" id="ui_factor_mech">x 1.0</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-5 d-flex justify-content-between border-top pt-4">
+    <button
+      type="button"
+      class="btn btn-outline-secondary btn-prev px-4 py-2 rounded-pill"
+    >
+      <i class="mdi mdi-arrow-left me-sm-1"></i> Previous
+    </button>
+    <button
+      type="submit"
+      id="btn_save_assessment"
+      class="btn btn-success px-5 py-2 rounded-pill shadow-lg fw-bold"
+    >
+      <i class="mdi mdi-content-save-check me-2"></i> Save Assessment
+    </button>
+  </div>
+</div>
+{{ end }}

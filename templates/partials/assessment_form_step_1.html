@@ -1,0 +1,936 @@
+{{ define "partials/assessment_form_step_1" }}
+<div id="step-1" class="content">
+  <div class="section-header mb-3">
+    <h5>Step 1. Design & Material (Assessment Sheet 1)</h5>
+  </div>
+  <div class="accordion" id="vesselAccordion">
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#basic">
+          1. Basic & Dimensional Data
+        </button>
+      </h2>
+      <div id="basic" class="accordion-collapse collapse show" data-bs-parent="#vesselAccordion">
+        <div class="accordion-body">
+          <div class="row mb-3">
+            <div class="col-md-4 mb-4">
+              <div class="form-floating form-floating-outline">
+                <select id="select2_equipment" class="select2 form-select" name="description" data-allow-clear="true">
+                  <option value="">Select Equipment</option>
+                  {{ range .Equipments }}<option value="{{ .ID }}" data-type="{{ .Type }}" data-group="{{ .GroupName }}">{{ .Name }}</option>{{ end }}
+                </select>
+                <label>Description</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-4">
+              <div class="form-floating form-floating-outline">
+                <input type="text" class="form-control" name="location" placeholder="Input Location" />
+                <label>Location</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-4">
+              <div class="form-floating form-floating-outline">
+                <input type="text" class="form-control" name="tag_number" placeholder="Input Tag Number" />
+                <label>Tag Number</label>
+              </div>
+            </div>
+            <div class="col-md-3 mb-4">
+              <div class="form-floating form-floating-outline">
+                <input type="text" class="form-control" name="serial_number" placeholder="Input Serial Number" />
+                <label>Serial Number</label>
+              </div>
+            </div>
+            <div class="col-md-2 mb-4">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="equip_life" placeholder="e.g. 20" />
+                  <label>Equipment Life</label>
+                </div>
+                <span class="input-group-text">Years</span>
+              </div>
+            </div>
+            <div class="col-md-7 mb-4">
+              <small class="text-light fw-medium d-block">Certificate</small>
+              <div class="form-check form-check-inline mt-2">
+                <input class="form-check-input" type="checkbox" name="certificate" id="skkp" value="SKKP" />
+                <label class="form-check-label" for="skkp">SKKP</label>
+              </div>
+              <div class="form-check form-check-inline mt-2">
+                <input class="form-check-input" type="checkbox" name="certificate" id="form_u1" value="Form U-1" />
+                <label class="form-check-label" for="form_u1">Form U-1</label>
+              </div>
+              <div class="form-check form-check-inline mt-2">
+                <input class="form-check-input" type="checkbox" name="certificate" id="coc" value="COC" />
+                <label class="form-check-label" for="coc">COC</label>
+              </div>
+              <div class="form-check form-check-inline mt-2">
+                <input class="form-check-input" type="checkbox" name="certificate" id="not_required" value="Not Required" />
+                <label class="form-check-label" for="not_required">Not Required</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-3 mb-4">
+              <div class="form-floating form-floating-outline">
+                <select name="part_type" class="select2 form-select" data-allow-clear="true">
+                  <option value="">Select Part Type</option>
+                  <option value="mono part">Mono Part</option>
+                  <option value="multi part">Multi Part</option>
+                </select>
+                <label>Part Type</label>
+              </div>
+            </div>
+            <div class="col-md-3 mb-4">
+              <div class="form-floating form-floating-outline">
+                <select name="year_build" class="select2 form-select" data-allow-clear="true">
+                  <option value="">Select Year</option>
+                  {{range .Years}}<option value="{{ . }}">{{ . }}</option>{{end}}
+                </select>
+                <label>Year Built</label>
+              </div>
+            </div>
+            <div class="col-md-3 mb-4">
+              <div class="form-floating form-floating-outline">
+                <select name="first_use" class="select2 form-select" data-allow-clear="true">
+                  <option value="">Select Year</option>
+                  {{range .Years}}<option value="{{ . }}">{{ . }}</option>{{end}}
+                </select>
+                <label>First Use In</label>
+              </div>
+            </div>
+            <div class="col-md-3 mb-4">
+              <div class="form-floating form-floating-outline">
+                <select name="construction_code" class="select2 form-select" data-allow-clear="true">
+                  <option value="">Select Code</option>
+                  <option value="ASME Section VIII Div 1">ASME Section VIII Div 1</option>
+                  <option value="ASME Section VIII Div 2">ASME Section VIII Div 2</option>
+                </select>
+                <label>Construction Code</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row align-items-center mb-3">
+            <div class="col-md-6 mb-4">
+              <div class="form-floating form-floating-outline">
+                <input type="number" step="0.01" class="form-control" name="joint_efficiency" placeholder="1.0" />
+                <label>Joint Efficiency (E)</label>
+              </div>
+            </div>
+            <div class="col-md-6 mb-4">
+              <div class="form-floating form-floating-outline">
+                <input type="number" step="0.01" class="form-control" name="joint_efficiency_head" placeholder="1.0" />
+                <label>Joint Efficiency Head (E)</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-4">
+              <div class="form-floating form-floating-outline">
+                <input type="text" class="form-control" name="joint_type" placeholder="e.g. Type 1" />
+                <label>Joint Type</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-4">
+              <div class="form-floating form-floating-outline">
+                <select name="radiographic" class="select2 form-select" data-allow-clear="true">
+                  <option value="">Select RT</option>
+                  <option value="Full">Full (RT-1)</option>
+                  <option value="Spot">Spot (RT-3)</option>
+                  <option value="None">None (RT-4)</option>
+                </select>
+                <label>Radiographic</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-4">
+              <div class="form-floating form-floating-outline">
+                <select name="construction_type" class="select2 form-select" data-allow-clear="true">
+                  <option value="">Select Type</option>
+                  <option value="Vertical">VERTICAL</option>
+                  <option value="Horizontal">HORIZONTAL</option>
+                </select>
+                <label>Construction Type</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-12 mb-4">
+              <small class="text-light fw-medium d-block">Data Reference</small>
+              <div class="form-check form-check-inline mt-2">
+                <input class="form-check-input" type="checkbox" name="data_source" id="ds_pid" value="P&ID" />
+                <label class="form-check-label" for="ds_pid">P&ID</label>
+              </div>
+              <div class="form-check form-check-inline mt-2">
+                <input class="form-check-input" type="checkbox" name="data_source" id="ds_pfd" value="PFD" />
+                <label class="form-check-label" for="ds_pfd">PFD</label>
+              </div>
+              <div class="form-check form-check-inline mt-2">
+                <input class="form-check-input" type="checkbox" name="data_source" id="ds_ds" value="Data Sheet" />
+                <label class="form-check-label" for="ds_ds">Data Sheet</label>
+              </div>
+              <div class="form-check form-check-inline mt-2">
+                <input class="form-check-input" type="checkbox" name="data_source" id="ds_mdr" value="MDR" />
+                <label class="form-check-label" for="ds_mdr">MDR</label>
+              </div>
+              <div class="form-check form-check-inline mt-2">
+                <input class="form-check-input" type="checkbox" name="data_source" id="ds_ga" value="GA Drawing" />
+                <label class="form-check-label" for="ds_ga">GA Drawing</label>
+              </div>
+            </div>
+          </div>
+          <div class="row mb-3 mt-3">
+            <div class="col-md-12">
+              <small class="text-light fw-medium d-block">Post Weld Heat Treatment (PWHT)</small>
+              <div class="form-check form-check-inline mt-2">
+                <input class="form-check-input" type="radio" name="pwht" id="pwht_yes" value="Yes" />
+                <label class="form-check-label" for="pwht_yes">Yes</label>
+              </div>
+              <div class="form-check form-check-inline mt-2">
+                <input class="form-check-input" type="radio" name="pwht" id="pwht_no" value="No" />
+                <label class="form-check-label" for="pwht_no">No</label>
+              </div>
+              <div class="form-check form-check-inline mt-2">
+                <input class="form-check-input" type="radio" name="pwht" id="pwht_notreq" value="NotReq" />
+                <label class="form-check-label" for="pwht_notreq">Not Required</label>
+              </div>
+            </div>
+          </div>
+
+          <h6 class="fw-bold mt-3">Dimensional Data</h6>
+          <div id="inside_diameter" class="row align-items-center mb-3">
+            <div class="col-md-4 col-lg-4 col-sm-12">
+              <div class="input-group">
+                <div class="form-floating form-floating-outline">
+                  <input
+                    type="number"
+                    class="form-control"
+                    name="diameter"
+                    placeholder="200"
+                  />
+                  <label class="text-dark">Diameter</label>
+                </div>
+                <select
+                  name="satuan_diameter"
+                  class="form-control"
+                  style="
+                    position: relative;
+                    flex: none !important;
+                    width: 20% !important;
+                    min-width: 0;
+                  "
+                  id="satuan_diameter"
+                >
+                  <option value="inch">inch</option>
+                  <option value="mm">mm</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-4 col-lg-4 col-sm-12">
+              <div class="form-check form-check-inline mt-3">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  id="inside"
+                  name="diameter_type"
+                  value="inside"
+                />
+                <label class="form-check-label text-dark" for="inside"
+                  >Inside</label
+                >
+              </div>
+              <div class="form-check form-check-inline">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  id="outside"
+                  name="diameter_type"
+                  value="outside"
+                />
+                <label
+                  class="form-check-label text-dark"
+                  for="outside"
+                  >Outside</label
+                >
+              </div>
+            </div>
+            <div class="col-md-4 col-lg-4 col-sm-12">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="nozzle" placeholder="200" />
+                  <label>Nozzle</label>
+                </div>
+                <select name="satuan_nozzle" class="form-control" style="flex: none; width: 35%;">
+                  <option value="inch">inch</option>
+                  <option value="mm">mm</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div id="diameter_shell_tube" class="row align-items-center mb-3" style="display: none;">
+            <div class="row align-items-center mb-3">
+              <div class="col-md-8 col-lg-8 col-sm-12">
+                <div class="form-floating form-floating-outline">
+                  <input
+                    type="number"
+                    class="form-control"
+                    name="diameter_shell"
+                    placeholder="200"
+                  />
+                  <label class="text-dark">Diameter (shell)</label>
+                </div>
+              </div>
+              <div class="col-md-4 col-lg-4 col-sm-12">
+                <div class="form-check form-check-inline mt-3">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    id="inside_shell"
+                    name="diameter_type_shell"
+                    value="inside"
+                  />
+                  <label class="form-check-label text-dark" for="inside_shell"
+                    >Inside</label
+                  >
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    id="outside_shell"
+                    name="diameter_type_shell"
+                    value="outside"
+                  />
+                  <label
+                    class="form-check-label text-dark"
+                    for="outside_shell"
+                    >Outside</label
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="row align-items-center mb-3">
+              <div class="col-md-8 col-lg-8 col-sm-12">
+                <div class="form-floating form-floating-outline">
+                  <input
+                    type="number"
+                    class="form-control"
+                    name="diameter_tube"
+                    placeholder="200"
+                  />
+                  <label class="text-dark">Diameter (tube)</label>
+                </div>
+              </div>
+              <div class="col-md-4 col-lg-4 col-sm-12">
+                <div class="form-check form-check-inline mt-3">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    id="inside_tube"
+                    name="diameter_type_tube"
+                    value="inside"
+                  />
+                  <label class="form-check-label text-dark" for="inside_tube"
+                    >Inside</label
+                  >
+                </div>
+                <div class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    id="outside_tube"
+                    name="diameter_type_tube"
+                    value="outside"
+                  />
+                  <label
+                    class="form-check-label text-dark"
+                    for="outside_tube"
+                    >Outside</label
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row align-items-center">
+            <div class="col-md-6 mb-6 col-sm-12">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="length" placeholder="200" />
+                  <label>Length</label>
+                </div>
+                <select name="satuan_pjg" class="form-control" style="flex: none; width: 35%;">
+                  <option value="ft">ft</option>
+                  <option value="mm">mm</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6 mb-6 col-sm-12">
+              <div class="input-group">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="total_volume" placeholder="0.05" />
+                  <label>Total Volume (Data Sheet)</label>
+                </div>
+                <select name="volume_type" class="form-control" style="flex: none; width: 30%;">
+                  <option value="m">m³</option>
+                  <option value="ft">ft³</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pressure">
+          2. Pressure & Temperature
+        </button>
+      </h2>
+      <div id="pressure" class="accordion-collapse collapse" data-bs-parent="#vesselAccordion">
+        <div class="accordion-body">
+          <div class="row mb-3">
+            <div class="col-md-6 mb-4">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="design_press" placeholder="125" />
+                  <label>Design Press</label>
+                </div>
+                <span class="input-group-text">psig</span>
+              </div>
+            </div>
+            <div class="col-md-6 mb-4">
+              <div class="input-group">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="design_temp" placeholder="200" />
+                  <label>Design Temperature</label>
+                </div>
+                <select name="suhu_design" class="form-control" style="flex: none; width: 30%;">
+                  <option value="c">°C</option>
+                  <option value="f">°F</option>
+                </select>
+              </div>
+            </div>
+            
+          </div>
+          <div class="row mb-3" id="operating_press">
+            <div class="col-md-6 mb-4">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="operating_press" placeholder="80" />
+                  <label>Operating Press</label>
+                </div>
+                <span class="input-group-text">psig</span>
+              </div>
+            </div>
+            <div class="col-md-6 mb-4">
+              <div class="input-group">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="operating_temp" placeholder="200" />
+                  <label>Operating Temp</label>
+                </div>
+                <select name="suhu_opr" class="form-control" style="flex: none; width: 30%;">
+                  <option value="c">°C</option>
+                  <option value="f">°F</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="row mb-3" id="operating_press_top_bottom" style="display: none;">
+            <div class="col-md-3 mb-4">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="operating_press_top" placeholder="80" />
+                  <label>Operating Press (top/shell)</label>
+                </div>
+                <span class="input-group-text">psig</span>
+              </div>
+            </div>
+            <div class="col-md-3 mb-4">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="operating_press_bottom" placeholder="80" />
+                  <label>Operating Press (bottom/tube)</label>
+                </div>
+                <span class="input-group-text">psig</span>
+              </div>
+            </div>
+            <div class="col-md-3 mb-4">
+              <div class="input-group">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="operating_temp_top" placeholder="200" />
+                  <label>Operating Temp (top/shell)</label>
+                </div>
+                <select name="suhu_opr_top" class="form-control" style="flex: none; width: 30%;">
+                  <option value="c">°C</option>
+                  <option value="f">°F</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-3 mb-4">
+              <div class="input-group">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="operating_temp_bottom" placeholder="200" />
+                  <label>Operating Temp (bottom/shell)</label>
+                </div>
+                <select name="suhu_opr_bottom" class="form-control" style="flex: none; width: 30%;">
+                  <option value="c">°C</option>
+                  <option value="f">°F</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="row align-items-center">
+            <div class="col-md-6">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="mawp" placeholder="125" />
+                  <label>MAWP (Design)</label>
+                </div>
+                <span class="input-group-text">psig</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="hydro_test" placeholder="162.5" />
+                  <label>Hydrostatic Test Pressure</label>
+                </div>
+                <span class="input-group-text">psig</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#material">
+          3. Material Specification
+        </button>
+      </h2>
+      <div id="material" class="accordion-collapse collapse" data-bs-parent="#vesselAccordion">
+        <div class="accordion-body">
+          <div class="row align-items-center mb-4">
+            <div class="col-md-4 mb-3">
+              <div class="form-floating form-floating-outline">
+                <select class="select2-tag form-select" name="shell_material" data-allow-clear="true">
+                  <option value="">Select Material</option>
+                  {{ range .ShellType }}<option value="{{ .ID }}" data-external="{{ .External }}" data-internal="{{ .Internal }}" data-co2corr="{{ .CO2Corr }}">{{ .Name }}</option>{{ end }}
+                </select>
+                <label>Shell Material Spec</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="form-floating form-floating-outline">
+                <select class="select2-tag form-select" name="head_material" data-allow-clear="true">
+                  <option value="">Select Material</option>
+                  {{ range .ShellType }}<option value="{{ .ID }}">{{ .Name }}</option>{{ end }}
+                </select>
+                <label>Head Material Spec</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="form-floating form-floating-outline">
+                <select class="select2 form-select" name="type_head" data-allow-clear="true">
+                  <option value="">Select Type</option>
+                  {{ range .HeadTypes }}<option value="{{ .ID }}">{{ .Name }}</option>{{ end }}
+                </select>
+                <label>Type Head</label>
+              </div>
+            </div>
+
+            <div class="row justify-content-center align-items-center mb-3" id="div_crown_knuckle_radius" style="display: none;">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Crown Radius (L)</label>
+                <div class="input-group">
+                  <input type="number" step="any" name="crown_radius" class="form-control" placeholder="0">
+                  <span class="input-group-text">mm/in</span>
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Knuckle Radius (r)</label>
+                <div class="input-group">
+                  <input type="number" step="any" name="knuckle_radius" class="form-control" placeholder="0">
+                  <span class="input-group-text">mm/in</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <div class="form-floating form-floating-outline">
+                <select class="select2-tag form-select" name="neck_material" data-allow-clear="true">
+                  <option value="">Select Material</option>
+                  {{ range .NeckMaterial }}<option value="{{ .ID }}">{{ .Name }}</option>{{ end }}
+                </select>
+                <label>Flange/Neck Material Specs</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="form-floating form-floating-outline">
+                <select class="select2-tag form-select" name="nozzle_material" data-allow-clear="true">
+                  <option value="">Select Material</option>
+                  {{ range .NozzleMaterial }}<option value="{{ .ID }}">{{ .Name }}</option>{{ end }}
+                </select>
+                <label>Shell Material Spec (Nozzle)</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="form-floating form-floating-outline">
+                <input type="text" class="form-control" name="internal_parts_material" placeholder="e.g. SS316" />
+                <label>Internal Parts Material Spec</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row align-items-center">
+            <div class="col-md-4 mb-4">
+              <div class="form-floating form-floating-outline">
+                <select class="select2 form-select" name="shell_contaminant" data-allow-clear="true">
+                  <option value="Ultra Low">&lt; 0.002% S</option>
+                  <option value="Low Sulfur">0.002 - 0.001% S</option>
+                  <option value="High Sulfur">&gt; 0.01% S</option>
+                </select>
+                <label>Shell Contaminant Contents</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-4">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="max_brinell" placeholder="200" />
+                  <label>Max Brinell Hardness</label>
+                </div>
+                <span class="input-group-text">HBW</span>
+              </div>
+            </div>
+            <div class="col-md-4 mb-4">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="allowable_stress" placeholder="20000" />
+                  <label>Allowable Stress (S)</label>
+                </div>
+                <span class="input-group-text">psi</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#thickness">
+          4. Thickness Data & Inspection History
+        </button>
+      </h2>
+      <div id="thickness" class="accordion-collapse collapse" data-bs-parent="#vesselAccordion">
+        <div class="accordion-body">
+          <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+              <div class="input-group">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="inspection_interval" value="3" />
+                  <label>Inspection Interval</label>
+                </div>
+                <span class="input-group-text">Year(s)</span>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="form-floating form-floating-outline">
+                <input type="month" class="form-control" name="prev_inspection" placeholder="YYYY" />
+                <label>Previous Inspection Year</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="form-floating form-floating-outline">
+                <input type="month" class="form-control" name="act_inspection" />
+                <label>Actual Inspection (Month / Year)</label>
+              </div>
+            </div>
+            <div class="col-md-4 mt-2">
+              <div class="input-group">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="corrosion_allowance" placeholder="3.0" />
+                  <label>Corrosion allowance</label>
+                </div>
+                <span class="input-group-text">Inch</span>
+              </div>
+            </div>
+          </div>
+
+          <h6 class="fw-bold mt-2">Nominal & Cladded Thickness (mm)</h6>
+          <!-- <div class="row mt-2 mb-2">
+            <div class="col-md-6 mb-3">
+              <div class="form-floating form-floating-outline text-bg-danger-subtle">
+                <input type="number" step="0.01" class="form-control" name="min_thick_shell" />
+                <label class="text-danger fw-bold">Min. Required Shell Thickness</label>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="form-floating form-floating-outline text-bg-danger-subtle">
+                <input type="number" step="0.01" class="form-control" name="min_thick_head" />
+                <label class="text-danger fw-bold">Min. Required Head Thickness</label>
+              </div>
+            </div>
+          </div> -->
+
+          <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+              <div class="input-group text-bg-secondary">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="shell_clad_base_metal" />
+                  <label>Shell Clad Base Metal</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="input-group text-bg-secondary">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="head_clad_base_metal" />
+                  <label>Head Clad Base Metal</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="input-group text-bg-secondary">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="nozzle_clad_base_metal" />
+                  <label>Nozzle Clad Base Metal</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-2 mb-4">
+            <div class="col-md-4 mb-3">
+              <div class="form-floating form-floating-outline">
+                <input type="number" step="0.01" class="form-control" name="shell_wall_thickness" />
+                <label>Shell Wall Thickness</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="form-floating form-floating-outline">
+                <input type="number" step="0.01" class="form-control" name="head_wall_thickness" />
+                <label>Head Wall Thickness</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="form-floating form-floating-outline">
+                <input type="number" step="0.01" class="form-control" name="nozzle_wall_thick" />
+                <label>Nozzle wall thickness</label>
+              </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <div class="input-group text-bg-secondary">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="shell_thick_cladded" />
+                  <label>Shell thickness (if cladded)</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="input-group text-bg-secondary">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="head_thick_cladded" />
+                  <label>Head thickness (if cladded)</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="input-group text-bg-secondary">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="nozzle_thick_cladded" />
+                  <label>Nozzle thickness (if cladded)</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h6 class="fw-bold mt-2">Previous & Actual Thickness (mm)</h6>
+          <div class="row mt-2">
+            <div class="col-md-4 mb-3">
+              <div class="input-group text-bg-warning-subtle">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="prev_thick_shell" />
+                  <label>Previous thickness (shell/top)</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="input-group text-bg-warning-subtle">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="prev_thick_head" />
+                  <label>Previous thickness (head/bottom)</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="input-group text-bg-warning-subtle">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="nozzle_previous_thick" />
+                  <label>Nozzle Previous thickness</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <div class="input-group text-bg-success-subtle">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="act_thick_shell" />
+                  <label>Actual thickness (shell/top)</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="input-group text-bg-success-subtle">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="act_thick_head" />
+                  <label>Actual thickness (head/bottom)</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="input-group text-bg-success-subtle">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="nozzle_actual_thick" />
+                  <label>Nozzle Actual Thickness</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#service">
+          5. Service & Protection
+        </button>
+      </h2>
+      <div id="service" class="accordion-collapse collapse" data-bs-parent="#vesselAccordion">
+        <div class="accordion-body">
+          <div class="row align-items-center mb-4">
+            <div class="col-md-4 mb-3">
+              <div class="form-floating form-floating-outline">
+                <select name="phase_type" class="select2 form-select" data-allow-clear="true">
+                  <option value="">Select Phase</option>
+                  <option value="multi phase">Multi Phase</option>
+                  <option value="single phase">Single Phase</option>
+                </select>
+                <label>Phase Type</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="form-floating form-floating-outline">
+                <select name="internal_lining" class="select2 form-select" data-allow-clear="true">
+                  <option value="None">None</option>
+                  <option value="Strip Lined">Strip Lined</option>
+                  <option value="Weld Overlay">Weld Overlay</option>
+                  <option value="Glass Lined">Glass Lined</option>
+                </select>
+                <label>Internal Lining /Coating</label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="form-floating form-floating-outline">
+                <select name="insulation" class="select2 form-select" data-allow-clear="true">
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
+                </select>
+                <label>Insulation</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4 mb-4">
+              <small class="text-light fw-medium d-block">Special & Cyclic Service</small>
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="sour_service" name="special_service" value="Sour Service" />
+                <label class="form-check-label" for="sour_service">Sour Service</label>
+              </div>
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="flammable" name="special_service" value="Flammable" />
+                <label class="form-check-label" for="flammable">Flammable</label>
+              </div>
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="cyclic_service" name="cyclic_service" />
+                <label class="form-check-label text-warning" for="cyclic_service">Cyclic Service</label>
+              </div>
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="lethal_service" name="special_service" value="Lethal" />
+                <label class="form-check-label text-danger" for="lethal_service">Lethal Service</label>
+              </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+              <small class="text-light fw-medium d-block">Equipment Protection</small>
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="psv_setting" name="equipment_protection" value="PSV" checked />
+                <label class="form-check-label" for="psv_setting">PSV Setting</label>
+              </div>
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="psd" name="equipment_protection" value="PSD" />
+                <label class="form-check-label" for="psd">PSD</label>
+              </div>
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="esd" name="equipment_protection" value="ESD" />
+                <label class="form-check-label" for="esd">ESD</label>
+              </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+              <small class="text-light fw-medium d-block">Cathodic Protection System</small>
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="radio" id="cp_yes" name="cathodic_protection" value="Yes" />
+                <label class="form-check-label" for="cp_yes">Yes</label>
+              </div>
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="radio" id="cp_no" name="cathodic_protection" value="No" checked />
+                <label class="form-check-label" for="cp_no">No</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div> <div class="col-12 d-flex justify-content-end mt-5">
+    <button class="btn btn-primary btn-next">
+      Next Step <i class="mdi mdi-arrow-right"></i>
+    </button>
+  </div>
+
+  <button class="btn btn-dark rounded-circle shadow" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSummary" aria-controls="offcanvasSummary" style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 1050;">
+    <i class="mdi mdi-calculator fs-3"></i>
+  </button>
+
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasSummary" aria-labelledby="offcanvasSummaryLabel">
+    <div class="offcanvas-header bg-primary text-white">
+      <h5 id="offcanvasSummaryLabel" class="text-white mb-0"><i class="mdi mdi-database-sync me-2"></i>Live Data Store</h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <ul class="list-group list-group-flush" style="font-size: 0.9rem;">
+        <li class="list-group-item d-flex justify-content-between bg-light fw-bold mt-2">
+          <span>Calculation Result (Background)</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span>Volume:</span> <strong id="store_volume" class="text-primary">-</strong>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span>Req. Thickness (t-min):</span> <strong id="store_tmin" class="text-success">-</strong>
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span>Corrosion Rate (CR):</span> <strong id="store_cr" class="text-danger">-</strong>
+        </li>
+        <li class="list-group-item mt-4 text-muted" style="font-size: 0.8rem;">
+          <em>*Data is safely stored in Local Storage.</em>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+{{ end }}

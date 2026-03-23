@@ -1,0 +1,26 @@
+/* Menambah jarak antar step (Vertical) */
+.bs-stepper.vertical .step {
+  margin-bottom: 1.5rem !important;
+  /* Tambahkan jarak antar nomor step */
+}
+
+/* Memanjangkan garis penghubung antar step */
+.bs-stepper.vertical .line {
+  min-height: 2.5rem !important;
+  margin-left: 1.35rem !important;
+  /* Lurusin garis sama lingkaran icon */
+}
+
+/* Lebar header biar teks title & subtitle gak numpuk */
+.bs-stepper.vertical .bs-stepper-header {
+  min-width: 300px !important;
+  padding-top: 1rem;
+}
+
+/* Styling Subtitle biar lebih rapi */
+.bs-stepper-subtitle {
+  font-size: 0.75rem;
+  color: #828393;
+  display: block;
+  margin-top: 2px;
+}

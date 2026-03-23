@@ -1,0 +1,532 @@
+{{ define "partials/assessment_form_step_3" }}
+<div id="step-3" class="content">
+  <div class="content-header mb-5">
+    <h4 class="mb-1 text-primary fw-bold">Step 3. Process and Previous Equipment Condition</h4>
+    <p class="text-muted">Fill in component composition, process conditions, protections, previous equipment condition, and corrective actions.</p>
+  </div>
+
+  <div class="border rounded p-4 mb-4 border-primary bg-label-secondary">
+    <div class="row g-4">
+      
+      <div class="col-md-6">
+        <label class="form-label fw-semibold text-dark">Equipment</label>
+        <div class="input-group input-group-merge">
+          <span class="input-group-text"><i class="mdi mdi-gas-cylinder"></i></span>
+          <input type="text" id="step3_equipment" class="form-control fw-bold" readonly placeholder="Auto-generated (e.g., Fuel gas spot (36-MBJ-119))">
+        </div>
+        <div class="form-text">Combined automatically from Description & Tag No.</div>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label fw-semibold text-dark">Impact for Production</label>
+        <div class="input-group input-group-merge">
+          <span class="input-group-text border-primary"><i class="mdi mdi-factory"></i></span>
+          <select name="impact_for_production" id="impact_for_production" class="form-select border-primary">
+            <option value="">-- Select Impact --</option>
+            {{range .DamageMechanical}}
+            <option value="{{ .Code }}">{{ .Impact }}</option>
+            {{end}}
+            </select>
+        </div>
+        <div class="form-text text-primary">Data source: Master DataRef</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="border rounded p-4 mb-4">
+    <h6 class="mb-4 text-primary fw-semibold d-flex align-items-center">
+      <i class="mdi mdi-flask-outline me-2 fs-4"></i> A. Component Composition (mole %)
+    </h6>
+    <div class="row g-4">
+      <div class="col-md-3">
+        <label class="form-label">Nitrogen</label>
+        <div class="input-group input-group-merge">
+          <input type="number" step="any" name="comp_nitrogen" class="form-control" placeholder="0">
+          <span class="input-group-text text-muted">%</span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">CO2</label>
+        <div class="input-group input-group-merge">
+          <input type="number" step="any" name="comp_co2" class="form-control" placeholder="0">
+          <span class="input-group-text text-muted">%</span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">H2S</label>
+        <div class="input-group input-group-merge">
+          <input type="number" step="any" name="comp_h2s" class="form-control" placeholder="0">
+          <span class="input-group-text text-muted">%</span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Methane (CH4)</label>
+        <div class="input-group input-group-merge">
+          <input type="number" step="any" name="comp_methane" class="form-control" placeholder="0">
+          <span class="input-group-text text-muted">%</span>
+        </div>
+      </div>
+      
+      <div class="col-md-3">
+        <label class="form-label">Ethane (C2H6)</label>
+        <div class="input-group input-group-merge">
+          <input type="number" step="any" name="comp_ethane" class="form-control" placeholder="0">
+          <span class="input-group-text text-muted">%</span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Propane (C3H8)</label>
+        <div class="input-group input-group-merge">
+          <input type="number" step="any" name="comp_propane" class="form-control" placeholder="0">
+          <span class="input-group-text text-muted">%</span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Butane (C4H10)</label>
+        <div class="input-group input-group-merge">
+          <input type="number" step="any" name="comp_butane" class="form-control" placeholder="0">
+          <span class="input-group-text text-muted">%</span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">H2O</label>
+        <div class="input-group input-group-merge">
+          <input type="number" step="any" name="comp_h2o" class="form-control" placeholder="0">
+          <span class="input-group-text text-muted">%</span>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Solvent</label>
+        <div class="input-group input-group-merge">
+          <input type="number" step="any" name="comp_solvent" class="form-control" placeholder="0">
+          <span class="input-group-text text-muted">%</span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Air</label>
+        <div class="input-group input-group-merge">
+          <input type="number" step="any" name="comp_air" class="form-control" placeholder="0">
+          <span class="input-group-text text-muted">%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="border rounded p-4 mb-4">
+    <h6 class="mb-4 text-primary fw-semibold d-flex align-items-center">
+      <i class="mdi mdi-thermostat me-2 fs-4"></i> B. Process Condition
+    </h6>
+    
+    <div class="row align-items-end g-4">
+      <div class="col-md-3">
+        <label class="form-label">Fluida</label>
+        <select id="select2_fluida" class="select2 form-select" data-placeholder="Select Fluida" name="fluida" data-allow-clear="true">
+          <option value="">Select Fluida</option>
+          {{ range .FluidaData }}
+          <option value="{{ .Code }}" data-lic="{{ .LocalisedInternalCorrosion }}">{{ .Name }}</option>
+          {{ end }}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Phase</label>
+        <select id="select2_phase" class="select2 form-select" data-placeholder="Select Phase" name="phase" data-allow-clear="true">
+          <option value="">Select Phase</option>
+          {{ range .PhaseData }}
+          <option value="{{ .Code }}">{{ .Name }}</option>
+          {{ end }}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Pollutant</label>
+        <select id="select2_pollutant" class="select2 form-select" data-placeholder="Select Pollutant" name="pollutant" data-allow-clear="true">
+          <option value="">Select Pollutant</option>
+          {{ range .PollutionData }}
+          <option value="{{ .Code }}">{{ .Name }}</option>
+          {{ end }}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Velocity</label>
+        <select id="select2_velocity" class="select2 form-select" data-placeholder="Select Velocity" name="velocity" data-allow-clear="true">
+          <option value="">Select Velocity</option>
+          {{ range .VelocityData }}
+            <option value="{{ .Code }}"
+                    data-co2="{{ .Co2Corr }}" 
+                    data-lic="{{ .LicVelocity }}" 
+                    data-mic="{{ .MicVelocity }}">
+              {{ .VelocityRange }}
+            </option>
+          {{ end }}
+        </select>
+      </div>
+
+      <div class="col-12" id="he_side_selector" style="display: none;">
+        <label class="form-label text-warning fw-bold"><i class="mdi mdi-alert-circle-outline"></i> Heat Exchanger Detected: Select Side to Assess</label>
+        <div class="d-flex gap-3">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="he_side" id="side_shell" value="shell" checked>
+            <label class="form-check-label" for="side_shell">Shell Side</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="he_side" id="side_head" value="head">
+            <label class="form-check-label" for="side_head">Head / Tube Side</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label text-info">Operating Pressure</label>
+        <div class="input-group input-group-merge">
+          <input type="number" step="any" id="step3_op_pressure" name="operating_pressure" class="form-control fw-bold bg-label-secondary" readonly placeholder="0">
+          <span class="input-group-text text-muted bg-label-secondary">psig</span>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label text-info">Operating Temperature</label>
+        <div class="input-group input-group-merge">
+          <input type="number" step="any" id="step3_op_temperature" name="operating_temperature" class="form-control fw-bold bg-label-secondary" readonly placeholder="0">
+          <span class="input-group-text text-muted bg-label-secondary">°C</span>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label mb-4"></label> <label class="form-label">Vibration</label>
+        <select name="vibration" class="form-select border-primary">
+          <option value="No Vibration">No Vibration</option>
+          <option value="Observed">Observed</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">pH Contents</label>
+        <select id="select2_ph_contents" class="select2 form-select" data-placeholder="Select PH" name="ph_contents" data-allow-clear="true">
+          <option value="">Select PH</option>
+          {{ range .PHCategoryData }}
+            <option value="{{ .Index }}" data-lic="{{ .LICValue }}">{{ .Range }}</option>
+          {{ end }}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">H2S Contents</label>
+        <select id="select2_h2s_contents" class="select2 form-select" data-placeholder="Select H2S" name="h2s_contents" data-allow-clear="true">
+          <option value="">Select H2S</option>
+          {{ range .H2SContentData }}
+            <option value="{{ .Index }}">{{ .Range }}</option>
+          {{ end }}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Chloride Contents</label>
+        <select id="select2_chloride_contents" class="select2 form-select" data-placeholder="Select Chloride Content" name="chloride_contents" data-allow-clear="true">
+          <option value="">Select Chloride Content</option>
+          {{ range .ChlorideContentData }}
+            <option value="{{ .Level }}">{{ .Description }}</option>
+          {{ end }}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label text-primary">Environmental Severity</label>
+        <input type="text" id="environmental_severity" name="environmental_severity" class="form-control fw-bold bg-label-secondary" readonly placeholder="Auto Calculated">
+      </div>
+
+    </div>
+  </div>
+
+  <div class="border rounded p-4 mb-4">
+    <h6 class="mb-4 text-primary fw-semibold d-flex align-items-center">
+      <i class="mdi mdi-shield-check-outline me-2 fs-4"></i> C. Protection & Contaminants
+    </h6>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <label class="form-label">Cathodic Protection</label>
+        <select name="cathodic_protection" class="form-select">
+          <option value="">-- Select Option --</option>
+          <option value="Satisfactory">Satisfactory</option>
+          <option value="Not Satisfactory">Not Satisfactory</option>
+          <option value="Not Applicable">Not Applicable</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Preventive of Corrosion</label>
+        <select name="preventive_corrosion" class="form-select">
+          <option value="">-- Select Option --</option>
+          {{range .CO2CorrosionData}}
+            <option value="{{ .ID }}" data-val="{{ .Value }}" data-level="{{ .Level }}">{{ .Method }}</option>
+          {{end}}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Effectivity of Inhibitor Injection</label>
+        <select name="inhibitor_effectivity" class="form-select">
+          <option value="">-- Select Level --</option>
+          {{range .InhibitorInjectionData}}
+            <option value="{{ .Description}}">{{.Description}}</option>
+          {{end}}
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Corrosion Monitoring Result</label>
+        <select name="corrosion_monitoring" id="corrosion_monitoring" class="form-control">
+          <option value="">-- Select Result --</option>
+          <option value="Satisfactory">Satisfactory</option>
+          <option value="Unsatisfactory">Unsatisfactory</option>
+          <option value="Not Applicable">Not Applicable</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Env. Contrib. to Ext. Cracking</label>
+        <select name="env_ext_cracking" class="form-select">
+          <option value="None">None</option>
+          <option value="H2S">H2S</option>
+          <option value="Chloride">Chloride</option>
+          <option value="Hydrogen">Hydrogen</option>
+          <option value="Marine">Marine</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Biocide Treatment</label>
+        <select name="biocide_treatment" class="form-select">
+          <option value="No">No</option>
+          <option value="Yes">Yes</option>
+          <option value="Not Required">Not Required</option>
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Release Fluid Containment</label>
+        <select name="release_fluid_containment" id="release_fluid_containment" class="form-control">
+          <option value="">-- Select Value --</option>
+          {{range .ReleaseProductData}}
+            <option value="{{ .Level }}" data-code="{{ .Code }}">{{ .Condition }}</option>
+          {{end}}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label text-info">Clean Up Time (Related to Fluid Containment)</label>
+        <select name="clean_up_time" id="clean_up_time" class="form-control">
+          <option value="">-- Select Value --</option>
+          {{range .CleanupTimeData}}
+            <option value="{{ .Score }}">{{ .Description }}</option>
+          {{end}}
+        </select>
+      </div>
+
+      <div class="col-md-12">
+        <label class="form-label">Contaminant Contrib. to Amine Cracking</label>
+        <div class="form-check form-check-inline mt-2">
+          <input class="form-check-input" type="checkbox" name="contaminant_amine_cracking" id="lean_amine" value="Lean Amine" />
+          <label class="form-check-label" for="lean_amine">Lean Amine</label>
+        </div>
+        <div class="form-check form-check-inline mt-2">
+          <input class="form-check-input" type="checkbox" name="contaminant_amine_cracking" id="mea" value="MEA" />
+          <label class="form-check-label" for="mea">MEA</label>
+        </div>
+        <div class="form-check form-check-inline mt-2">
+          <input class="form-check-input" type="checkbox" name="contaminant_amine_cracking" id="dipa" value="DIPA" />
+          <label class="form-check-label" for="dipa">DIPA</label>
+        </div>
+        <div class="form-check form-check-inline mt-2">
+          <input class="form-check-input" type="checkbox" name="contaminant_amine_cracking" id="dea" value="DEA" />
+          <label class="form-check-label" for="dea">DEA</label>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Heat Traced</label>
+        <div class="form-check form-check-inline mt-2">
+          <input class="form-check-input" type="radio" name="heat_traced" id="ht_yes" value="1" />
+          <label class="form-check-label" for="ht_yes">Yes</label>
+        </div>
+        <div class="form-check form-check-inline mt-2">
+          <input class="form-check-input" type="radio" name="heat_traced" id="ht_no" value="0" />
+          <label class="form-check-label" for="ht_no">No</label>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label text-info">Steam Out</label>
+        <div class="form-check form-check-inline mt-2">
+          <input class="form-check-input" type="radio" name="steam_out" id="so_yes" value="1" />
+          <label class="form-check-label" for="so_yes">Yes</label>
+        </div>
+        <div class="form-check form-check-inline mt-2">
+          <input class="form-check-input" type="radio" name="steam_out" id="so_no" value="0" />
+          <label class="form-check-label" for="so_no">No</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="border rounded p-4 mb-4 bg-label-secondary">
+    <h6 class="mb-4 text-primary fw-semibold d-flex align-items-center">
+      <i class="mdi mdi-history me-2 fs-4"></i> D. Previous Equipment Condition
+    </h6>
+
+    <div class="table-responsive">
+      <table class="table table-borderless align-middle mb-4">
+        <thead class="border-bottom border-secondary">
+          <tr>
+            <th style="width: 30%;" class="text-muted fw-bold">Equipment Condition</th>
+            <th style="width: 35%;" class="text-muted fw-bold">Finding / Status</th>
+            <th style="width: 35%;" class="text-muted fw-bold">Level of Confidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="fw-semibold text-dark">External Corrosion</td>
+            <td>
+              <select name="prev_ext_corrosion" class="form-select border-primary">
+                <option value="No Finding">No Finding</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </td>
+            <td>
+              <select name="conf_ext_corrosion" class="form-select border-info">
+                <option value="">-- Select Confidence --</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="fw-semibold text-dark">Internal Cracking</td>
+            <td>
+              <select name="prev_int_cracking" class="form-select border-primary">
+                <option value="No Finding">No Finding</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </td>
+            <td>
+              <select name="conf_int_cracking" class="form-select border-info">
+                <option value="">-- Select Confidence --</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="fw-semibold text-dark">Internal Thinning</td>
+            <td>
+              <select name="prev_int_thinning" class="form-select border-primary">
+                <option value="No Finding">No Finding</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </td>
+            <td>
+              <select name="conf_int_thinning" class="form-select border-info">
+                <option value="">-- Select Confidence --</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="fw-semibold text-dark">Location Internal Corrosion</td>
+            <td>
+              <select name="prev_loc_int_corrosion" class="form-select border-primary">
+                <option value="No Finding">No Finding</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </td>
+            <td>
+              <select name="conf_loc_int_corrosion" class="form-select border-info">
+                <option value="">-- Select Confidence --</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="border-secondary mb-4">
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Insulation Condition</label>
+        <select name="insulation_condition" id="insulation_condition" class="form-select border-primary">
+          <option value="Good">Good</option>
+          <option value="Damaged">Damaged</option>
+          <option value="Not Inspectable">Not Inspectable</option>
+          <option value="Not Applicable">Not Applicable</option>
+        </select>
+      </div>
+      
+      <div class="col-md-6 d-none" id="insulation_level_wrapper">
+        <label class="form-label text-warning fw-bold"><i class="mdi mdi-alert-circle-outline"></i> Level (if damaged)</label>
+        <select name="insulation_level" class="form-select border-warning">
+          <option value="Small">Small</option>
+          <option value="Medium">Medium</option>
+          <option value="Large">Large</option>
+          <option value="Severe">Severe</option>
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">External Coating Condition</label>
+        <select name="ext_coating_condition" id="ext_coating_condition" class="form-select border-primary">
+          <option value="Good">Good</option>
+          <option value="Damaged">Damaged</option>
+          <option value="Not Inspectable">Not Inspectable</option>
+          <option value="Not Applicable">Not Applicable</option>
+        </select>
+      </div>
+      
+      <div class="col-md-6 d-none" id="ext_coating_level_wrapper">
+        <label class="form-label text-warning fw-bold"><i class="mdi mdi-alert-circle-outline"></i> Level (if damaged)</label>
+        <select name="ext_coating_level" class="form-select border-warning">
+          <option value="Small">Small</option>
+          <option value="Medium">Medium</option>
+          <option value="Large">Large</option>
+          <option value="Severe">Severe</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="border rounded p-4 mb-4 border-primary">
+    <h6 class="mb-4 text-primary fw-semibold d-flex align-items-center">
+      <i class="mdi mdi-wrench-outline me-2 fs-4"></i> E. Corrective Actions
+    </h6>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <label class="form-label">Description</label>
+        <textarea name="corrective_description" class="form-control" rows="2" placeholder="Issue description..."></textarea>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Action Taken</label>
+        <textarea name="corrective_action_taken" class="form-control" rows="2" placeholder="Action taken..."></textarea>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Date</label>
+        <input type="date" name="corrective_date" class="form-control">
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 d-flex justify-content-between mt-5">
+    <button type="button" class="btn btn-outline-secondary btn-prev">
+      <i class="mdi mdi-arrow-left me-sm-1"></i> Previous
+    </button>
+    <button type="button" class="btn btn-primary btn-next">
+      Next <i class="mdi mdi-arrow-right ms-sm-1"></i>
+    </button>
+  </div>
+</div>
+{{ end }}

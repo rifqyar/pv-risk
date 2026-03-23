@@ -1,0 +1,341 @@
+{{ define "partials/assessment_form_step_2" }}
+<div id="step-2" class="content">
+  <div class="section-header">
+    <h5>Step 2. Calculation Sheet</h5>
+    <p class="text-muted small">Calculation results for Shell, Head, and Nozzle including Short-term and Long-term rates.</p>
+  </div>
+
+  <div class="d-flex justify-content-center align-items-center">
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 bg-light-subtle shadow-none border">
+        <div class="card-header bg-primary text-white py-2">
+          <h6 class="mb-0 text-white">SHELL</h6>
+        </div>
+        <div class="card-body pt-3">
+          <label class="form-label small fw-bold">Required thickness (t)</label>
+          <div class="input-group input-group-sm mb-3">
+            <input type="text" class="form-control" name="req_thick_shell_in" placeholder="0" readonly>
+            <span class="input-group-text bg-white border-start-0 border-end-0">in. =</span>
+            <input type="text" class="form-control" name="req_thick_shell_mm" placeholder="0" readonly>
+            <span class="input-group-text">mm</span>
+          </div>
+
+          <label class="form-label small fw-bold">MAWP <span class="fw-normal">(Based on remaining thickness)</span></label>
+          <div class="input-group input-group-sm mb-3">
+            <input type="text" class="form-control" name="mawp_shell" placeholder="0" readonly>
+            <span class="input-group-text">psi</span>
+          </div>
+
+          <label class="form-label small fw-bold">Corrosion Rate (Short term)</label>
+          <div class="input-group input-group-sm mb-3">
+            <input type="text" class="form-control" name="cr_st_shell_in" placeholder="NaN" readonly>
+            <span class="input-group-text bg-white border-start-0 border-end-0">inch/yr =</span>
+            <input type="text" class="form-control" name="cr_st_shell_mm" placeholder="NaN" readonly>
+            <span class="input-group-text">mm/yr</span>
+          </div>
+
+          <label class="form-label small fw-bold">Corrosion Rate (Long term)</label>
+          <div class="input-group input-group-sm mb-3">
+            <input type="text" class="form-control" name="cr_lt_shell_in" placeholder="NaN" readonly>
+            <span class="input-group-text bg-white border-start-0 border-end-0">inch/yr =</span>
+            <input type="text" class="form-control" name="cr_lt_shell_mm" placeholder="NaN" readonly>
+            <span class="input-group-text">mm/yr</span>
+          </div>
+
+          <label class="form-label small fw-bold">Remaining Lifetime</label>
+          <div class="row g-2">
+            <div class="col-12">
+              <div class="input-group input-group-sm mb-2">
+                <span class="input-group-text bg-secondary-subtle" style="width: 90px;">Short term:</span>
+                <input type="text" class="form-control" name="rem_life_st_shell" placeholder="NaN" readonly>
+                <span class="input-group-text">year(s)</span>
+              </div>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-secondary-subtle" style="width: 90px;">Long term:</span>
+                <input type="text" class="form-control" name="rem_life_lt_shell" placeholder="NaN" readonly>
+                <span class="input-group-text">year(s)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 bg-light-subtle shadow-none border">
+        <div class="card-header bg-info text-white py-2">
+          <h6 class="mb-0 text-white">HEAD</h6>
+        </div>
+        <div class="card-body pt-3">
+          <label class="form-label small fw-bold">Required thickness (t)</label>
+          <div class="input-group input-group-sm mb-3">
+            <input type="text" class="form-control" name="req_thick_head_in" placeholder="NaN" readonly>
+            <span class="input-group-text bg-white border-start-0 border-end-0">in. =</span>
+            <input type="text" class="form-control" name="req_thick_head_mm" placeholder="0" readonly>
+            <span class="input-group-text">mm</span>
+          </div>
+
+          <label class="form-label small fw-bold">MAWP <span class="fw-normal">(Based on remaining thickness)</span></label>
+          <div class="input-group input-group-sm mb-3">
+            <input type="text" class="form-control" name="mawp_head" placeholder="0" readonly>
+            <span class="input-group-text">psi</span>
+          </div>
+
+          <label class="form-label small fw-bold">Corrosion Rate (Short term)</label>
+          <div class="input-group input-group-sm mb-3">
+            <input type="text" class="form-control" name="cr_st_head_in" placeholder="NaN" readonly>
+            <span class="input-group-text bg-white border-start-0 border-end-0">inch/yr =</span>
+            <input type="text" class="form-control" name="cr_st_head_mm" placeholder="NaN" readonly>
+            <span class="input-group-text">mm/yr</span>
+          </div>
+
+          <label class="form-label small fw-bold">Corrosion Rate (Long term)</label>
+          <div class="input-group input-group-sm mb-3">
+            <input type="text" class="form-control" name="cr_lt_head_in" placeholder="NaN" readonly>
+            <span class="input-group-text bg-white border-start-0 border-end-0">inch/yr =</span>
+            <input type="text" class="form-control" name="cr_lt_head_mm" placeholder="NaN" readonly>
+            <span class="input-group-text">mm/yr</span>
+          </div>
+
+          <label class="form-label small fw-bold">Remaining Lifetime</label>
+          <div class="row g-2">
+            <div class="col-12">
+              <div class="input-group input-group-sm mb-2">
+                <span class="input-group-text bg-secondary-subtle" style="width: 90px;">Short term:</span>
+                <input type="text" class="form-control" name="rem_life_st_head" placeholder="NaN" readonly>
+                <span class="input-group-text">year(s)</span>
+              </div>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-secondary-subtle" style="width: 90px;">Long term:</span>
+                <input type="text" class="form-control" name="rem_life_lt_head" placeholder="NaN" readonly>
+                <span class="input-group-text">year(s)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 bg-light-subtle shadow-none border">
+        <div class="card-header bg-secondary text-white py-2">
+          <h6 class="mb-0 text-white">NOZZLE</h6>
+        </div>
+        <div class="card-body pt-3">
+          <label class="form-label small fw-bold">Required thickness (t)</label>
+          <div class="input-group input-group-sm mb-3">
+            <input type="text" class="form-control" name="req_thick_nozzle_in" placeholder="0" readonly>
+            <span class="input-group-text bg-white border-start-0 border-end-0">in. =</span>
+            <input type="text" class="form-control" name="req_thick_nozzle_mm" placeholder="0" readonly>
+            <span class="input-group-text">mm</span>
+          </div>
+
+          <label class="form-label small fw-bold">MAWP <span class="fw-normal">(Based on remaining thickness)</span></label>
+          <div class="input-group input-group-sm mb-3">
+            <input type="text" class="form-control" name="mawp_nozzle" placeholder="0" readonly>
+            <span class="input-group-text">psi</span>
+          </div>
+
+          <label class="form-label small fw-bold">Corrosion Rate (Short term)</label>
+          <div class="input-group input-group-sm mb-3">
+            <input type="text" class="form-control" name="cr_st_nozzle_in" placeholder="NaN" readonly>
+            <span class="input-group-text bg-white border-start-0 border-end-0">inch/yr =</span>
+            <input type="text" class="form-control" name="cr_st_nozzle_mm" placeholder="NaN" readonly>
+            <span class="input-group-text">mm/yr</span>
+          </div>
+
+          <label class="form-label small fw-bold">Corrosion Rate (Long term)</label>
+          <div class="input-group input-group-sm mb-3">
+            <input type="text" class="form-control" name="cr_lt_nozzle_in" placeholder="NaN" readonly>
+            <span class="input-group-text bg-white border-start-0 border-end-0">inch/yr =</span>
+            <input type="text" class="form-control" name="cr_lt_nozzle_mm" placeholder="NaN" readonly>
+            <span class="input-group-text">mm/yr</span>
+          </div>
+
+          <label class="form-label small fw-bold">Remaining Lifetime</label>
+          <div class="row g-2">
+            <div class="col-12">
+              <div class="input-group input-group-sm mb-2">
+                <span class="input-group-text bg-secondary-subtle" style="width: 90px;">Short term:</span>
+                <input type="text" class="form-control" name="rem_life_st_nozzle" placeholder="NaN" readonly>
+                <span class="input-group-text">year(s)</span>
+              </div>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-secondary-subtle" style="width: 90px;">Long term:</span>
+                <input type="text" class="form-control" name="rem_life_lt_nozzle" placeholder="NaN" readonly>
+                <span class="input-group-text">year(s)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4 mb-4">
+    <div class="col-12">
+      <div class="card border-warning bg-warning-subtle shadow-none">
+        <div class="card-body">
+          <h6 class="fw-bold text-warning-emphasis mb-3">
+            <i class="mdi mdi-alert-decagram-outline me-1"></i> Summary of Calculation
+          </h6>
+          <div class="row text-center">
+            <div class="col-md-4 mb-3 mb-md-0 border-end border-warning-subtle">
+              <label class="small fw-bold text-muted text-uppercase">Governing Remaining Life</label>
+              <h4 class="text-primary fw-bold mb-0 mt-1" id="summary_rem_life">NaN <small class="fs-6 fw-normal text-muted">year(s)</small></h4>
+              <small class="text-muted" id="summary_rem_life_source">Component: -</small>
+            </div>
+            
+            <div class="col-md-4 mb-3 mb-md-0 border-end border-warning-subtle">
+              <label class="small fw-bold text-muted text-uppercase">Next Inspection Date</label>
+              <h4 class="text-danger fw-bold mb-0 mt-1" id="summary_next_insp">-</h4>
+              <small class="text-muted">Target Date</small>
+            </div>
+            
+            <div class="col-md-4">
+              <label class="small fw-bold text-muted text-uppercase">Calculation Date</label>
+              <h4 class="text-dark fw-bold mb-0 mt-1" id="summary_calc_date">-</h4>
+              <small class="text-muted">Today</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-12"> 
+      <div class="card mb-4 border-primary shadow-sm">
+        <div class="card-header bg-primary text-white py-3 d-flex align-items-center">
+          <i class="mdi mdi-table-large fs-4 me-2"></i>
+          <h6 class="mb-0 text-white fw-bold">Overall Calculation Summary</h6>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover table-bordered text-center align-middle mb-0" style="font-size: 0.85rem;">
+              <thead class="table-light">
+                <tr>
+                  <th rowspan="2" class="bg-primary-subtle text-primary">Component</th>
+                  <th colspan="4" class="bg-light">Thickness (mm)</th>
+                  <th colspan="2" class="bg-light">Corrosion Rate (mm/yr)</th>
+                  <th colspan="2" class="bg-light">Remaining Life (years)</th>
+                </tr>
+                <tr>
+                  <th class="text-muted small">Nominal / Wall</th>
+                  <th class="text-muted small">Required</th>
+                  <th class="text-muted small">Actual</th>
+                  <th class="text-primary small fw-bold">Consumable</th>
+                  <th class="text-muted small">Short Term</th>
+                  <th class="text-muted small">Long Term</th>
+                  <th class="text-danger small fw-bold">Short Term</th>
+                  <th class="text-danger small fw-bold">Long Term</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="fw-bold bg-primary-subtle text-primary">Shell</td>
+                  <td><span id="sum_nom_shell" class="fw-medium">-</span></td>
+                  <td><span id="sum_req_shell" class="fw-medium">-</span></td>
+                  <td><span id="sum_act_shell" class="fw-medium">-</span></td>
+                  <td class="bg-primary-subtle"><span id="sum_cons_shell" class="text-primary fw-bold fs-6">-</span></td>
+                  <td><span id="sum_crst_shell">-</span></td>
+                  <td><span id="sum_crlt_shell">-</span></td>
+                  <td><span id="sum_rlst_shell" class="fw-bold text-danger">-</span></td>
+                  <td><span id="sum_rllt_shell" class="fw-bold text-danger">-</span></td>
+                </tr>
+                <tr>
+                  <td class="fw-bold bg-primary-subtle text-primary">Head</td>
+                  <td><span id="sum_nom_head" class="fw-medium">-</span></td>
+                  <td><span id="sum_req_head" class="fw-medium">-</span></td>
+                  <td><span id="sum_act_head" class="fw-medium">-</span></td>
+                  <td class="bg-primary-subtle"><span id="sum_cons_head" class="text-primary fw-bold fs-6">-</span></td>
+                  <td><span id="sum_crst_head">-</span></td>
+                  <td><span id="sum_crlt_head">-</span></td>
+                  <td><span id="sum_rlst_head" class="fw-bold text-danger">-</span></td>
+                  <td><span id="sum_rllt_head" class="fw-bold text-danger">-</span></td>
+                </tr>
+                <tr>
+                  <td class="fw-bold bg-primary-subtle text-primary">Nozzle</td>
+                  <td><span id="sum_nom_nozzle" class="fw-medium">-</span></td>
+                  <td><span id="sum_req_nozzle" class="fw-medium">-</span></td>
+                  <td><span id="sum_act_nozzle" class="fw-medium">-</span></td>
+                  <td class="bg-primary-subtle"><span id="sum_cons_nozzle" class="text-primary fw-bold fs-6">-</span></td>
+                  <td><span id="sum_crst_nozzle">-</span></td>
+                  <td><span id="sum_crlt_nozzle">-</span></td>
+                  <td><span id="sum_rlst_nozzle" class="fw-bold text-danger">-</span></td>
+                  <td><span id="sum_rllt_nozzle" class="fw-bold text-danger">-</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-2 border-secondary shadow-sm">
+      <div class="card-header bg-secondary text-white py-3 d-flex align-items-center">
+        <i class="mdi mdi-shield-check-outline fs-4 me-2"></i>
+        <h6 class="mb-0 text-white fw-bold">Cladding Thickness Checking</h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered text-center align-middle mb-0" style="font-size: 0.85rem;">
+            <thead class="table-light">
+              <tr>
+                <th rowspan="2" class="bg-secondary-subtle text-secondary">Component</th>
+                <th colspan="4" class="bg-light">Thickness (mm)</th>
+                <th rowspan="2" class="bg-primary-subtle text-primary">Actual Consumable<br>Cladding</th>
+                <th rowspan="2" class="bg-light">Cladding Status</th>
+              </tr>
+              <tr>
+                <th class="text-muted small">Base Metal</th>
+                <th class="text-muted small">Cladding</th>
+                <th class="text-muted small">Total Initial</th>
+                <th class="text-muted small">Actual Now</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="fw-bold bg-secondary-subtle text-secondary">Shell</td>
+                <td><span id="clad_base_shell" class="fw-medium">-</span></td>
+                <td><span id="clad_thick_shell" class="fw-medium">-</span></td>
+                <td><span id="clad_total_shell" class="fw-medium">-</span></td>
+                <td><span id="clad_act_shell" class="fw-medium">-</span></td>
+                <td class="bg-primary-subtle"><span id="clad_cons_shell" class="text-primary fw-bold fs-6">-</span></td>
+                <td><span id="clad_stat_shell" class="badge rounded-pill bg-label-secondary w-100 py-2">No Data</span></td>
+              </tr>
+              <tr>
+                <td class="fw-bold bg-secondary-subtle text-secondary">Head</td>
+                <td><span id="clad_base_head" class="fw-medium">-</span></td>
+                <td><span id="clad_thick_head" class="fw-medium">-</span></td>
+                <td><span id="clad_total_head" class="fw-medium">-</span></td>
+                <td><span id="clad_act_head" class="fw-medium">-</span></td>
+                <td class="bg-primary-subtle"><span id="clad_cons_head" class="text-primary fw-bold fs-6">-</span></td>
+                <td><span id="clad_stat_head" class="badge rounded-pill bg-label-secondary w-100 py-2">No Data</span></td>
+              </tr>
+              <tr>
+                <td class="fw-bold bg-secondary-subtle text-secondary">Nozzle</td>
+                <td><span id="clad_base_nozzle" class="fw-medium">-</span></td>
+                <td><span id="clad_thick_nozzle" class="fw-medium">-</span></td>
+                <td><span id="clad_total_nozzle" class="fw-medium">-</span></td>
+                <td><span id="clad_act_nozzle" class="fw-medium">-</span></td>
+                <td class="bg-primary-subtle"><span id="clad_cons_nozzle" class="text-primary fw-bold fs-6">-</span></td>
+                <td><span id="clad_stat_nozzle" class="badge rounded-pill bg-label-secondary w-100 py-2">No Data</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 d-flex justify-content-between mt-5">
+    <button class="btn btn-outline-secondary btn-prev">
+      <i class="mdi mdi-arrow-left"></i> Previous
+    </button>
+    <button class="btn btn-primary btn-next">
+      Next <i class="mdi mdi-arrow-right"></i>
+    </button>
+  </div>
+</div>
+{{ end }}

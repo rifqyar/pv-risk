@@ -16,10 +16,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//go:embed templates/* templates/layouts/* templates/partial/*
+//go:embed templates/* templates/layouts/* templates/partials/*
 var templateFS embed.FS
 
-//go:embed static/*
+//go:embed static/* assets/*
 var staticFS embed.FS
 
 func openBrowser(url string) {
@@ -63,9 +63,9 @@ func main() {
 	// tmpl = template.Must(tmpl.ParseGlob("templates/*.html"))
 	// tmpl = template.Must(tmpl.ParseGlob("templates/layouts/*.html"))
 	tmpl, err := tmpl.ParseFS(templateFS,
-		"templates/*.html",         // Untuk backup_assessment_form.html dll di root templates
-		"templates/layouts/*.html", // Untuk master.html
-		"templates/partial/*.html", // Untuk partials kamu
+		"templates/*.html",          // Untuk backup_assessment_form.html dll di root templates
+		"templates/layouts/*.html",  // Untuk master.html
+		"templates/partials/*.html", // Untuk partials kamu
 	)
 
 	if err != nil {
@@ -75,7 +75,9 @@ func main() {
 	r.SetHTMLTemplate(tmpl)
 	// r.Static("/static", "./static")
 	staticContent, _ := fs.Sub(staticFS, "static")
+	assetsContent, _ := fs.Sub(staticFS, "assets")
 	r.StaticFS("/static", http.FS(staticContent))
+	r.StaticFS("/assets", http.FS(assetsContent))
 
 	r.GET("/", controller.ShowForm)
 	r.POST("/submit", controller.SubmitAssessment)

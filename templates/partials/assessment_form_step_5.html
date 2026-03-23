@@ -1,0 +1,286 @@
+{{ define "partials/assessment_form_step_5" }}
+<div id="step-5" class="content">
+  <div class="section-header mb-4 pb-3 border-bottom">
+    <h4 class="fw-bolder text-primary mb-1">
+      <i class="mdi mdi-alert-rhombus text-primary me-2"></i>Step 5. Risk
+      Assessment
+    </h4>
+    <p class="text-muted mb-0">
+      Evaluate Likelihood (LoF) and Consequence (CoF) to determine the
+      equipment's overall Risk Level.
+    </p>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-12">
+      <div class="card border-info mt-4">
+        <div class="card-header bg-info-subtle">
+          <h6 class="fw-bold">Inspection Effectiveness</h6>
+        </div>
+        <div class="card-body">
+
+          <div class="row">
+
+            <div class="col-md-4">
+              <label>Internal Thinning Method</label>
+              <select id="insp_internal_thinning" class="form-select">
+                <option value="UT">UT (High)</option>
+                <option value="RT">RT (Medium)</option>
+                <option value="VT">Visual (Low)</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label>External Corrosion Method</label>
+              <select id="insp_external_corrosion" class="form-select">
+                <option value="VT+UT">VT + UT (High)</option>
+                <option value="UT">UT (Medium)</option>
+                <option value="RT">RT (Low)</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label>Cracking Inspection</label>
+              <select id="insp_cracking" class="form-select">
+                <option value="WFMT">WFMT (High)</option>
+                <option value="UT">UT (Medium)</option>
+                <option value="RT">RT (Low)</option>
+              </select>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row g-4 mb-4">
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm rounded-4 bg-label-secondary">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="avatar avatar-sm me-2">
+              <span class="avatar-initial rounded-circle bg-primary"
+                ><i class="mdi mdi-chart-line text-white"></i
+              ></span>
+            </div>
+            <h6 class="fw-bold mb-0">1. Likelihood of Failure (LoF)</h6>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label text-muted small text-uppercase fw-bold"
+              >Damage Factor (Macro)</label
+            >
+            <input
+              type="text"
+              class="form-control bg-white"
+              id="ui_lof_score"
+              readonly
+              placeholder="Auto from Step 4"
+            />
+          </div>
+          <div>
+            <label class="form-label text-dark fw-bold"
+              >Select LoF Category</label
+            >
+            <select
+              class="form-select border-primary bg-white fw-bold py-2"
+              name="lof_category"
+              id="lof_category"
+              disabled
+            >
+              <option value="" selected disabled>Select Category...</option>
+              <option value="1">1 - Very Low</option>
+              <option value="2">2 - Low</option>
+              <option value="3">3 - Medium</option>
+              <option value="4">4 - High</option>
+              <option value="5">5 - Very High</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm rounded-4 bg-label-secondary">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="avatar avatar-sm me-2">
+              <span class="avatar-initial rounded-circle bg-primary"
+                ><i class="mdi mdi-factory text-white"></i
+              ></span>
+            </div>
+            <h6 class="fw-bold mb-0">2. Consequence of Failure (CoF)</h6>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-sm-6">
+              <label class="form-label text-muted small"
+                >Financial Impact</label
+              >
+              <select class="form-select form-select-sm" id="cof_financial">
+                <option value="" selected disabled>Select...</option>
+                <option value="A">A - Insignificant</option>
+                <option value="B">B - Minor</option>
+                <option value="C">C - Moderate</option>
+                <option value="D">D - Major</option>
+                <option value="E">E - Catastrophic</option>
+              </select>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label text-muted small">Safety Impact</label>
+              <select class="form-select form-select-sm" id="cof_safety">
+                <option value="" selected disabled>Select...</option>
+                <option value="A">A - First Aid</option>
+                <option value="B">B - Medical</option>
+                <option value="C">C - LTI</option>
+                <option value="D">D - Fatality</option>
+                <option value="E">E - Multiple Fatalities</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-auto pt-2 border-top">
+            <label class="form-label text-dark fw-bold mb-1"
+              >Final CoF Category
+              <span class="text-muted fw-normal">(Highest)</span></label
+            >
+            <input
+              type="text"
+              class="form-control bg-white fw-bold text-center text-primary fs-5"
+              name="cof_category"
+              id="cof_category"
+              readonly
+              placeholder="-"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="card border-primary shadow-sm rounded-4 overflow-hidden">
+        <div
+          class="card-header bg-primary-subtle py-4 text-center border-bottom"
+        >
+          <h6 class="text-primary fw-bolder tracking-wide text-uppercase mb-2">
+            Overall Risk Level
+          </h6>
+          <div id="final_risk_label" class="mt-2">
+            <span
+              class="badge bg-secondary rounded-pill px-5 py-3 fs-5 shadow-sm"
+              >Awaiting Input...</span
+            >
+          </div>
+          <input type="hidden" name="risk_level" id="risk_level" />
+          <input type="hidden" name="risk_index" id="risk_index" />
+        </div>
+
+        <div
+          class="card-body p-5 bg-white d-flex justify-content-center align-items-center flex-column"
+        >
+          <h5 class="fw-bold mb-4 text-dark text-center">
+            5x5 Criticality Matrix
+          </h5>
+
+          <div class="table-responsive" style="max-width: 800px; width: 100%">
+            <table
+              class="table table-bordered text-center align-middle mb-0"
+              id="risk_matrix_table"
+              style="table-layout: fixed; font-size: 0.9rem"
+            >
+              <tbody>
+                <tr>
+                  <td
+                    rowspan="5"
+                    class="bg-light text-dark align-middle fw-bolder border-0"
+                    style="
+                      writing-mode: vertical-rl;
+                      transform: rotate(180deg);
+                      width: 40px;
+                      letter-spacing: 2px;
+                    "
+                  >
+                    LIKELIHOOD (LoF)
+                  </td>
+                  <td class="bg-warning text-dark py-3" id="cell-5-A">5</td>
+                  <td class="bg-warning text-dark py-3" id="cell-5-B"></td>
+                  <td class="bg-danger text-white py-3" id="cell-5-C"></td>
+                  <td class="bg-danger text-white py-3" id="cell-5-D"></td>
+                  <td class="bg-dark text-white py-3" id="cell-5-E"></td>
+                </tr>
+                <tr>
+                  <td class="bg-success text-white py-3" id="cell-4-A">4</td>
+                  <td class="bg-warning text-dark py-3" id="cell-4-B"></td>
+                  <td class="bg-warning text-dark py-3" id="cell-4-C"></td>
+                  <td class="bg-danger text-white py-3" id="cell-4-D"></td>
+                  <td class="bg-danger text-white py-3" id="cell-4-E"></td>
+                </tr>
+                <tr>
+                  <td class="bg-success text-white py-3" id="cell-3-A">3</td>
+                  <td class="bg-success text-white py-3" id="cell-3-B"></td>
+                  <td class="bg-warning text-dark py-3" id="cell-3-C"></td>
+                  <td class="bg-warning text-dark py-3" id="cell-3-D"></td>
+                  <td class="bg-danger text-white py-3" id="cell-3-E"></td>
+                </tr>
+                <tr>
+                  <td class="bg-success text-white py-3" id="cell-2-A">2</td>
+                  <td class="bg-success text-white py-3" id="cell-2-B"></td>
+                  <td class="bg-success text-white py-3" id="cell-2-C"></td>
+                  <td class="bg-warning text-dark py-3" id="cell-2-D"></td>
+                  <td class="bg-warning text-dark py-3" id="cell-2-E"></td>
+                </tr>
+                <tr>
+                  <td class="bg-success text-white py-3" id="cell-1-A">1</td>
+                  <td class="bg-success text-white py-3" id="cell-1-B"></td>
+                  <td class="bg-success text-white py-3" id="cell-1-C"></td>
+                  <td class="bg-success text-white py-3" id="cell-1-D"></td>
+                  <td class="bg-warning text-dark py-3" id="cell-1-E"></td>
+                </tr>
+                <tr>
+                  <td class="border-0"></td>
+                  <td class="fw-bolder bg-light py-2">A</td>
+                  <td class="fw-bolder bg-light py-2">B</td>
+                  <td class="fw-bolder bg-light py-2">C</td>
+                  <td class="fw-bolder bg-light py-2">D</td>
+                  <td class="fw-bolder bg-light py-2">E</td>
+                </tr>
+                <tr>
+                  <td class="border-0"></td>
+                  <td
+                    colspan="5"
+                    class="bg-light text-dark fw-bolder border-0 pt-3"
+                    style="letter-spacing: 2px"
+                  >
+                    CONSEQUENCE (CoF)
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-5 d-flex justify-content-between">
+    <button
+      type="button"
+      class="btn btn-outline-secondary btn-prev px-4 py-2 rounded-pill"
+    >
+      <i class="mdi mdi-arrow-left me-sm-1"></i>
+      <span class="d-none d-sm-inline-block">Previous</span>
+    </button>
+    <button
+      type="button"
+      class="btn btn-primary btn-next px-4 py-2 rounded-pill shadow-sm"
+      id="btn-next-5"
+    >
+      <span class="d-none d-sm-inline-block">Next Step</span>
+      <i class="mdi mdi-arrow-right ms-sm-1"></i>
+    </button>
+  </div>
+</div>
+{{ end }}
