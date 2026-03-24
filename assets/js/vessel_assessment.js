@@ -303,6 +303,9 @@ $(function () {
             icon: "success",
             title: "Riwayat data ditemukan & otomatis terisi!",
           });
+
+          initDefaultStates()
+          runStep2Calculations()
         } else {
           // Jika data kosong, beri notifikasi ringan saja
           console.log("No previous assessment for this equipment.");
