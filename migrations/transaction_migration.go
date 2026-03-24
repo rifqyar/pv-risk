@@ -2,7 +2,9 @@ package migrations
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"strings"
 )
 
 // 1. Tabel Master Equipment (Header)
@@ -27,6 +29,67 @@ func EquipmentsTable(db *sql.DB) {
 
 	if _, err := db.Exec(query); err != nil {
 		log.Fatalf("Error creating trx_equipments table: %v", err)
+	}
+
+	// helper function cek kolom
+	columnExists := func(columnName string) bool {
+		rows, err := db.Query(`PRAGMA table_info(trx_equipments);`)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer rows.Close()
+
+		var cid int
+		var name, ctype string
+		var notnull, pk int
+		var dfltValue interface{}
+
+		for rows.Next() {
+			err := rows.Scan(&cid, &name, &ctype, &notnull, &dfltValue, &pk)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if name == columnName {
+				return true
+			}
+		}
+		return false
+	}
+
+	columns := []string{
+		// sebelumnya
+		"diameter_type REAL DEFAULT 'inside'",
+		"diameter_unit REAL DEFAULT 'inch'",
+		"diameter_tube_type REAL DEFAULT 'inside'",
+		"diameter_tube_unit REAL DEFAULT 'inch'",
+		"length FLOAT DEFAULT 0",
+		"length_unit REAL DEFAULT 'ft'",
+		"volume_unit REAL DEFAULT 'm'",
+		"temp_design_unit REAL DEFAULT 'c'",
+		"temp_design_tube_unit REAL DEFAULT 'c'",
+		"pwht REAL DEFAULT 'No'",
+		"certificate REAL DEFAULT '-'",
+		"data_reference REAL DEFAULT '-'",
+		"nozzle FLOAT DEFAULT 0",
+		"nozzle_unit REAL DEFAULT 'inch'",
+		"phase_type REAL DEFAULT 'multi phase'",
+		"internal_lining REAL DEFAULT 'None'",
+		"insulation REAL DEFAULT 'No'",
+		"special_service REAL DEFAULT '-'",
+		"protection REAL DEFAULT '-'",
+		"cathodic_protection REAL DEFAULT 'No'",
+	}
+
+	// add column kalau belum ada
+	for _, col := range columns {
+		colName := strings.Split(col, " ")[0]
+
+		if !columnExists(colName) {
+			alterQuery := fmt.Sprintf("ALTER TABLE trx_equipments ADD COLUMN %s;", col)
+			if _, err := db.Exec(alterQuery); err != nil {
+				log.Fatalf("Error adding column %s: %v", colName, err)
+			}
+		}
 	}
 }
 
@@ -64,6 +127,48 @@ func AssessmentsTable(db *sql.DB) {
 		FOREIGN KEY (equipment_id) REFERENCES trx_equipments(id) ON DELETE CASCADE
 	);`
 	db.Exec(query)
+
+	// helper function cek kolom
+	columnExists := func(columnName string) bool {
+		rows, err := db.Query(`PRAGMA table_info(assessments);`)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer rows.Close()
+
+		var cid int
+		var name, ctype string
+		var notnull, pk int
+		var dfltValue interface{}
+
+		for rows.Next() {
+			err := rows.Scan(&cid, &name, &ctype, &notnull, &dfltValue, &pk)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if name == columnName {
+				return true
+			}
+		}
+		return false
+	}
+
+	columns := []string{
+		"temp_op_unit REAL DEFAULT 'c'",
+		"temp_op_tube_unit REAL DEFAULT 'c'",
+	}
+
+	// add column kalau belum ada
+	for _, col := range columns {
+		colName := strings.Split(col, " ")[0]
+
+		if !columnExists(colName) {
+			alterQuery := fmt.Sprintf("ALTER TABLE assessments ADD COLUMN %s;", col)
+			if _, err := db.Exec(alterQuery); err != nil {
+				log.Fatalf("Error adding column %s: %v", colName, err)
+			}
+		}
+	}
 }
 
 // 3. Tabel Data Ketebalan (Sub-Detail)
@@ -125,7 +230,7 @@ func AssessmentResultsTable(db *sql.DB) {
 		insp_external_corrosion TEXT, -- TAMBAHAN STEP 5
 		insp_cracking TEXT,           -- TAMBAHAN STEP 5
 
-		governing_component TEXT,
+		governing_component TEXT, 
 		max_interval_years REAL,
 		next_inspection_year INTEGER,
 		recommended_method TEXT,

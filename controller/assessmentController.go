@@ -118,18 +118,25 @@ func SubmitAssessment(c *gin.Context) {
 	err = tx.QueryRow("SELECT id FROM trx_equipments WHERE equipment_id = ?", masterEqID).Scan(&trxEqID)
 
 	if err == sql.ErrNoRows {
-		// BELUM PERNAH DIISI SPEKNYA: Lakukan INSERT
+		// BELUM PERNAH DIISI SPEKNYA: Lakukan INSERT (Lengkap dengan kolom baru)
 		res, err := tx.Exec(`
 			INSERT INTO trx_equipments 
-			(equipment_id, tag_number, year_built, shell_material_id, design_pressure, design_pressure_tube, design_temp, design_temp_tube, diameter, diameter_tube, volume) 
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			masterEqID, payload.Equipment.TagNumber, payload.Equipment.YearBuilt,
-			payload.Equipment.ShellMaterialID, payload.Equipment.DesignPressure, payload.Equipment.DesignPressureTube,
-			payload.Equipment.DesignTemp, payload.Equipment.DesignTempTube, payload.Equipment.Diameter, payload.Equipment.DiameterTube, payload.Equipment.Volume,
+			(equipment_id, tag_number, year_built, shell_material_id, design_pressure, design_pressure_tube, design_temp, design_temp_tube, diameter, diameter_tube, volume,
+			diameter_type, diameter_unit, diameter_tube_type, diameter_tube_unit, length, length_unit, volume_unit, temp_design_unit, temp_design_tube_unit,
+			pwht, certificate, data_reference, nozzle, nozzle_unit, phase_type, internal_lining, insulation, special_service, protection, cathodic_protection) 
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			masterEqID, payload.Equipment.TagNumber, payload.Equipment.YearBuilt, payload.Equipment.ShellMaterialID,
+			payload.Equipment.DesignPressure, payload.Equipment.DesignPressureTube, payload.Equipment.DesignTemp, payload.Equipment.DesignTempTube,
+			payload.Equipment.Diameter, payload.Equipment.DiameterTube, payload.Equipment.Volume,
+			// KOLOM BARU
+			payload.Equipment.DiameterType, payload.Equipment.DiameterUnit, payload.Equipment.DiameterTubeType, payload.Equipment.DiameterTubeUnit,
+			payload.Equipment.Length, payload.Equipment.LengthUnit, payload.Equipment.VolumeUnit, payload.Equipment.TempDesignUnit, payload.Equipment.TempDesignTubeUnit,
+			payload.Equipment.Pwht, payload.Equipment.Certificate, payload.Equipment.DataReference, payload.Equipment.Nozzle, payload.Equipment.NozzleUnit,
+			payload.Equipment.PhaseType, payload.Equipment.InternalLining, payload.Equipment.Insulation, payload.Equipment.SpecialService, payload.Equipment.Protection, payload.Equipment.CathodicProtection,
 		)
 
 		if err != nil {
-			c.JSON(500, gin.H{"status": "error", "message": "Failed to save equipment specs", "detail": err})
+			c.JSON(500, gin.H{"status": "error", "message": "Failed to save equipment specs", "detail": err.Error()})
 			return
 		}
 		lastID, _ := res.LastInsertId()
@@ -139,16 +146,23 @@ func SubmitAssessment(c *gin.Context) {
 		// SUDAH PERNAH DIISI: Lakukan UPDATE (Biar spesifikasinya selalu yang paling baru)
 		_, err = tx.Exec(`
 			UPDATE trx_equipments SET 
-			year_built=?, shell_material_id=?, design_pressure=?, design_temp=?, design_pressure_tube=?, design_temp_tube=?, diameter=?, diameter_tube=?, volume=? 
+			year_built=?, shell_material_id=?, design_pressure=?, design_temp=?, design_pressure_tube=?, design_temp_tube=?, diameter=?, diameter_tube=?, volume=?,
+			diameter_type=?, diameter_unit=?, diameter_tube_type=?, diameter_tube_unit=?, length=?, length_unit=?, volume_unit=?, temp_design_unit=?, temp_design_tube_unit=?,
+			pwht=?, certificate=?, data_reference=?, nozzle=?, nozzle_unit=?, phase_type=?, internal_lining=?, insulation=?, special_service=?, protection=?, cathodic_protection=?
 			WHERE id=?`,
 			payload.Equipment.YearBuilt, payload.Equipment.ShellMaterialID,
 			payload.Equipment.DesignPressure, payload.Equipment.DesignTemp,
 			payload.Equipment.DesignPressureTube, payload.Equipment.DesignTempTube,
-			payload.Equipment.Diameter, payload.Equipment.DiameterTube,
-			payload.Equipment.Volume, trxEqID,
+			payload.Equipment.Diameter, payload.Equipment.DiameterTube, payload.Equipment.Volume,
+			// KOLOM BARU
+			payload.Equipment.DiameterType, payload.Equipment.DiameterUnit, payload.Equipment.DiameterTubeType, payload.Equipment.DiameterTubeUnit,
+			payload.Equipment.Length, payload.Equipment.LengthUnit, payload.Equipment.VolumeUnit, payload.Equipment.TempDesignUnit, payload.Equipment.TempDesignTubeUnit,
+			payload.Equipment.Pwht, payload.Equipment.Certificate, payload.Equipment.DataReference, payload.Equipment.Nozzle, payload.Equipment.NozzleUnit,
+			payload.Equipment.PhaseType, payload.Equipment.InternalLining, payload.Equipment.Insulation, payload.Equipment.SpecialService, payload.Equipment.Protection, payload.Equipment.CathodicProtection,
+			trxEqID,
 		)
 		if err != nil {
-			c.JSON(500, gin.H{"status": "error", "message": "Failed to update equipment specs"})
+			c.JSON(500, gin.H{"status": "error", "message": "Failed to update equipment specs: " + err.Error()})
 			return
 		}
 	}
@@ -156,13 +170,23 @@ func SubmitAssessment(c *gin.Context) {
 	// ==========================================
 	// 5. INSERT DETAIL 1: Assessments
 	// ==========================================
+	// Helper untuk merubah tanggal kosong ("") menjadi NULL di Database
+	var prevInsp, actInsp interface{}
+	if payload.Assessment.PrevInspectionDate != "" {
+		prevInsp = payload.Assessment.PrevInspectionDate
+	}
+	if payload.Assessment.ActInspectionDate != "" {
+		actInsp = payload.Assessment.ActInspectionDate
+	}
+
 	res, err := tx.Exec(`
 		INSERT INTO assessments 
-		(equipment_id, assessment_date, prev_inspection_date, act_inspection_date, operating_pressure, operating_temp, operating_pressure_tube, operating_temp_tube, phase, h2s_content, co2_content, h2o_content, chloride_index, ph_index, 
+		(equipment_id, assessment_date, prev_inspection_date, act_inspection_date, operating_pressure, operating_temp, operating_pressure_tube, operating_temp_tube, temp_op_unit, temp_op_tube_unit, phase, h2s_content, co2_content, h2o_content, chloride_index, ph_index, 
 		impact_production, insulation_condition, insulation_damage_level, coating_condition, coating_damage_level, corrective_description, corrective_action, corrective_date) 
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		trxEqID, payload.Assessment.AssessmentDate, payload.Assessment.PrevInspectionDate, payload.Assessment.ActInspectionDate,
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		trxEqID, payload.Assessment.AssessmentDate, prevInsp, actInsp,
 		payload.Assessment.OperatingPressure, payload.Assessment.OperatingTemp, payload.Assessment.OperatingPressureTube, payload.Assessment.OperatingTempTube,
+		payload.Assessment.TempOpUnit, payload.Assessment.TempOpTubeUnit,
 		payload.Environment.Phase, payload.Environment.H2sContent, payload.Environment.Co2Content, payload.Environment.H2oContent,
 		payload.Environment.ChlorideIndex, payload.Environment.PhIndex,
 		payload.Environment.ImpactProduction, payload.Environment.InsulationCondition, payload.Environment.InsulationDamageLevel,
@@ -171,7 +195,7 @@ func SubmitAssessment(c *gin.Context) {
 	)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to insert assessment detail"})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to insert assessment detail: " + err.Error()})
 		return
 	}
 
@@ -249,7 +273,7 @@ func SubmitAssessment(c *gin.Context) {
 		return
 	}
 
-	// Kirim respon sukses ke Frontend (JavaScript lu bakal nangkep ini dan ngeluarin Alert Success)
+	// Kirim respon sukses ke Frontend
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
 		"message": "Assessment successfully saved!",

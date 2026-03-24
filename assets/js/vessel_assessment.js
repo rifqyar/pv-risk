@@ -95,10 +95,10 @@ $(function () {
   });
 
   // Step 3 Triggers (Syncing values)
-  $("input[name*='operating_press'], input[name*='operating_temp'], input[name='suhu_opr'], input[name='suhu_opr_top'], input[name='suhu_opr_bottom']").on(
-    "keyup change",
-    syncOperatingConditions,
-  );
+  $(
+    "input[name*='operating_press'], input[name*='operating_temp'], select[name='suhu_opr'], select[name='suhu_opr_top'], select[name='suhu_opr_bottom']",
+  ).on("keyup change", syncOperatingConditions);
+
   $("input[name='he_side']").on("change", syncOperatingConditions);
   elements.eqType.on("change", syncOperatingConditions);
 
@@ -1659,6 +1659,20 @@ $(function () {
     }
 
     // --- B. BENTUK JSON PAYLOAD ---
+    // 1. Kumpulin data Checkbox Arrays menjadi String (separator koma)
+    const certArray = Array.from(
+      document.querySelectorAll(".cert-checkbox:checked"),
+    ).map((el) => el.value);
+    const refArray = Array.from(
+      document.querySelectorAll(".ref-checkbox:checked"),
+    ).map((el) => el.value);
+    const specialArray = Array.from(
+      document.querySelectorAll(".special-checkbox:checked"),
+    ).map((el) => el.value);
+    const protArray = Array.from(
+      document.querySelectorAll(".prot-checkbox:checked"),
+    ).map((el) => el.value);
+
     let payload = {
       // 1. HEADER: Equipment Data (Akan di-insert/update ke tabel `equipments`)
       equipment: {
@@ -1681,6 +1695,37 @@ $(function () {
             ? parseFloat($("input[name='diameter_tube']").val())
             : parseFloat($("input[name='diameter']").val())) || 0,
         volume: parseFloat($("input[name='total_volume']").val()) || 0,
+        diameter_type:
+          (eqType == "EQT3"
+            ? $("select[name='diameter_type_shell']").val()
+            : $("select[name='diameter_type']").val()) || "inside",
+        diameter_unit:
+          (eqType == "EQT3"
+            ? "inch"
+            : $("select[name='satuan_diameter']").val()) || "inch",
+        diameter_tube_type:
+          eqType == "EQT3"
+            ? $("select[name='diameter_type_tube']").val()
+            : null,
+        diameter_tube_unit: eqType == "EQT3" ? "inch" : null,
+        length: parseFloat($("input[name='length']").val()) || 0,
+        length_unit: $("select[name='satuan_pjg']").val() || "ft",
+        nozzle: parseFloat($("input[name='nozzle']").val()) || 0,
+        nozzle_unit: $("input[name='satuan_nozzle']").val() || "inch",
+        volume_unit: $("select[name='volume_type']").val() || "m",
+        temp_design_unit: $("select[name='suhu_design']").val() || "c",
+        temp_design_tube_unit:
+          eqType == "EQT3" ? $("select[name='suhu_design_tube']").val() : null,
+        pwht: $("select[name='pwht']").val() || "No",
+        certificate: certArray.join(", ") || "-",
+        data_reference: refArray.join(", ") || "-",
+        phase_type: $("select[name='phase_type']").val() || "multi phase",
+        internal_lining: $("select[name='internal_lining']").val() || "None",
+        insulation: $("select[name='insulation']").val() || "No",
+        special_service: specialArray.join(", ") || "-",
+        protection: protArray.join(", ") || "-",
+        cathodic_protection:
+          $("input[name='cathodic_protection']").val() || "No",
       },
 
       // 2. DETAIL: Assessment General Info
@@ -1704,6 +1749,13 @@ $(function () {
           (eqType == "EQT1"
             ? 0
             : parseFloat($("input[name='operating_temp_bottom']").val())) || 0,
+
+        temp_op_unit:
+          (eqType == "EQT3"
+            ? $("select[name='suhu_opr_top']").val()
+            : $("select[name='suhu_opr']").val()) || "c",
+        temp_op_tube_unit:
+          eqType == "EQT3" ? $("select[name='suhu_opr_bottom']").val() : null,
       },
 
       // 3. DETAIL: Thickness & Corrosion Rate Data

@@ -22,6 +22,28 @@ type EquipmentPayload struct {
 	Diameter           float64  `json:"diameter"`
 	DiameterTube       float64  `json:"diameter_tube"`
 	Volume             float64  `json:"volume"`
+
+	// --- TAMBAHAN DARI MIGRATION BARU ---
+	DiameterType       string  `json:"diameter_type"`
+	DiameterUnit       string  `json:"diameter_unit"`
+	DiameterTubeType   string  `json:"diameter_tube_type"`
+	DiameterTubeUnit   string  `json:"diameter_tube_unit"`
+	Length             float64 `json:"length"`
+	LengthUnit         string  `json:"length_unit"`
+	VolumeUnit         string  `json:"volume_unit"`
+	TempDesignUnit     string  `json:"temp_design_unit"`
+	TempDesignTubeUnit string  `json:"temp_design_tube_unit"`
+	Pwht               string  `json:"pwht"`
+	Certificate        string  `json:"certificate"`
+	DataReference      string  `json:"data_reference"`
+	Nozzle             float64 `json:"nozzle"`
+	NozzleUnit         string  `json:"nozzle_unit"`
+	PhaseType          string  `json:"phase_type"`
+	InternalLining     string  `json:"internal_lining"`
+	Insulation         string  `json:"insulation"`
+	SpecialService     string  `json:"special_service"`
+	Protection         string  `json:"protection"`
+	CathodicProtection string  `json:"cathodic_protection"`
 }
 type AssessmentGeneral struct {
 	AssessmentDate        string  `json:"assessment_date"`
@@ -31,6 +53,8 @@ type AssessmentGeneral struct {
 	OperatingTemp         float64 `json:"operating_temp"`
 	OperatingPressureTube float64 `json:"operating_pressure_tube"`
 	OperatingTempTube     float64 `json:"operating_temp_tube"`
+	TempOpUnit            string  `json:"temp_op_unit"`
+	TempOpTubeUnit        string  `json:"temp_op_tube_unit"`
 }
 
 type ThicknessDataPayload struct {
