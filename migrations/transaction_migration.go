@@ -8,22 +8,25 @@ import (
 // 1. Tabel Master Equipment (Header)
 func EquipmentsTable(db *sql.DB) {
 	query := `
-	CREATE TABLE IF NOT EXISTS equipments (
+	CREATE TABLE IF NOT EXISTS trx_equipments (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		equipment_id INTEGER UNIQUE NOT NULL, -- FK ke master equipments.id
 		tag_number TEXT UNIQUE NOT NULL,
-		description TEXT,
-		equipment_type_id TEXT,
 		year_built INTEGER,
 		shell_material_id INTEGER,
 		design_pressure REAL,
+		design_pressure_tube REAL,
 		design_temp REAL,
+		design_temp_tube REAL,
 		diameter REAL,
+		diameter_tube REAL,
 		volume REAL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (equipment_id) REFERENCES equipments(id) ON DELETE CASCADE
 	);`
 
 	if _, err := db.Exec(query); err != nil {
-		log.Fatalf("Error creating equipments table: %v", err)
+		log.Fatalf("Error creating trx_equipments table: %v", err)
 	}
 }
 
@@ -36,21 +39,31 @@ func AssessmentsTable(db *sql.DB) {
 		assessment_date DATE,
 		prev_inspection_date DATE,
 		act_inspection_date DATE,
-		operating_pressure REAL,
-		operating_temp REAL,
+		operating_pressure REAL,     
+		operating_temp REAL,         
+		operating_pressure_tube REAL,
+		operating_temp_tube REAL,    
 		phase TEXT,
 		h2s_content REAL,
 		co2_content REAL,
 		h2o_content REAL,
 		chloride_index INTEGER,
 		ph_index INTEGER,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (equipment_id) REFERENCES equipments(id) ON DELETE CASCADE
-	);`
+		
+		-- TAMBAHAN STEP 3:
+		impact_production TEXT,
+		insulation_condition TEXT,
+		insulation_damage_level TEXT,
+		coating_condition TEXT,
+		coating_damage_level TEXT,
+		corrective_description TEXT,
+		corrective_action TEXT,
+		corrective_date DATE,
 
-	if _, err := db.Exec(query); err != nil {
-		log.Fatalf("Error creating assessments table: %v", err)
-	}
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (equipment_id) REFERENCES trx_equipments(id) ON DELETE CASCADE
+	);`
+	db.Exec(query)
 }
 
 // 3. Tabel Data Ketebalan (Sub-Detail)
@@ -88,13 +101,11 @@ func AssessmentDamageMechanismsTable(db *sql.DB) {
 		amine_scc TEXT,
 		hic TEXT,
 		ciscc TEXT,
-		total_damage_factor REAL,
+		galvanic TEXT,     -- TAMBAHAN STEP 4
+		lof_score TEXT,    -- DIUBAH DARI FLOAT KE TEXT (Biar bisa nampung "PoF: 1.5E-3 (DF: 50)")
 		FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE
 	);`
-
-	if _, err := db.Exec(query); err != nil {
-		log.Fatalf("Error creating assessment_damage_mechanisms table: %v", err)
-	}
+	db.Exec(query)
 }
 
 // 5. Tabel Final Result & Strategy (Sub-Detail)
@@ -104,19 +115,23 @@ func AssessmentResultsTable(db *sql.DB) {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		assessment_id INTEGER,
 		lof_category INTEGER,
+		cof_financial TEXT, -- TAMBAHAN STEP 5
+		cof_safety TEXT,    -- TAMBAHAN STEP 5
 		cof_category TEXT,
 		risk_level TEXT,
 		risk_index INTEGER,
+
+		insp_internal_thinning TEXT,  -- TAMBAHAN STEP 5 (Inspection Effectiveness)
+		insp_external_corrosion TEXT, -- TAMBAHAN STEP 5
+		insp_cracking TEXT,           -- TAMBAHAN STEP 5
+
 		governing_component TEXT,
 		max_interval_years REAL,
 		next_inspection_year INTEGER,
 		recommended_method TEXT,
 		FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE
 	);`
-
-	if _, err := db.Exec(query); err != nil {
-		log.Fatalf("Error creating assessment_results table: %v", err)
-	}
+	db.Exec(query)
 }
 
 func RunAllAssessmentMigrations(db *sql.DB) {

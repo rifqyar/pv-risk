@@ -1,124 +1,154 @@
-{{ define "content" }}
-<div class="row">
-  <div class="col-12">
-    <div class="card">
-      <div class="card-body">
-        <div id="wizard-vessel-assessment" class="bs-stepper vertical wizard-modern shadow-none">
-          <div class="bs-stepper-header">
-            <div class="step" data-target="#step-1">
-              <button type="button" class="step-trigger">
-                <span class="bs-stepper-circle"><i class="mdi mdi-information-outline"></i></span>
-                <span class="bs-stepper-label">
-                  <span class="bs-stepper-number">01</span>
-                  <span class="d-flex flex-column gap-1 ms-2 text-start">
-                    <span class="bs-stepper-title">Design & Material</span>
-                    <span class="bs-stepper-subtitle">Equipment Specification</span>
+{{ define "form_content" }}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="py-3 mb-4">
+      Assessment Form
+    </h4>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div
+            id="wizard-vessel-assessment"
+            class="bs-stepper vertical wizard-modern shadow-none"
+          >
+            <div class="bs-stepper-header">
+              <div class="step" data-target="#step-1">
+                <button type="button" class="step-trigger">
+                  <span class="bs-stepper-circle"
+                    ><i class="mdi mdi-information-outline"></i
+                  ></span>
+                  <span class="bs-stepper-label">
+                    <span class="bs-stepper-number">01</span>
+                    <span class="d-flex flex-column gap-1 ms-2 text-start">
+                      <span class="bs-stepper-title">Design & Material</span>
+                      <span class="bs-stepper-subtitle"
+                        >Equipment Specification</span
+                      >
+                    </span>
                   </span>
-                </span>
-              </button>
-            </div>
-            <div class="line"></div>
+                </button>
+              </div>
+              <div class="line"></div>
 
-            <div class="step" data-target="#step-2">
-              <button type="button" class="step-trigger">
-                <span class="bs-stepper-circle"><i class="mdi mdi-layers-outline"></i></span>
-                <span class="bs-stepper-label">
-                  <span class="bs-stepper-number">02</span>
-                  <span class="d-flex flex-column gap-1 ms-2 text-start">
-                    <span class="bs-stepper-title">Calculation</span>
-                    <span class="bs-stepper-subtitle">Thickness & Life</span>
+              <div class="step" data-target="#step-2">
+                <button type="button" class="step-trigger">
+                  <span class="bs-stepper-circle"
+                    ><i class="mdi mdi-layers-outline"></i
+                  ></span>
+                  <span class="bs-stepper-label">
+                    <span class="bs-stepper-number">02</span>
+                    <span class="d-flex flex-column gap-1 ms-2 text-start">
+                      <span class="bs-stepper-title">Calculation</span>
+                      <span class="bs-stepper-subtitle">Thickness & Life</span>
+                    </span>
                   </span>
-                </span>
-              </button>
-            </div>
-            <div class="line"></div>
+                </button>
+              </div>
+              <div class="line"></div>
 
-            <div class="step" data-target="#step-3">
-              <button type="button" class="step-trigger">
-                <span class="bs-stepper-circle"><i class="mdi mdi-thermometer-lines"></i></span>
-                <span class="bs-stepper-label">
-                  <span class="bs-stepper-number">03</span>
-                  <span class="d-flex flex-column gap-1 ms-2 text-start">
-                    <span class="bs-stepper-title">Process & Condition</span>
-                    <span class="bs-stepper-subtitle">Previous Equipment Data</span>
+              <div class="step" data-target="#step-3">
+                <button type="button" class="step-trigger">
+                  <span class="bs-stepper-circle"
+                    ><i class="mdi mdi-thermometer-lines"></i
+                  ></span>
+                  <span class="bs-stepper-label">
+                    <span class="bs-stepper-number">03</span>
+                    <span class="d-flex flex-column gap-1 ms-2 text-start">
+                      <span class="bs-stepper-title">Process & Condition</span>
+                      <span class="bs-stepper-subtitle"
+                        >Previous Equipment Data</span
+                      >
+                    </span>
                   </span>
-                </span>
-              </button>
-            </div>
-            <div class="line"></div>
+                </button>
+              </div>
+              <div class="line"></div>
 
-            <div class="step" data-target="#step-4">
-              <button type="button" class="step-trigger">
-                <span class="bs-stepper-circle"><i class="mdi mdi-alert-decagram-outline"></i></span>
-                <span class="bs-stepper-label">
-                  <span class="bs-stepper-number">04</span>
-                  <span class="d-flex flex-column gap-1 ms-2 text-start">
-                    <span class="bs-stepper-title">Damage Mechanism</span>
-                    <span class="bs-stepper-subtitle">Screening Analysis</span>
+              <div class="step" data-target="#step-4">
+                <button type="button" class="step-trigger">
+                  <span class="bs-stepper-circle"
+                    ><i class="mdi mdi-alert-decagram-outline"></i
+                  ></span>
+                  <span class="bs-stepper-label">
+                    <span class="bs-stepper-number">04</span>
+                    <span class="d-flex flex-column gap-1 ms-2 text-start">
+                      <span class="bs-stepper-title">Damage Mechanism</span>
+                      <span class="bs-stepper-subtitle"
+                        >Screening Analysis</span
+                      >
+                    </span>
                   </span>
-                </span>
-              </button>
-            </div>
-            <div class="line"></div>
+                </button>
+              </div>
+              <div class="line"></div>
 
-            <div class="step" data-target="#step-5">
-              <button type="button" class="step-trigger">
-                <span class="bs-stepper-circle"><i class="mdi mdi-shield-check-outline"></i></span>
-                <span class="bs-stepper-label">
-                  <span class="bs-stepper-number">05</span>
-                  <span class="d-flex flex-column gap-1 ms-2 text-start">
-                    <span class="bs-stepper-title">Risk Assessment</span>
-                    <span class="bs-stepper-subtitle">Criticality Matrix</span>
+              <div class="step" data-target="#step-5">
+                <button type="button" class="step-trigger">
+                  <span class="bs-stepper-circle"
+                    ><i class="mdi mdi-shield-check-outline"></i
+                  ></span>
+                  <span class="bs-stepper-label">
+                    <span class="bs-stepper-number">05</span>
+                    <span class="d-flex flex-column gap-1 ms-2 text-start">
+                      <span class="bs-stepper-title">Risk Assessment</span>
+                      <span class="bs-stepper-subtitle"
+                        >Criticality Matrix</span
+                      >
+                    </span>
                   </span>
-                </span>
-              </button>
-            </div>
-            <div class="line"></div>
+                </button>
+              </div>
+              <div class="line"></div>
 
-            <div class="step" data-target="#step-6">
-              <button type="button" class="step-trigger" id="step6-calculation">
-                <span class="bs-stepper-circle"><i class="mdi mdi-calendar-check"></i></span>
-                <span class="bs-stepper-label">
-                  <span class="bs-stepper-number">06</span>
-                  <span class="d-flex flex-column gap-1 ms-2 text-start">
-                    <span class="bs-stepper-title">Inspection Strategy</span>
-                    <span class="bs-stepper-subtitle">Schedule & NDT Methods</span>
+              <div class="step" data-target="#step-6">
+                <button
+                  type="button"
+                  class="step-trigger"
+                  id="step6-calculation"
+                >
+                  <span class="bs-stepper-circle"
+                    ><i class="mdi mdi-calendar-check"></i
+                  ></span>
+                  <span class="bs-stepper-label">
+                    <span class="bs-stepper-number">06</span>
+                    <span class="d-flex flex-column gap-1 ms-2 text-start">
+                      <span class="bs-stepper-title">Inspection Strategy</span>
+                      <span class="bs-stepper-subtitle"
+                        >Schedule & NDT Methods</span
+                      >
+                    </span>
                   </span>
-                </span>
-              </button>
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div class="bs-stepper-content">
-            <form id="vesselAssessmentForm" onsubmit="return false;">
-              
-              {{ template "partials/assessment_form_step_1" . }}
-              {{ template "partials/assessment_form_step_2" . }}
-              {{ template "partials/assessment_form_step_3" . }}
-              {{ template "partials/assessment_form_step_4" . }}
-              {{ template "partials/assessment_form_step_5" . }}
-              {{ template "partials/assessment_form_step_6" . }}
-
-            </form>
+            <div class="bs-stepper-content">
+              <form id="vesselAssessmentForm" onsubmit="return false;">
+                {{ template "partials/assessment_form_step_1" . }} 
+                {{ template "partials/assessment_form_step_2" . }} 
+                {{ template "partials/assessment_form_step_3" . }} 
+                {{ template "partials/assessment_form_step_4" . }} 
+                {{ template "partials/assessment_form_step_5" . }} 
+                {{ template "partials/assessment_form_step_6" . }}
+              </form>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
-{{ end }} 
-
-{{ define "page-style" }}
+{{ end }} {{ define "page-style" }}
 <link rel="stylesheet" href="/assets/css/vessel_assessment.css" />
-{{ end }} 
-
-{{ define "scripts" }}
+{{ end }} {{ define "form_scripts" }}
 <script>
-    window.VESSEL_APP = {
-        cisccMasterJSON: `{{ .CISCCMasterJSON }}`
-    };
+  window.VESSEL_APP = {
+    cisccMasterJSON: `{{ .CISCCMasterJSON }}`,
+  };
 </script>
 
 <script src="/assets/js/vessel_assessment.js"></script>
-{{ end }}
-{{ template "layouts/master" . }}
+{{ end }} {{ template "layouts/master" . }}

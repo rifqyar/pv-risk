@@ -1,0 +1,207 @@
+{{ define "dashboard_content" }}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    
+    <h4 class="py-3 mb-4">
+      Dashboard Risk-Based Inspection
+    </h4>
+
+    <div class="row g-4 mb-4">
+      
+      <div class="col-sm-6 col-xl-3">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="avatar">
+                <div class="avatar-initial bg-label-primary rounded">
+                  <i class="mdi mdi-database-outline mdi-24px"></i>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4">
+              <h6 class="mb-1 text-heading">Total Assessed Assets</h6>
+              <div class="d-flex align-items-center mb-1">
+                <h4 class="mb-0 me-2">{{ .Dashboard.TotalAssets }}</h4>
+              </div>
+              <p class="mb-0 text-muted">API 581 Registered</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="avatar">
+                <div class="avatar-initial bg-label-dark rounded">
+                  <i class="mdi mdi-alert-octagon-outline mdi-24px"></i>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4">
+              <h6 class="mb-1 text-heading">Extreme Risk</h6>
+              <div class="d-flex align-items-center mb-1">
+                <h4 class="mb-0 me-2">{{ .Dashboard.ExtremeRisk }}</h4>
+              </div>
+              <p class="mb-0 text-muted">Requires Immediate Action</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="avatar">
+                <div class="avatar-initial bg-label-danger rounded">
+                  <i class="mdi mdi-alert-outline mdi-24px"></i>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4">
+              <h6 class="mb-1 text-heading">High Risk</h6>
+              <div class="d-flex align-items-center mb-1">
+                <h4 class="mb-0 me-2">{{ .Dashboard.HighRisk }}</h4>
+              </div>
+              <p class="mb-0 text-muted">Monitor Closely</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="avatar">
+                <div class="avatar-initial bg-label-warning rounded">
+                  <i class="mdi mdi-calendar-clock-outline mdi-24px"></i>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4">
+              <h6 class="mb-1 text-heading">Inspections Due</h6>
+              <div class="d-flex align-items-center mb-1">
+                <h4 class="mb-0 me-2">{{ .Dashboard.InspectionsDue }}</h4>
+              </div>
+              <p class="mb-0 text-muted">In {{ .CurrentYear }} or Overdue</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row g-4 mb-4">
+      
+      <div class="col-12 col-lg-6">
+        <div class="card h-100 shadow-sm">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <h5 class="card-title m-0 me-2">Overall Risk Distribution</h5>
+          </div>
+          <div class="card-body d-flex align-items-center justify-content-center">
+            <div id="riskDonutChart" 
+                 data-extreme="{{ .Dashboard.ExtremeRisk }}"
+                 data-high="{{ .Dashboard.HighRisk }}"
+                 data-medium="{{ .MediumRisk }}"
+                 data-low="{{ .LowRisk }}"
+                 style="width: 100%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <div class="card h-100 shadow-sm">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <h5 class="card-title m-0 me-2">Inspection Forecast</h5>
+          </div>
+          <div class="card-body">
+            <div id="inspectionBarChart" 
+                 data-years="{{ .YearsJSON }}"
+                 data-counts="{{ .CountsJSON }}"
+                 style="width: 100%;"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <h5 class="card-title m-0 me-2">Critical Assets Overview</h5>
+            <a href="/assessment/list" class="btn btn-sm btn-outline-primary">View All</a>
+          </div>
+          
+          <div class="table-responsive text-nowrap">
+            <table class="table table-borderless border-top">
+              <thead class="border-bottom">
+                <tr>
+                  <th class="fw-bold">TAG NUMBER</th>
+                  <th class="fw-bold">GOVERNING COMPONENT</th>
+                  <th class="fw-bold">RISK LEVEL</th>
+                  <th class="fw-bold">NEXT INSPECTION</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{ range .Dashboard.RecentAssessments }}
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar avatar-sm me-3">
+                        <span class="avatar-initial rounded-circle bg-label-secondary"><i class="mdi mdi-gas-cylinder"></i></span>
+                      </div>
+                      <div class="d-flex flex-column">
+                        <h6 class="mb-0 text-heading fw-semibold">{{ .TagNumber }}</h6>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <td><span class="text-heading">{{ .GoverningComponent }}</span></td>
+                  
+                  <td>
+                    {{ if eq .RiskLevel "EXTREME RISK" }}
+                      <span class="badge rounded-pill bg-label-dark">{{ .RiskLevel }}</span>
+                    {{ else if eq .RiskLevel "HIGH RISK" }}
+                      <span class="badge rounded-pill bg-label-danger">{{ .RiskLevel }}</span>
+                    {{ else if eq .RiskLevel "MEDIUM RISK" }}
+                      <span class="badge rounded-pill bg-label-warning">{{ .RiskLevel }}</span>
+                    {{ else }}
+                      <span class="badge rounded-pill bg-label-success">{{ .RiskLevel }}</span>
+                    {{ end }}
+                  </td>
+                  
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <i class="mdi mdi-calendar-blank-outline text-muted me-2"></i>
+                      <span class="text-heading fw-medium">{{ .NextInspectionYear }}</span>
+                    </div>
+                  </td>
+                </tr>
+                {{ else }}
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-5">
+                    <i class="mdi mdi-database-off-outline mdi-36px mb-2"></i><br>
+                    No assessment data found.
+                  </td>
+                </tr>
+                {{ end }}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="content-backdrop fade"></div>
+</div>
+{{ end }}  
+{{ define "dashboard_scripts" }}
+<script src="/static/vendor/libs/apex-charts/apexcharts.js"></script>
+<script src="/assets/js/dashboard.js"></script>
+{{ end }} 
+{{ template "layouts/master" . }}

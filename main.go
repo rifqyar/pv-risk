@@ -65,7 +65,7 @@ func main() {
 	tmpl, err := tmpl.ParseFS(templateFS,
 		"templates/*.html",          // Untuk backup_assessment_form.html dll di root templates
 		"templates/layouts/*.html",  // Untuk master.html
-		"templates/partials/*.html", // Untuk partials kamu
+		"templates/partials/*.html", // Untuk partials
 	)
 
 	if err != nil {
@@ -79,7 +79,11 @@ func main() {
 	r.StaticFS("/static", http.FS(staticContent))
 	r.StaticFS("/assets", http.FS(assetsContent))
 
-	r.GET("/", controller.ShowForm)
+	r.GET("/", controller.ShowDashboard)
+	r.GET("/dashboard", controller.ShowDashboard)
+	r.GET("/assessment/form", controller.ShowForm)
+	r.GET("/assessment/list", controller.ShowListAssessment)
+	r.GET("/assessment/view/:id", controller.ViewAssessmentDetail)
 	r.POST("/submit", controller.SubmitAssessment)
 
 	r.Run(":8080")

@@ -388,7 +388,7 @@
       </h2>
       <div id="pressure" class="accordion-collapse collapse" data-bs-parent="#vesselAccordion">
         <div class="accordion-body">
-          <div class="row mb-3">
+          <div class="row mb-3" id="design_eq1">
             <div class="col-md-6 mb-4">
               <div class="input-group input-group-merge">
                 <div class="form-floating form-floating-outline">
@@ -410,7 +410,50 @@
                 </select>
               </div>
             </div>
-            
+          </div>
+          <div class="row mb-3" id="design_eq3" style="display: none;">
+            <div class="col-md-3 mb-4">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="design_press" placeholder="125" />
+                  <label>Design Press (Shell)</label>
+                </div>
+                <span class="input-group-text">psig</span>
+              </div>
+            </div>
+            <div class="col-md-3 mb-4">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="design_press_tube" placeholder="125" />
+                  <label>Design Press (Tube)</label>
+                </div>
+                <span class="input-group-text">psig</span>
+              </div>
+            </div>
+            <div class="col-md-3 mb-4">
+              <div class="input-group">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="design_temp" placeholder="200" />
+                  <label>Design Temperature (Shell)</label>
+                </div>
+                <select name="suhu_design" class="form-control" style="flex: none; width: 30%;">
+                  <option value="c">°C</option>
+                  <option value="f">°F</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-3 mb-4">
+              <div class="input-group">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" class="form-control" name="design_temp_tube" placeholder="200" />
+                  <label>Design Temperature (Tube)</label>
+                </div>
+                <select name="suhu_design_tube" class="form-control" style="flex: none; width: 30%;">
+                  <option value="c">°C</option>
+                  <option value="f">°F</option>
+                </select>
+              </div>
+            </div>
           </div>
           <div class="row mb-3" id="operating_press">
             <div class="col-md-6 mb-4">

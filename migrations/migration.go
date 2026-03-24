@@ -23,12 +23,24 @@ func Migrate(db *sql.DB) {
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 	`
+	createEquipment := `
+	CREATE TABLE IF NOT EXISTS equipments (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL UNIQUE,
+		type TEXT NOT NULL,
+		group_name TEXT NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);`
 
 	if _, err = config.DB.Exec(createTypeHead); err != nil {
 		log.Fatal(err)
 	}
 
 	if _, err = config.DB.Exec(createShellMaterial); err != nil {
+		log.Fatal(err)
+	}
+
+	if _, err = config.DB.Exec(createEquipment); err != nil {
 		log.Fatal(err)
 	}
 

@@ -1,0 +1,293 @@
+{{ define "detail_content" }}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+      <div>
+        <h4 class="fw-bold mb-1"><span class="text-muted fw-light">Assessment /</span> Pressure Vessel Detailed View</h4>
+        <p class="text-muted mb-0">Record ID: #{{ .Detail.AssessmentID }} | Status: Active | API 581 Registered</p>
+      </div>
+      <div class="mt-3 mt-md-0 d-flex gap-2">
+        <a href="/list-assessment" class="btn btn-outline-secondary">
+          <i class="mdi mdi-arrow-left me-1"></i> Back to List
+        </a>
+        <button onclick="exportToPDF()" class="btn btn-danger shadow-sm">
+          <i class="mdi mdi-file-pdf-box me-1"></i> Generate API 581 Executive Summary
+        </button>
+      </div>
+    </div>
+
+    <div id="ui-view">
+      
+      <div class="card bg-primary text-white mb-4 shadow-sm">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <h3 class="text-white mb-1">{{ .Detail.TagNumber }}</h3>
+            <p class="mb-0 opacity-75">{{ .Detail.Description }} | Doc RBI-{{ .Detail.YearBuilt }}-{{ .Detail.AssessmentID }}</p>
+          </div>
+          <div class="text-end">
+            <span class="d-block mb-1 opacity-75">Final Risk Result</span>
+            {{ if eq .Detail.RiskLevel "EXTREME RISK" }}
+              <h2 class="text-white mb-0 bg-dark px-3 py-1 rounded d-inline-block">{{ .Detail.RiskLevel }}</h2>
+            {{ else if eq .Detail.RiskLevel "HIGH RISK" }}
+              <h2 class="text-white mb-0 bg-danger px-3 py-1 rounded d-inline-block">{{ .Detail.RiskLevel }}</h2>
+            {{ else if eq .Detail.RiskLevel "MEDIUM RISK" }}
+              <h2 class="text-white mb-0 bg-warning px-3 py-1 rounded d-inline-block">{{ .Detail.RiskLevel }}</h2>
+            {{ else }}
+              <h2 class="text-white mb-0 bg-success px-3 py-1 rounded d-inline-block">{{ .Detail.RiskLevel }}</h2>
+            {{ end }}
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 shadow-sm border-top border-4 border-info">
+            <div class="card-header pb-2"><h6 class="fw-bold mb-0">Vessel Characterization</h6></div>
+            <div class="card-body">
+              <ul class="list-unstyled mb-0 text-dark">
+                <li class="mb-3 d-flex justify-content-between"><span>Year Built</span><span class="fw-bold">{{ .Detail.YearBuilt }}</span></li>
+                <li class="mb-3 d-flex justify-content-between"><span>Diameter/Height</span><span class="fw-bold">{{ .Detail.Diameter }}" / {{ .Detail.Volume }} m³</span></li>
+                <li class="mb-3 d-flex justify-content-between border-top pt-2"><span>Design P/T</span><span class="fw-bold text-info">{{ .Detail.DesignPressure }} psig / {{ .Detail.DesignTemp }} °C</span></li>
+                <li class="mb-3 d-flex justify-content-between"><span>Op. P/T</span><span class="fw-bold text-info">{{ .Detail.OperatingPressure }} psig / {{ .Detail.OperatingTemp }} °C</span></li>
+                <li class="mb-0 d-flex justify-content-between"><span>Fluid Phase</span><span class="fw-bold">{{ .Detail.Phase }}</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 shadow-sm border-top border-4 border-secondary">
+            <div class="card-header pb-2"><h6 class="fw-bold mb-0">Fluid Composition</h6></div>
+            <div class="card-body text-dark">
+              <ul class="list-unstyled mb-0">
+                <li class="mb-3 d-flex justify-content-between"><span>H2S Content</span><span class="fw-bold">{{ .Detail.H2sContent }}</span></li>
+                <li class="mb-3 d-flex justify-content-between"><span>CO2 Content</span><span class="fw-bold">{{ .Detail.Co2Content }}</span></li>
+                <li class="mb-3 d-flex justify-content-between"><span>H2O Content</span><span class="fw-bold">Yes (Wet H2S Service)</span></li>
+                <li class="mb-3 d-flex justify-content-between pt-2 border-top"><span>Chloride Index</span><span class="fw-bold">{{ .Detail.ChlorideIndex }}</span></li>
+                <li class="mb-0 d-flex justify-content-between"><span>pH Index</span><span class="fw-bold">{{ .Detail.PhIndex }}</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-12 col-lg-4">
+          <div class="card h-100 shadow-sm border-top border-4 border-success bg-success-subtle">
+            <div class="card-header pb-2 bg-transparent"><h6 class="fw-bold mb-0 text-success">Approved Inspection Plan</h6></div>
+            <div class="card-body text-center d-flex flex-column justify-content-center">
+              <p class="text-muted small mb-1">Recommended NDT Method (API 571)</p>
+              <h5 class="fw-bold text-dark lh-base">{{ .Detail.RecommendedMethod }}</h5>
+              <hr class="text-success opacity-25">
+              <div class="row text-dark">
+                <div class="col-6 border-end border-light">
+                  <p class="text-muted mb-0">Interval</p>
+                  <h4 class="mb-0 text-success fw-bold">{{ .Detail.MaxIntervalYears }} Years</h4>
+                </div>
+                <div class="col-6">
+                  <p class="text-muted mb-0">Target Year</p>
+                  <h4 class="mb-0 text-success fw-bold">{{ .Detail.NextInspectionYear }}</h4>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="card h-100 shadow-sm">
+            <div class="card-header pb-2 border-bottom"><h6 class="fw-bold mb-0">Damage Mechanism Susceptibility</h6></div>
+            <div class="card-body">
+              <div class="d-flex flex-wrap gap-2 text-dark">
+                {{ if ne .Detail.Atmospheric "Not" }}<span class="badge bg-danger">Atmospheric: {{ .Detail.Atmospheric }}</span>{{ end }}
+                {{ if ne .Detail.Cui "Not" }}<span class="badge bg-danger">CUI: {{ .Detail.Cui }}</span>{{ end }}
+                {{ if ne .Detail.ExtCracking "Not" }}<span class="badge bg-danger">Ext. Cracking: {{ .Detail.ExtCracking }}</span>{{ end }}
+                {{ if ne .Detail.Ssc "Not" }}<span class="badge bg-danger">Wet H2S/SSC: {{ .Detail.Ssc }}</span>{{ end }}
+                {{ if ne .Detail.Hic "Not" }}<span class="badge bg-danger">HIC/SOHIC: {{ .Detail.Hic }}</span>{{ end }}
+                {{ if ne .Detail.Co2 "Not" }}<span class="badge bg-danger">CO2 Corrosion: {{ .Detail.Co2 }}</span>{{ end }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100 shadow-sm bg-label-dark">
+            <div class="card-header pb-2 border-bottom"><h6 class="fw-bold mb-0">Risk Components (Detailed)</h6></div>
+            <div class="card-body text-dark">
+              <div class="row">
+                <div class="col-6 text-center border-end">
+                  <p class="text-muted mb-0">Likelihood (LoF)</p>
+                  <h3 class="mb-0">Category <strong>{{ .Detail.LofCategory }}</strong></h3>
+                </div>
+                <div class="col-6 text-center">
+                  <p class="text-muted mb-0">Consequence (CoF)</p>
+                  <h3 class="mb-0">Category <strong>{{ .Detail.CofCategory }}</strong></h3>
+                </div>
+              </div>
+              <p class="text-center text-muted small mt-2">Calculated Index: {{ .Detail.LofScore }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="pdf-view-container" style="display: none;">
+      <div id="pdf-content" class="bg-white text-dark" style="width: 210mm; min-height: 297mm; padding: 15mm; font-family: 'Times New Roman', serif;">
+        
+        <div style="border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+          <div>
+            <h2 style="margin: 0; font-weight: bold; font-family: Arial, sans-serif;">EXECUTIVE SUMMARY REPORT - RBI ASSESSMENT</h2>
+            <h5 style="margin: 5px 0 0 0; color: #555;">PRESSURE VESSEL INTEGRITY AS PER API RP 581 (2nd Edition)</h5>
+          </div>
+          <div style="text-align: right; font-size: 11px;">
+            <p style="margin: 0;"><strong>Doc No:</strong> RBI-{{ .Detail.YearBuilt }}-{{ .Detail.AssessmentID }}</p>
+            <p style="margin: 0;"><strong>Assessment Date:</strong> {{ .Detail.AssessmentDate }}</p>
+            <p style="margin: 0;"><strong>Page:</strong> 1 of 1</p>
+          </div>
+        </div>
+
+        <h4 style="font-family: Arial, sans-serif; font-size: 15px; font-weight: bold; margin-bottom: 8px; border-left: 5px solid #000; padding-left: 10px;">1. EQUIPMENT CHARACTERISTICS</h4>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; font-size: 12px;">
+          <table style="width: 50%; border-collapse: collapse;">
+            <tr>
+              <td style="border: 1px solid #000; padding: 6px; background-color: #eee; fw-bold w-40%;">Tag Number</td>
+              <td style="border: 1px solid #000; padding: 6px;">{{ .Detail.TagNumber }}</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #000; padding: 6px; background-color: #eee; fw-bold">Description</td>
+              <td style="border: 1px solid #000; padding: 6px;">{{ .Detail.Description }}</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #000; padding: 6px; background-color: #eee; fw-bold">Fluid Phase</td>
+              <td style="border: 1px solid #000; padding: 6px;">{{ .Detail.Phase }}</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #000; padding: 6px; background-color: #eee; fw-bold">Year Built</td>
+              <td style="border: 1px solid #000; padding: 6px;">{{ .Detail.YearBuilt }}</td>
+            </tr>
+          </table>
+          <table style="width: 50%; border-collapse: collapse;">
+            <tr>
+              <td style="border: 1px solid #000; padding: 6px; background-color: #eee; fw-bold w-40%;">Volume / Diameter</td>
+              <td style="border: 1px solid #000; padding: 6px;">{{ .Detail.Volume }} m³ / {{ .Detail.Diameter }}"</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #000; padding: 6px; background-color: #eee; fw-bold">Design P / T</td>
+              <td style="border: 1px solid #000; padding: 6px;">{{ .Detail.DesignPressure }} psig / {{ .Detail.DesignTemp }} °C</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #000; padding: 6px; background-color: #eee; fw-bold">Operating P / T</td>
+              <td style="border: 1px solid #000; padding: 6px;">{{ .Detail.OperatingPressure }} psig / {{ .Detail.OperatingTemp }} °C</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #000; padding: 6px; background-color: #eee; fw-bold">Joint Efficiency</td>
+              <td style="border: 1px solid #000; padding: 6px;">COALESCE(0.85, 1.0)</td> </tr>
+          </table>
+        </div>
+
+        <h4 style="font-family: Arial, sans-serif; font-size: 15px; font-weight: bold; margin-bottom: 8px; border-left: 5px solid #000; padding-left: 10px;">2. ENVIRONMENTAL & FLUID COMPOSITION</h4>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; text-align: center;">
+          <tr style="background-color: #eee;">
+            <th style="border: 1px solid #000; padding: 6px;">H2S Content</th>
+            <th style="border: 1px solid #000; padding: 6px;">CO2 Content</th>
+            <th style="border: 1px solid #000; padding: 6px;">H2O Presence</th>
+            <th style="border: 1px solid #000; padding: 6px;">Chloride Index</th>
+            <th style="border: 1px solid #000; padding: 6px;">pH Index</th>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000; padding: 10px;">{{ .Detail.H2sContent }}</td>
+            <td style="border: 1px solid #000; padding: 10px;">{{ .Detail.Co2Content }}</td>
+            <td style="border: 1px solid #000; padding: 10px; font-weight: bold;">Wet H2S</td>
+            <td style="border: 1px solid #000; padding: 10px;">Index {{ .Detail.ChlorideIndex }}</td>
+            <td style="border: 1px solid #000; padding: 10px;">Index {{ .Detail.PhIndex }}</td>
+          </tr>
+        </table>
+
+        <h4 style="font-family: Arial, sans-serif; font-size: 15px; font-weight: bold; margin-bottom: 8px; border-left: 5px solid #000; padding-left: 10px;">3. DAMAGE MECHANISM & RISK EVALUATION</h4>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; font-size: 12px;">
+          <table style="width: 60%; border-collapse: collapse; text-align: center;">
+            <tr style="background-color: #eee; font-weight: bold;">
+              <td style="border: 1px solid #000; padding: 6px; text-align: left;">Damage Mechanism (API 571)</td>
+              <td style="border: 1px solid #000; padding: 6px;">Susceptibility</td>
+            </tr>
+            <tr><td style="border: 1px solid #000; padding: 6px; text-align: left;">Atmospheric Corrosion</td><td style="border: 1px solid #000; padding: 6px;">{{ .Detail.Atmospheric }}</td></tr>
+            <tr><td style="border: 1px solid #000; padding: 6px; text-align: left;">Corrosion Under Insulation (CUI)</td><td style="border: 1px solid #000; padding: 6px;">{{ .Detail.Cui }}</td></tr>
+            <tr><td style="border: 1px solid #000; padding: 6px; text-align: left;">Ext. Chloride SCC</td><td style="border: 1px solid #000; padding: 6px;">{{ .Detail.ExtCracking }}</td></tr>
+            <tr><td style="border: 1px solid #000; padding: 6px; text-align: left;">Sulfide Stress Cracking (Wet H2S)</td><td style="border: 1px solid #000; padding: 6px; font-weight: bold;">{{ .Detail.Ssc }}</td></tr>
+            <tr><td style="border: 1px solid #000; padding: 6px; text-align: left;">HIC / SOHIC (Wet H2S)</td><td style="border: 1px solid #000; padding: 6px; font-weight: bold;">{{ .Detail.Hic }}</td></tr>
+            <tr><td style="border: 1px solid #000; padding: 6px; text-align: left;">CO2 Corrosion</td><td style="border: 1px solid #000; padding: 6px;">{{ .Detail.Co2 }}</td></tr>
+          </table>
+          <table style="width: 40%; border-collapse: collapse; text-align: center;">
+            <tr style="background-color: #000; color: #fff; font-weight: bold;">
+              <th colspan="2" style="border: 1px solid #000; padding: 8px;">FINAL RISK RESULT</th>
+            </tr>
+            <tr><td style="border: 1px solid #000; padding: 10px; background-color: #eee;">Likelihood (LoF)</td><td style="border: 1px solid #000; padding: 10px; font-size: 14px;">Cat <strong>{{ .Detail.LofCategory }}</strong></td></tr>
+            <tr><td style="border: 1px solid #000; padding: 10px; background-color: #eee;">Consequence (CoF)</td><td style="border: 1px solid #000; padding: 10px; font-size: 14px;">Cat <strong>{{ .Detail.CofCategory }}</strong></td></tr>
+            <tr><td style="border: 1px solid #000; padding: 10px; background-color: #eee;">Calculated Index</td><td style="border: 1px solid #000; padding: 10px;">{{ .Detail.LofScore }}</td></tr>
+            <tr><td colspan="2" style="border: 1px solid #000; padding: 15px; font-weight: bold; font-size: 16px; background-color: #f8d7da; border: 2px solid #dc3545;">{{ .Detail.RiskLevel }}</td></tr>
+          </table>
+        </div>
+
+        <h4 style="font-family: Arial, sans-serif; font-size: 15px; font-weight: bold; margin-bottom: 8px; border-left: 5px solid #000; padding-left: 10px;">4. APPROVED INSPECTION PLAN</h4>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px; font-size: 12px;">
+          <tr>
+            <td style="border: 1px solid #000; padding: 10px; background-color: #eee; font-weight: bold; width: 30%;">Governing Component</td>
+            <td style="border: 1px solid #000; padding: 10px;">{{ .Detail.GoverningComponent }}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000; padding: 10px; background-color: #eee; font-weight: bold;">Recommended Method (API 571)</td>
+            <td style="border: 1px solid #000; padding: 10px; font-weight: bold;">{{ .Detail.RecommendedMethod }}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000; padding: 10px; background-color: #eee; font-weight: bold;">Maximum Interval / Target Year</td>
+            <td style="border: 1px solid #000; padding: 10px; font-size: 14px; font-weight: bold; color: #dc3545;">{{ .Detail.MaxIntervalYears }} Years / YEAR {{ .Detail.NextInspectionYear }}</td>
+          </tr>
+        </table>
+
+        <div style="display: flex; justify-content: space-between; text-align: center; margin-top: 60px; font-size: 13px;">
+          <div style="width: 30%;">
+            <p style="margin-bottom: 50px;">Prepared By,</p>
+            <p style="border-bottom: 1px solid #000; margin: 0;"></p>
+            <p style="margin-top: 5px;">Certified RBI Engineer</p>
+          </div>
+          <div style="width: 30%;">
+            <p style="margin-bottom: 50px;">Reviewed By,</p>
+            <p style="border-bottom: 1px solid #000; margin: 0;"></p>
+            <p style="margin-top: 5px;">Inspection Supervisor</p>
+          </div>
+          <div style="width: 30%;">
+            <p style="margin-bottom: 50px;">Approved By,</p>
+            <p style="border-bottom: 1px solid #000; margin: 0;"></p>
+            <p style="margin-top: 5px;">Plant Manager / Owner</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    </div>
+</div>
+
+<script src="/static/js/html2pdf.bundle.min.js"></script>
+<script>
+  function exportToPDF() {
+    const pdfContainer = document.getElementById('pdf-view-container');
+    const pdfContent = document.getElementById('pdf-content');
+    
+    // Tampilkan sementara biar html2canvas bisa ngebaca
+    pdfContainer.style.display = 'block';
+
+    const opt = {
+      margin:       0,
+      filename:     `RBI_Corporate_Report_{{ .Detail.TagNumber }}_{{ .Detail.AssessmentDate }}.pdf`,
+      image:        { type: 'jpeg', quality: 1.0 },
+      html2canvas:  { scale: 3, useCORS: true, letterRendering: true }, // Scale 3 bikin teks PDF super tajam
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(pdfContent).save().then(() => {
+      // Sembunyikan lagi setelah selesai download
+      pdfContainer.style.display = 'none';
+    });
+  }
+</script>
+{{ end }}
+
+{{ template "layouts/master" . }}

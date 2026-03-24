@@ -20,25 +20,53 @@
 
     <meta name="description" content="" />
 
-    <link rel="icon" type="image/x-icon" href="/static/img/favicon/favicon.ico"/>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="/static/img/favicon/favicon.ico"
+    />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&ampdisplay=swap" rel="stylesheet"/>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&ampdisplay=swap"
+      rel="stylesheet"
+    />
 
-    <link rel="stylesheet" href="/static/vendor/fonts/materialdesignicons.css"/>
-    <link rel="stylesheet" href="/static/vendor/libs/node-waves/node-waves.css"/>
+    <link
+      rel="stylesheet"
+      href="/static/vendor/fonts/materialdesignicons.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/static/vendor/libs/node-waves/node-waves.css"
+    />
 
     <link rel="stylesheet" href="/static/vendor/css/rtl/core.css" />
     <link rel="stylesheet" href="/static/vendor/css/rtl/theme-default.css" />
     <link rel="stylesheet" href="/static/css/demo.css" />
 
-    <link rel="stylesheet" href="/static/vendor/libs/perfect-scrollbar/perfect-scrollbar.css"/>
-    <link rel="stylesheet" href="/static/vendor/libs/typeahead-js/typeahead.css"/>
-    <link rel="stylesheet" href="/static/vendor/libs/bs-stepper/bs-stepper.css" />
-    <link rel="stylesheet" href="/static/vendor/libs/bootstrap-select/bootstrap-select.css" />
+    <link
+      rel="stylesheet"
+      href="/static/vendor/libs/perfect-scrollbar/perfect-scrollbar.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/static/vendor/libs/typeahead-js/typeahead.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/static/vendor/libs/bs-stepper/bs-stepper.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/static/vendor/libs/bootstrap-select/bootstrap-select.css"
+    />
     <link rel="stylesheet" href="/static/vendor/libs/select2/select2.css" />
-    <link rel="stylesheet" href="/static/vendor/libs/sweetalert2/sweetalert2.css">
+    <link
+      rel="stylesheet"
+      href="/static/vendor/libs/sweetalert2/sweetalert2.css"
+    />
 
     <script src="/static/vendor/js/helpers.js"></script>
     <script src="/static/js/config.js"></script>
@@ -91,11 +119,22 @@
           <div class="menu-inner-shadow"></div>
 
           <ul class="menu-inner py-1">
-            <!-- Page -->
-            <li class="menu-item active">
-              <a href="index.html" class="menu-link">
-                <i class="menu-icon tf-icons mdi mdi-form-select"></i>
-                <div data-i18n="Page 1">Assessment Form</div>
+            <li class="menu-item {{ if eq .ActiveMenu "dashboard" }}active{{ end }}">
+              <a href="/" class="menu-link">
+                <i class="menu-icon tf-icons mdi mdi-view-dashboard-outline"></i>
+                <div data-i18n="Dashboard">Dashboard</div>
+              </a>
+            </li>
+            <li class="menu-item {{ if eq .ActiveMenu "assessment" }}active{{ end }}">
+              <a href="/assessment/form" class="menu-link">
+                <i class="menu-icon tf-icons mdi mdi-clipboard-text-outline"></i>
+                <div data-i18n="Assessment Form">Assessment Form</div>
+              </a>
+            </li>
+            <li class="menu-item {{ if eq .ActiveMenu "list-assessment" }}active{{ end }}">
+              <a href="/assessment/list" class="menu-link">
+                <i class="menu-icon tf-icons mdi mdi-format-list-bulleted"></i>
+                <div data-i18n="List Assessment">List Assessment</div>
               </a>
             </li>
           </ul>
@@ -120,15 +159,17 @@
           </nav>
 
           <div class="content-wrapper">
-            <div class="container-xxl flex-grow-1 container-p-y">
-              <div class="row align-items-center justify-content-between">
-                <div class="col-6">
-                  <h4 class="py-3 mb-4">Pressure Vessel Risk Assessment</h4>
-                </div>
-              </div>
-
-              {{ template "content" . }}
-            </div>
+              {{ if eq .ActiveMenu "dashboard" }}
+                {{ template "dashboard_content" . }}
+              {{ else if eq .ActiveMenu "assessment" }}
+                {{ template "form_content" . }}
+              {{ else if eq .ActiveMenu "list-assessment" }} 
+                {{ template "list_content" . }}
+              {{ else if eq .ActiveMenu "detail-assessment" }} 
+                {{ template "detail_content" . }}
+              {{ else }}
+                  <div class="p-5 text-center">Page Not Found / Blank Content</div>
+              {{ end }}
 
             <footer class="content-footer footer bg-footer-theme">
               <div class="container-xxl">
@@ -205,7 +246,14 @@
     <!-- Page JS -->
     <script src="/static/js/forms-selects.js"></script>
 
-    {{ template "scripts" . }}
+    {{ if eq .ActiveMenu "dashboard" }}
+        {{ template "dashboard_scripts" . }}
+    {{ else if eq .ActiveMenu "assessment" }}
+        {{ template "form_scripts" . }}
+    {{ else if eq .ActiveMenu "list-assessment" }}
+    {{ else if eq .ActiveMenu "detail-assessment" }}
+    {{ else }}
+    {{ end }}
   </body>
 </html>
 
