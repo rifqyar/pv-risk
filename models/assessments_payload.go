@@ -24,6 +24,7 @@ type EquipmentPayload struct {
 	Volume             float64  `json:"volume"`
 
 	// --- TAMBAHAN DARI MIGRATION BARU ---
+	Location           string  `json:"location"`
 	DiameterType       string  `json:"diameter_type"`
 	DiameterUnit       string  `json:"diameter_unit"`
 	DiameterTubeType   string  `json:"diameter_tube_type"`

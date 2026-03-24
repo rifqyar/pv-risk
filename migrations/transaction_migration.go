@@ -58,6 +58,7 @@ func EquipmentsTable(db *sql.DB) {
 
 	columns := []string{
 		// sebelumnya
+		"location REAL DEFAULT ''",
 		"diameter_type REAL DEFAULT 'inside'",
 		"diameter_unit REAL DEFAULT 'inch'",
 		"diameter_tube_type REAL DEFAULT 'inside'",

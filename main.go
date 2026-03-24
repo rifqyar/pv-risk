@@ -86,6 +86,8 @@ func main() {
 	r.GET("/assessment/view/:id", controller.ViewAssessmentDetail)
 	r.POST("/submit", controller.SubmitAssessment)
 
+	r.GET("/api/equipment-autofill/:id", controller.GetEquipmentAutofill)
+
 	r.Run(":8080")
 	// // Run server in goroutine
 	// go func() {

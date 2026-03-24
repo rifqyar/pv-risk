@@ -178,6 +178,143 @@ $(function () {
   });
 
   // ==========================================
+  // EVENT: Saat User Memilih Master Equipment (AUTOFILL)
+  // ==========================================
+  $("#select2_equipment").on("change", function () {
+    const eqId = $(this).val();
+    const eqType = $(this).find(":selected").data("type"); // EQT1 (Piping), EQT3 (Vessel/Exchanger)
+    const tagNumber = $(this).find(":selected").text().split(" (")[0]; // Ambil Tag No aja
+
+    if (!eqId) return;
+
+    // 1. Tampilkan Loading (Biar user tau aplikasi lagi kerja)
+    Swal.fire({
+      title: "Fetching History...",
+      text: "Mengambil data teknis terakhir dari database",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    // 2. Tembak API Autofill yang baru kita buat
+    fetch(`/api/equipment-autofill/${eqId}`)
+      .then((response) => response.json())
+      .then((res) => {
+        Swal.close();
+
+        // Update UI Dasar dulu
+        $("#step3_equipment").val($(this).find(":selected").text());
+
+        if (res.status === "success" && res.data) {
+          const d = res.data;
+
+          // --- A. PENGISIAN DATA TEKNIS (STEP 1) ---
+          $("input[name='tag_number']").val(d.tag_number);
+          $("select[name='first_use']").val(d.year_built).trigger("change");
+          $("#shell_material").val(d.shell_material_id).trigger("change");
+          $("input[name='location']").val(d.location);
+
+          // Design Data
+          $("input[name='design_press']").val(d.design_pressure);
+          $("input[name='design_temp']").val(d.design_temp);
+          $("select[name='suhu_design']").val(d.temp_design_unit);
+
+          if (eqType === "EQT3") {
+            $("input[name='design_press_tube']").val(d.design_pressure_tube);
+            $("input[name='design_temp_tube']").val(d.design_temp_tube);
+            $("select[name='suhu_design_tube']").val(d.temp_design_tube_unit);
+            $("input[name='diameter_shell']").val(d.diameter);
+            $("input[name='diameter_tube']").val(d.diameter_tube);
+            $("select[name='diameter_type_shell']").val(d.diameter_type);
+            $("select[name='diameter_type_tube']").val(d.diameter_tube_type);
+          } else {
+            $("input[name='diameter']").val(d.diameter);
+            $("select[name='diameter_type']").val(d.diameter_type);
+            $("select[name='satuan_diameter']").val(d.diameter_unit);
+          }
+
+          // Geometry & Units
+          $("input[name='length']").val(d.length);
+          $("select[name='satuan_pjg']").val(d.length_unit);
+          $("input[name='total_volume']").val(d.volume);
+          $("select[name='volume_type']").val(d.volume_unit);
+          $("input[name='nozzle']").val(d.nozzle);
+          $("input[name='satuan_nozzle']").val(d.nozzle_unit);
+
+          // Specs & Services
+          $("select[name='pwht']").val(d.pwht);
+          $("select[name='phase_type']").val(d.phase_type);
+          $("select[name='internal_lining']").val(d.internal_lining);
+          $("select[name='insulation']").val(d.insulation);
+          $("input[name='cathodic_protection']").val(d.cathodic_protection);
+
+          // --- B. PENGISIAN CHECKBOX ARRAYS (SPECIAL TRICK) ---
+          const setCheckboxes = (className, valueString) => {
+            $(`.${className}`).prop("checked", false); // Reset dulu
+            if (valueString && valueString !== "-") {
+              const vals = valueString.split(", ");
+              vals.forEach((v) => {
+                $(`.${className}[value="${v}"]`).prop("checked", true);
+              });
+            }
+          };
+
+          setCheckboxes("cert-checkbox", d.certificate);
+          setCheckboxes("ref-checkbox", d.data_reference);
+          setCheckboxes("special-checkbox", d.special_service);
+          setCheckboxes("prot-checkbox", d.protection);
+
+          // --- C. DATA OPERATING (STEP 3) ---
+          if (eqType === "EQT1") {
+            $("#step3_op_pressure").val(d.operating_pressure);
+            $("#step3_op_temperature").val(d.operating_temp);
+            $("select[name='suhu_opr']").val(d.temp_op_unit);
+            $("input[name='operating_press']").val(d.operating_pressure);
+            $("input[name='operating_temp']").val(d.operating_temp);
+          } else {
+            $("input[name='operating_press_top']").val(d.operating_pressure);
+            $("input[name='operating_temp_top']").val(d.operating_temp);
+            $("select[name='suhu_opr_top']").val(d.temp_op_unit);
+            $("input[name='operating_press_bottom']").val(
+              d.operating_pressure_tube,
+            );
+            $("input[name='operating_temp_bottom']").val(d.operating_temp_tube);
+            $("select[name='suhu_opr_bottom']").val(d.temp_op_tube_unit);
+          }
+
+          // Fluid Comp
+          $("select[name='phase']").val(d.phase);
+          $("input[name='comp_h2s']").val(d.h2s_content);
+          $("input[name='comp_co2']").val(d.co2_content);
+          $("#select2_chloride_contents")
+            .val(d.chloride_index)
+            .trigger("change");
+          $("#select2_ph_contents").val(d.ph_index).trigger("change");
+
+          // Notifikasi Toast Sukses
+          const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+          });
+          Toast.fire({
+            icon: "success",
+            title: "Riwayat data ditemukan & otomatis terisi!",
+          });
+        } else {
+          // Jika data kosong, beri notifikasi ringan saja
+          console.log("No previous assessment for this equipment.");
+        }
+      })
+      .catch((err) => {
+        Swal.close();
+        console.error("Autofill Error:", err);
+      });
+  });
+
+  // ==========================================
   // 3. CORE FUNCTIONS
   // ==========================================
 
@@ -1678,6 +1815,7 @@ $(function () {
       equipment: {
         tag_number: tagNumber,
         master_equipment_id: parseInt(eqId),
+        year_built: $("input[name='location']").val(),
         year_built: parseInt($("select[name='first_use']").val()) || 0,
         shell_material_id: parseInt(shellMaterial) || 0,
         design_pressure: parseFloat($("input[name='design_press']").val()) || 0,
@@ -1735,11 +1873,11 @@ $(function () {
         act_inspection_date: $("input[name='act_inspection']").val() || null,
         operating_pressure:
           (eqType == "EQT1"
-            ? parseFloat($("#step3_op_pressure").val())
+            ? parseFloat($("input[name='operating_press").val())
             : parseFloat($("input[name='operating_press_top']").val())) || 0,
         operating_temp:
           (eqType == "EQT1"
-            ? parseFloat($("#step3_op_temperature").val())
+            ? parseFloat($("input[name='operating_temp']").val())
             : parseFloat($("input[name='operating_temp_top']").val())) || 0,
         operating_pressure_tube:
           (eqType == "EQT1"

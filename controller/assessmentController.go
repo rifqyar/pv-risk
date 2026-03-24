@@ -123,8 +123,8 @@ func SubmitAssessment(c *gin.Context) {
 			INSERT INTO trx_equipments 
 			(equipment_id, tag_number, year_built, shell_material_id, design_pressure, design_pressure_tube, design_temp, design_temp_tube, diameter, diameter_tube, volume,
 			diameter_type, diameter_unit, diameter_tube_type, diameter_tube_unit, length, length_unit, volume_unit, temp_design_unit, temp_design_tube_unit,
-			pwht, certificate, data_reference, nozzle, nozzle_unit, phase_type, internal_lining, insulation, special_service, protection, cathodic_protection) 
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			pwht, certificate, data_reference, nozzle, nozzle_unit, phase_type, internal_lining, insulation, special_service, protection, cathodic_protection, location) 
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			masterEqID, payload.Equipment.TagNumber, payload.Equipment.YearBuilt, payload.Equipment.ShellMaterialID,
 			payload.Equipment.DesignPressure, payload.Equipment.DesignPressureTube, payload.Equipment.DesignTemp, payload.Equipment.DesignTempTube,
 			payload.Equipment.Diameter, payload.Equipment.DiameterTube, payload.Equipment.Volume,
@@ -133,6 +133,7 @@ func SubmitAssessment(c *gin.Context) {
 			payload.Equipment.Length, payload.Equipment.LengthUnit, payload.Equipment.VolumeUnit, payload.Equipment.TempDesignUnit, payload.Equipment.TempDesignTubeUnit,
 			payload.Equipment.Pwht, payload.Equipment.Certificate, payload.Equipment.DataReference, payload.Equipment.Nozzle, payload.Equipment.NozzleUnit,
 			payload.Equipment.PhaseType, payload.Equipment.InternalLining, payload.Equipment.Insulation, payload.Equipment.SpecialService, payload.Equipment.Protection, payload.Equipment.CathodicProtection,
+			payload.Equipment.Location,
 		)
 
 		if err != nil {
@@ -148,7 +149,7 @@ func SubmitAssessment(c *gin.Context) {
 			UPDATE trx_equipments SET 
 			year_built=?, shell_material_id=?, design_pressure=?, design_temp=?, design_pressure_tube=?, design_temp_tube=?, diameter=?, diameter_tube=?, volume=?,
 			diameter_type=?, diameter_unit=?, diameter_tube_type=?, diameter_tube_unit=?, length=?, length_unit=?, volume_unit=?, temp_design_unit=?, temp_design_tube_unit=?,
-			pwht=?, certificate=?, data_reference=?, nozzle=?, nozzle_unit=?, phase_type=?, internal_lining=?, insulation=?, special_service=?, protection=?, cathodic_protection=?
+			pwht=?, certificate=?, data_reference=?, nozzle=?, nozzle_unit=?, phase_type=?, internal_lining=?, insulation=?, special_service=?, protection=?, cathodic_protection=?, location=?
 			WHERE id=?`,
 			payload.Equipment.YearBuilt, payload.Equipment.ShellMaterialID,
 			payload.Equipment.DesignPressure, payload.Equipment.DesignTemp,
@@ -158,7 +159,8 @@ func SubmitAssessment(c *gin.Context) {
 			payload.Equipment.DiameterType, payload.Equipment.DiameterUnit, payload.Equipment.DiameterTubeType, payload.Equipment.DiameterTubeUnit,
 			payload.Equipment.Length, payload.Equipment.LengthUnit, payload.Equipment.VolumeUnit, payload.Equipment.TempDesignUnit, payload.Equipment.TempDesignTubeUnit,
 			payload.Equipment.Pwht, payload.Equipment.Certificate, payload.Equipment.DataReference, payload.Equipment.Nozzle, payload.Equipment.NozzleUnit,
-			payload.Equipment.PhaseType, payload.Equipment.InternalLining, payload.Equipment.Insulation, payload.Equipment.SpecialService, payload.Equipment.Protection, payload.Equipment.CathodicProtection,
+			payload.Equipment.PhaseType, payload.Equipment.InternalLining, payload.Equipment.Insulation, payload.Equipment.SpecialService, payload.Equipment.Protection,
+			payload.Equipment.CathodicProtection, payload.Equipment.Location,
 			trxEqID,
 		)
 		if err != nil {
@@ -282,4 +284,92 @@ func SubmitAssessment(c *gin.Context) {
 			"assessment_id": assessmentID,
 		},
 	})
+}
+
+// Struct penampung data Autofill
+type AutofillData struct {
+	TagNumber          string  `json:"tag_number"`
+	Location           string  `json:"location"`
+	YearBuilt          int     `json:"year_built"`
+	ShellMaterialID    int     `json:"shell_material_id"`
+	DesignPressure     float64 `json:"design_pressure"`
+	DesignTemp         float64 `json:"design_temp"`
+	DesignPressureTube float64 `json:"design_pressure_tube"`
+	DesignTempTube     float64 `json:"design_temp_tube"`
+	Diameter           float64 `json:"diameter"`
+	DiameterTube       float64 `json:"diameter_tube"`
+	Volume             float64 `json:"volume"`
+	DiameterType       string  `json:"diameter_type"`
+	DiameterUnit       string  `json:"diameter_unit"`
+	DiameterTubeType   string  `json:"diameter_tube_type"`
+	DiameterTubeUnit   string  `json:"diameter_tube_unit"`
+	Length             float64 `json:"length"`
+	LengthUnit         string  `json:"length_unit"`
+	VolumeUnit         string  `json:"volume_unit"`
+	TempDesignUnit     string  `json:"temp_design_unit"`
+	TempDesignTubeUnit string  `json:"temp_design_tube_unit"`
+	Pwht               string  `json:"pwht"`
+	Certificate        string  `json:"certificate"`
+	DataReference      string  `json:"data_reference"`
+	Nozzle             float64 `json:"nozzle"`
+	NozzleUnit         string  `json:"nozzle_unit"`
+	PhaseType          string  `json:"phase_type"`
+	InternalLining     string  `json:"internal_lining"`
+	Insulation         string  `json:"insulation"`
+	SpecialService     string  `json:"special_service"`
+	Protection         string  `json:"protection"`
+	CathodicProtection string  `json:"cathodic_protection"`
+
+	// Data Assessment Terakhir
+	OperatingPressure float64 `json:"operating_pressure"`
+	OperatingTemp     float64 `json:"operating_temp"`
+	TempOpUnit        string  `json:"temp_op_unit"`
+	Phase             string  `json:"phase"`
+	H2sContent        float64 `json:"h2s_content"`
+	Co2Content        float64 `json:"co2_content"`
+	ChlorideIndex     int     `json:"chloride_index"`
+	PhIndex           int     `json:"ph_index"`
+}
+
+func GetEquipmentAutofill(c *gin.Context) {
+	eqID := c.Param("id")
+	db := config.DB
+	var d AutofillData
+
+	// Query ngambil data trx_equipments dan assessments PALING TERAKHIR (ORDER BY a.id DESC)
+	query := `
+		SELECT 
+			COALESCE(t.tag_number, ''), COALESCE(t.location, ''), COALESCE(t.year_built, 0), COALESCE(t.shell_material_id, 0),
+			COALESCE(t.design_pressure, 0), COALESCE(t.design_temp, 0), COALESCE(t.design_pressure_tube, 0), COALESCE(t.design_temp_tube, 0),
+			COALESCE(t.diameter, 0), COALESCE(t.diameter_tube, 0), COALESCE(t.volume, 0),
+			COALESCE(t.diameter_type, 'Inside'), COALESCE(t.diameter_unit, 'inch'), COALESCE(t.diameter_tube_type, 'Inside'), COALESCE(t.diameter_tube_unit, 'inch'),
+			COALESCE(CAST(NULLIF(t.length, '-') AS REAL), 0), COALESCE(t.length_unit, 'ft'), COALESCE(t.volume_unit, 'm3'), COALESCE(t.temp_design_unit, 'C'), COALESCE(t.temp_design_tube_unit, 'C'),
+			COALESCE(t.pwht, 'No'), COALESCE(t.certificate, '-'), COALESCE(t.data_reference, '-'), COALESCE(CAST(NULLIF(t.nozzle, '-') AS REAL), 0), COALESCE(t.nozzle_unit, 'inch'),
+			COALESCE(t.phase_type, 'multi phase'), COALESCE(t.internal_lining, 'None'), COALESCE(t.insulation, 'No'), COALESCE(t.special_service, '-'), COALESCE(t.protection, '-'), COALESCE(t.cathodic_protection, 'No'),
+
+			COALESCE(a.operating_pressure, 0), COALESCE(a.operating_temp, 0), COALESCE(a.temp_op_unit, 'C'), COALESCE(a.phase, ''), 
+			COALESCE(a.h2s_content, 0), COALESCE(a.co2_content, 0), COALESCE(a.chloride_index, 0), COALESCE(a.ph_index, 0)
+		FROM equipments e
+		LEFT JOIN trx_equipments t ON e.id = t.equipment_id
+		LEFT JOIN assessments a ON t.id = a.equipment_id
+		WHERE e.id = ?
+		ORDER BY a.id DESC LIMIT 1
+	`
+
+	err := db.QueryRow(query, eqID).Scan(
+		&d.TagNumber, &d.Location, &d.YearBuilt, &d.ShellMaterialID, &d.DesignPressure, &d.DesignTemp, &d.DesignPressureTube, &d.DesignTempTube,
+		&d.Diameter, &d.DiameterTube, &d.Volume, &d.DiameterType, &d.DiameterUnit, &d.DiameterTubeType, &d.DiameterTubeUnit,
+		&d.Length, &d.LengthUnit, &d.VolumeUnit, &d.TempDesignUnit, &d.TempDesignTubeUnit,
+		&d.Pwht, &d.Certificate, &d.DataReference, &d.Nozzle, &d.NozzleUnit,
+		&d.PhaseType, &d.InternalLining, &d.Insulation, &d.SpecialService, &d.Protection, &d.CathodicProtection,
+		&d.OperatingPressure, &d.OperatingTemp, &d.TempOpUnit, &d.Phase, &d.H2sContent, &d.Co2Content, &d.ChlorideIndex, &d.PhIndex,
+	)
+
+	if err != nil {
+		// Kalau data belum pernah ada, kita kirim status "empty" biar form tetep kosong
+		c.JSON(http.StatusOK, gin.H{"status": "empty", "message": "No previous data found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": d})
 }

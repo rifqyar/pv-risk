@@ -5,14 +5,14 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
       <div>
         <h4 class="fw-bold mb-1"><span class="text-muted fw-light">Assessment /</span> Pressure Vessel Detailed View</h4>
-        <p class="text-muted mb-0">Record ID: #{{ .Detail.AssessmentID }} | Status: Active | API 581 Registered</p>
+        <p class="text-muted mb-0">Record ID: #{{ .Detail.AssessmentID }} | Status: Active</p>
       </div>
       <div class="mt-3 mt-md-0 d-flex gap-2">
-        <a href="/list-assessment" class="btn btn-outline-secondary">
+        <a href="/assessment/list" class="btn btn-outline-secondary">
           <i class="mdi mdi-arrow-left me-1"></i> Back to List
         </a>
         <button onclick="exportToPDF()" class="btn btn-danger shadow-sm">
-          <i class="mdi mdi-file-pdf-box me-1"></i> Generate API 581 Executive Summary
+          <i class="mdi mdi-file-pdf-box me-1"></i> Generate Executive Summary
         </button>
       </div>
     </div>
@@ -73,7 +73,7 @@
 
         <div class="col-md-12 col-lg-4">
           <div class="card h-100 shadow-sm border-top border-4 border-success bg-success-subtle">
-            <div class="card-header pb-2 bg-transparent"><h6 class="fw-bold mb-0 text-success">Approved Inspection Plan</h6></div>
+            <div class="card-header pb-2 bg-transparent"><h6 class="fw-bold mb-0 text-success">Suggesstion Inspection Plan</h6></div>
             <div class="card-body text-center d-flex flex-column justify-content-center">
               <p class="text-muted small mb-1">Recommended NDT Method (API 571)</p>
               <h5 class="fw-bold text-dark lh-base">{{ .Detail.RecommendedMethod }}</h5>
