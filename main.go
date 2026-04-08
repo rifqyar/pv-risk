@@ -6,15 +6,18 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
-	"os/exec"
+	"time"
+
 	"pv-risk/config"
 	"pv-risk/controller"
 	"pv-risk/migrations"
 	"pv-risk/seeder"
-	"runtime"
 
 	"github.com/gin-gonic/gin"
+	webview "github.com/webview/webview_go"
 )
+
+// ================= EMBED =================
 
 //go:embed templates/* templates/layouts/* templates/partials/*
 var templateFS embed.FS
@@ -22,31 +25,27 @@ var templateFS embed.FS
 //go:embed static/* assets/*
 var staticFS embed.FS
 
-func openBrowser(url string) {
-	var err error
-
-	switch runtime.GOOS {
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "linux":
-		err = exec.Command("xdg-open", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
-	}
-
-	if err != nil {
-		log.Println(err)
-	}
-}
+// ================= MAIN =================
 
 func main() {
 
-	// Initialize database connection
+	port := "8080"
+	baseURL := "http://localhost:" + port
+
+	// ================= SINGLE INSTANCE =================
+	if isServerRunning(baseURL) {
+		runWebview(baseURL)
+		return
+	}
+
+	// ================= INIT =================
 	config.InitDB()
 	migrations.Migrate(config.DB)
 	seeder.SeedAll(config.DB)
 
 	r := gin.Default()
+
+	// ================= TEMPLATE =================
 	tmpl := template.New("").Funcs(template.FuncMap{
 		"seq": func(start, end int) []int {
 			var result []int
@@ -60,51 +59,95 @@ func main() {
 		},
 	})
 
-	// tmpl = template.Must(tmpl.ParseGlob("templates/*.html"))
-	// tmpl = template.Must(tmpl.ParseGlob("templates/layouts/*.html"))
-	tmpl, err := tmpl.ParseFS(templateFS,
-		"templates/*.html",          // Untuk backup_assessment_form.html dll di root templates
-		"templates/layouts/*.html",  // Untuk master.html
-		"templates/partials/*.html", // Untuk partials
+	var err error
+	tmpl, err = tmpl.ParseFS(templateFS,
+		"templates/*.html",
+		"templates/layouts/*.html",
+		"templates/partials/*.html",
 	)
-
 	if err != nil {
-		log.Fatal("Gagal parsing template: ", err)
+		log.Fatal("template error:", err)
 	}
 
 	r.SetHTMLTemplate(tmpl)
-	// r.Static("/static", "./static")
+
+	// ================= STATIC =================
 	staticContent, _ := fs.Sub(staticFS, "static")
 	assetsContent, _ := fs.Sub(staticFS, "assets")
+
 	r.StaticFS("/static", http.FS(staticContent))
 	r.StaticFS("/assets", http.FS(assetsContent))
 
+	// ================= ROUTES =================
 	r.GET("/", controller.ShowDashboard)
 	r.GET("/dashboard", controller.ShowDashboard)
 	r.GET("/assessment/form", controller.ShowForm)
 	r.GET("/assessment/list", controller.ShowListAssessment)
 	r.GET("/assessment/view/:id", controller.ViewAssessmentDetail)
 	r.POST("/submit", controller.SubmitAssessment)
-
 	r.GET("/api/equipment-autofill/:id", controller.GetEquipmentAutofill)
 
+	// === DEV ===
 	r.Run(":8080")
-	// // Run server in goroutine
-	// go func() {
-	// 	r.Run(":8080")
-	// }()
 
-	// // Wait until server ready
-	// for i := 0; i < 20; i++ {
-	// 	resp, err := http.Get("http://localhost:8080")
-	// 	if err == nil {
-	// 		resp.Body.Close()
-	// 		break
-	// 	}
-	// 	time.Sleep(300 * time.Millisecond)
+	// ================= SERVER =================
+	// srv := &http.Server{
+	// 	Addr:    ":" + port,
+	// 	Handler: r,
 	// }
 
-	// openBrowser("http://localhost:8080")
+	// go func() {
+	// 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	// 		log.Fatalf("server error: %v", err)
+	// 	}
+	// }()
 
-	// select {}
+	// // ================= WAIT SERVER READY =================
+	// waitForServer(baseURL)
+
+	// // ================= RUN DESKTOP =================
+	// runWebview(baseURL)
+
+	// // ================= SHUTDOWN =================
+	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// defer cancel()
+
+	// if err := srv.Shutdown(ctx); err != nil {
+	// 	log.Println("shutdown error:", err)
+	// }
+
+	// log.Println("app closed cleanly")
+}
+
+// ================= HELPER =================
+
+func isServerRunning(url string) bool {
+	resp, err := http.Get(url)
+	if err == nil && resp.StatusCode == 200 {
+		resp.Body.Close()
+		return true
+	}
+	return false
+}
+
+func waitForServer(url string) {
+	for i := 0; i < 20; i++ {
+		resp, err := http.Get(url)
+		if err == nil && resp.StatusCode == 200 {
+			resp.Body.Close()
+			return
+		}
+		time.Sleep(300 * time.Millisecond)
+	}
+	log.Println("warning: server may not be fully ready")
+}
+
+func runWebview(url string) {
+	w := webview.New(true)
+	defer w.Destroy()
+
+	w.SetTitle("Fire")
+	w.SetSize(1200, 800, webview.HintNone)
+	w.Navigate(url)
+	w.Run()
 }

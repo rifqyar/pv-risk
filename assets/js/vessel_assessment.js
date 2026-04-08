@@ -206,7 +206,7 @@ $(function () {
         // Update UI Dasar dulu
         $("#step3_equipment").val($(this).find(":selected").text());
 
-        if (res.status === "success" && res.data) {
+        if (res.status === "success" && res.data.tag_number != '') {
           const d = res.data;
 
           // --- A. PENGISIAN DATA TEKNIS (STEP 1) ---

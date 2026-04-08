@@ -126,7 +126,13 @@
             </div>
             <div class="col-md-4 mb-4">
               <div class="form-floating form-floating-outline">
-                <input type="text" class="form-control" name="joint_type" placeholder="e.g. Type 1" />
+                <select name="joint_type" class="select2 form-select" data-allow-clear="true">
+                  <option value="">Select Join Type</option>
+                  <option value="Welded">Welded</option>
+                  <option value="As-Welded">As-Welded</option>
+                  <option value="Seamless">Seamless</option>
+                </select>
+                <!-- <input type="text" class="form-control" name="joint_type" placeholder="e.g. Type 1" /> -->
                 <label>Joint Type</label>
               </div>
             </div>
@@ -270,15 +276,18 @@
           <div id="diameter_shell_tube" class="row align-items-center mb-3" style="display: none;">
             <div class="row align-items-center mb-3">
               <div class="col-md-8 col-lg-8 col-sm-12">
-                <div class="form-floating form-floating-outline">
-                  <input
-                    type="number"
-                    class="form-control"
-                    name="diameter_shell"
-                    placeholder="200"
-                  />
-                  <label class="text-dark">Diameter (shell)</label>
-                </div>
+                <div class="input-group input-group-merge">
+                  <div class="form-floating form-floating-outline">
+                    <input
+                      type="number"
+                      class="form-control"
+                      name="diameter_shell"
+                      placeholder="200"
+                    />
+                    <label class="text-dark">Diameter (shell)</label>
+                  </div>
+                  <span class="input-group-text">inch</span>
+                </div>  
               </div>
               <div class="col-md-4 col-lg-4 col-sm-12">
                 <div class="form-check form-check-inline mt-3">
@@ -311,15 +320,18 @@
             </div>
             <div class="row align-items-center mb-3">
               <div class="col-md-8 col-lg-8 col-sm-12">
-                <div class="form-floating form-floating-outline">
-                  <input
-                    type="number"
-                    class="form-control"
-                    name="diameter_tube"
-                    placeholder="200"
-                  />
-                  <label class="text-dark">Diameter (tube)</label>
-                </div>
+                <div class="input-group input-group-merge">
+                  <div class="form-floating form-floating-outline">
+                    <input
+                      type="number"
+                      class="form-control"
+                      name="diameter_tube"
+                      placeholder="200"
+                    />
+                    <label class="text-dark">Diameter (tube)</label>
+                  </div>
+                  <span class="input-group-text">inch</span>
+                </div>  
               </div>
               <div class="col-md-4 col-lg-4 col-sm-12">
                 <div class="form-check form-check-inline mt-3">
@@ -641,6 +653,11 @@
             <div class="col-md-4 mb-4">
               <div class="input-group input-group-merge">
                 <div class="form-floating form-floating-outline">
+                  <select name="max_brinell" id="max_brinell" class="form-control">
+                    <option value="< 200">< 200</option>
+                    <option value="200-237">200 - 237</option>
+                    <option value="200">< 200</option>
+                  </select>
                   <input type="number" class="form-control" name="max_brinell" placeholder="200" />
                   <label>Max Brinell Hardness</label>
                 </div>
@@ -746,22 +763,31 @@
           </div>
           <div class="row mt-2 mb-4">
             <div class="col-md-4 mb-3">
-              <div class="form-floating form-floating-outline">
-                <input type="number" step="0.01" class="form-control" name="shell_wall_thickness" />
-                <label>Shell Wall Thickness</label>
-              </div>
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="shell_wall_thickness" />
+                  <label>Shell Wall Thickness</label>
+                </div>
+                <span class="input-group-text">mm</span>
+              </div>  
             </div>
             <div class="col-md-4 mb-3">
-              <div class="form-floating form-floating-outline">
-                <input type="number" step="0.01" class="form-control" name="head_wall_thickness" />
-                <label>Head Wall Thickness</label>
-              </div>
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="head_wall_thickness" />
+                  <label>Head Wall Thickness</label>
+                </div>
+                <span class="input-group-text">mm</span>
+              </div>  
             </div>
             <div class="col-md-4 mb-3">
-              <div class="form-floating form-floating-outline">
-                <input type="number" step="0.01" class="form-control" name="nozzle_wall_thick" />
-                <label>Nozzle wall thickness</label>
-              </div>
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="number" step="0.01" class="form-control" name="nozzle_wall_thick" />
+                  <label>Nozzle wall thickness</label>
+                </div>
+                <span class="input-group-text">mm</span>
+              </div>  
             </div>
 
             <div class="col-md-4 mb-3">
@@ -770,6 +796,7 @@
                   <input type="number" step="0.01" class="form-control" name="shell_thick_cladded" />
                   <label>Shell thickness (if cladded)</label>
                 </div>
+                <span class="input-group-text">mm</span>
               </div>
             </div>
             <div class="col-md-4 mb-3">
@@ -778,6 +805,7 @@
                   <input type="number" step="0.01" class="form-control" name="head_thick_cladded" />
                   <label>Head thickness (if cladded)</label>
                 </div>
+                <span class="input-group-text">mm</span>
               </div>
             </div>
             <div class="col-md-4 mb-3">
@@ -786,6 +814,7 @@
                   <input type="number" step="0.01" class="form-control" name="nozzle_thick_cladded" />
                   <label>Nozzle thickness (if cladded)</label>
                 </div>
+                <span class="input-group-text">mm</span>
               </div>
             </div>
           </div>
@@ -798,6 +827,7 @@
                   <input type="number" step="0.01" class="form-control" name="prev_thick_shell" />
                   <label>Previous thickness (shell/top)</label>
                 </div>
+                <span class="input-group-text">mm</span>
               </div>
             </div>
             <div class="col-md-4 mb-3">
@@ -806,6 +836,7 @@
                   <input type="number" step="0.01" class="form-control" name="prev_thick_head" />
                   <label>Previous thickness (head/bottom)</label>
                 </div>
+                <span class="input-group-text">mm</span>
               </div>
             </div>
             <div class="col-md-4 mb-3">
@@ -814,6 +845,7 @@
                   <input type="number" step="0.01" class="form-control" name="nozzle_previous_thick" />
                   <label>Nozzle Previous thickness</label>
                 </div>
+                <span class="input-group-text">mm</span>
               </div>
             </div>
 
@@ -823,6 +855,7 @@
                   <input type="number" step="0.01" class="form-control" name="act_thick_shell" />
                   <label>Actual thickness (shell/top)</label>
                 </div>
+                <span class="input-group-text">mm</span>
               </div>
             </div>
             <div class="col-md-4 mb-3">
@@ -831,6 +864,7 @@
                   <input type="number" step="0.01" class="form-control" name="act_thick_head" />
                   <label>Actual thickness (head/bottom)</label>
                 </div>
+                <span class="input-group-text">mm</span>
               </div>
             </div>
             <div class="col-md-4 mb-3">
@@ -839,6 +873,7 @@
                   <input type="number" step="0.01" class="form-control" name="nozzle_actual_thick" />
                   <label>Nozzle Actual Thickness</label>
                 </div>
+                <span class="input-group-text">mm</span>
               </div>
             </div>
           </div>
