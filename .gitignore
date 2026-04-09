@@ -1,8 +1,9 @@
-./*.exe
+*.exe
 ./tmp
 tmp
 pv-risk.db
 pv-risk.exe
+PV-risk.exe
 ./tmp/*.exe
 ./tmp/*.db
 ./tmp/*.log  

@@ -52,8 +52,8 @@
             <div class="col-md-7 mb-4">
               <small class="text-light fw-medium d-block">Certificate</small>
               <div class="form-check form-check-inline mt-2">
-                <input class="form-check-input cert-checkbox" type="checkbox" name="certificate" id="skkp" value="SKKP" />
-                <label class="form-check-label" for="skkp">SKKP</label>
+                <input class="form-check-input cert-checkbox" type="checkbox" name="certificate" id="coi" value="COI" />
+                <label class="form-check-label" for="coi">COI</label>
               </div>
               <div class="form-check form-check-inline mt-2">
                 <input class="form-check-input cert-checkbox" type="checkbox" name="certificate" id="form_u1" value="Form U-1" />
@@ -132,7 +132,6 @@
                   <option value="As-Welded">As-Welded</option>
                   <option value="Seamless">Seamless</option>
                 </select>
-                <!-- <input type="text" class="form-control" name="joint_type" placeholder="e.g. Type 1" /> -->
                 <label>Joint Type</label>
               </div>
             </div>
@@ -571,7 +570,7 @@
               <div class="form-floating form-floating-outline">
                 <select class="select2-tag form-select" name="shell_material" data-allow-clear="true">
                   <option value="">Select Material</option>
-                  {{ range .ShellType }}<option value="{{ .ID }}" data-external="{{ .External }}" data-internal="{{ .Internal }}" data-co2corr="{{ .CO2Corr }}">{{ .Name }}</option>{{ end }}
+                  {{ range .ShellType }}<option value="{{ .ID }}" data-external="{{ .External }}" data-internal="{{ .Internal }}" data-co2corr="{{ .CO2Corr }}" data-mic="{{ .MIC }}" data-amine-cracking="{{ .AmineCracking }}" data-sulfide-cracking="{{ .SulfideCracking }}">{{ .Name }}</option>{{ end }}
                 </select>
                 <label>Shell Material Spec</label>
               </div>
@@ -580,7 +579,7 @@
               <div class="form-floating form-floating-outline">
                 <select class="select2-tag form-select" name="head_material" data-allow-clear="true">
                   <option value="">Select Material</option>
-                  {{ range .ShellType }}<option value="{{ .ID }}">{{ .Name }}</option>{{ end }}
+                  {{ range .ShellType }}<option value="{{ .ID }}" data-external="{{ .External }}" data-internal="{{ .Internal }}" data-co2corr="{{ .CO2Corr }}" data-mic="{{ .MIC }}" data-amine-cracking="{{ .AmineCracking }}" data-sulfide-cracking="{{ .SulfideCracking }}">{{ .Name }}</option>{{ end }}
                 </select>
                 <label>Head Material Spec</label>
               </div>
@@ -654,11 +653,10 @@
               <div class="input-group input-group-merge">
                 <div class="form-floating form-floating-outline">
                   <select name="max_brinell" id="max_brinell" class="form-control">
-                    <option value="< 200">< 200</option>
-                    <option value="200-237">200 - 237</option>
-                    <option value="200">< 200</option>
+                    <option value="A">< 200</option>
+                    <option value="B">200 - 237</option>
+                    <option value="C">> 237</option>
                   </select>
-                  <input type="number" class="form-control" name="max_brinell" placeholder="200" />
                   <label>Max Brinell Hardness</label>
                 </div>
                 <span class="input-group-text">HBW</span>
@@ -914,8 +912,9 @@
             <div class="col-md-4 mb-3">
               <div class="form-floating form-floating-outline">
                 <select name="insulation" class="select2 form-select" data-allow-clear="true">
-                  <option value="No">No</option>
                   <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="Not Required">Not Required</option>
                 </select>
                 <label>Insulation</label>
               </div>
@@ -962,12 +961,16 @@
             <div class="col-md-4 mb-4">
               <small class="text-light fw-medium d-block">Cathodic Protection System</small>
               <div class="form-check mt-2">
-                <input class="form-check-input" type="radio" id="cp_yes" name="cathodic_protection" value="Yes" />
-                <label class="form-check-label" for="cp_yes">Yes</label>
+                <input class="form-check-input" type="radio" id="cp_available" name="cathodic_protection" value="Available" />
+                <label class="form-check-label" for="cp_available">Available</label>
               </div>
               <div class="form-check mt-2">
-                <input class="form-check-input" type="radio" id="cp_no" name="cathodic_protection" value="No" checked />
-                <label class="form-check-label" for="cp_no">No</label>
+                <input class="form-check-input" type="radio" id="cp_unavailable" name="cathodic_protection" value="Unavailable" />
+                <label class="form-check-label" for="cp_unavailable">Unavailable</label>
+              </div>
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="radio" id="cp_not_required" name="cathodic_protection" value="Not Required" />
+                <label class="form-check-label" for="cp_not_required">Not Required</label>
               </div>
             </div>
           </div>
