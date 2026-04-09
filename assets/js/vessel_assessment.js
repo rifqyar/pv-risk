@@ -173,6 +173,36 @@ $(function () {
     }
   });
 
+  // Event Listener untuk Preventive of Corrosion
+  $("select[name='preventive_corrosion']").on("change", function () {
+    // KUNCI PENTING: Ambil TEKS dari option yang dipilih (bukan value ID-nya), lalu ubah ke huruf kecil biar kebal typo
+    let selectedText = $(this)
+      .find("option:selected")
+      .text()
+      .trim()
+      .toLowerCase();
+
+    // Target dropdown Inhibitor Effectivity
+    let $inhibitorDropdown = $("select[name='inhibitor_effectivity']");
+
+    // Cek apakah teksnya mengandung "not required", "none", atau user belum milih (kosong)
+    if (
+      selectedText.includes("not required") ||
+      selectedText.includes("none") ||
+      selectedText === "-- select option --" ||
+      $(this).val() === ""
+    ) {
+      // Kunci dan reset form inhibitor
+      $inhibitorDropdown.val("").prop("disabled", true);
+    } else {
+      // Buka kuncinya kalau butuh prevention (misal ada injeksi dll)
+      $inhibitorDropdown.prop("disabled", false);
+    }
+  });
+
+  // Panggil sekali saat halaman di-load biar otomatis nyesuain kalau lagi mode Edit Data
+  $("select[name='preventive_corrosion']").trigger("change");
+
   // Trigger untuk Step 6 (Save Assessment)
   $("#btn_save_assessment").on("click", function (e) {
     e.preventDefault();
@@ -991,30 +1021,59 @@ $(function () {
   }
 
   function runStep2Calculations() {
+    const INCH_TO_MM = 25.4;
+
     // ==========================================
-    // 1. AMBIL PARAMETER DASAR (DARI STEP 1)
+    // 1. AMBIL PARAMETER DASAR (DARI STEP 1) & KONVERSI KE MM
     // ==========================================
     // Desain
     let P = parseFloat($("input[name='design_press']").val()) || 0;
     let S = parseFloat($("input[name='allowable_stress']").val()) || 0;
     let E = parseFloat($("input[name='joint_efficiency']").val()) || 1.0;
-    let D = parseFloat($("input[name='diameter']").val()) || 0;
-    let D_Shell = parseFloat($("input[name='diameter_shell']").val()) || 0;
-    let D_Tube = parseFloat($("input[name='diameter_tube']").val()) || 0;
-    let R = D / 2; // Radius
 
-    // Parameter Nozzle (Asumsi ditarik dari Step 1)
-    let D_Nozzle = parseFloat($("input[name='nozzle']").val()) || 0;
+    // Ambil Satuan dari Form
+    let unitDia = $("select[name='satuan_diameter']").val() || "inch";
+    let unitNozzle = $("select[name='satuan_nozzle']").val() || "inch";
+
+    // DIAMETER (Ubah ke mm)
+    let D_raw = parseFloat($("input[name='diameter']").val()) || 0;
+    let D = unitDia === "inch" ? D_raw * INCH_TO_MM : D_raw;
+
+    // Shell & Tube (Di HTML labelnya tertulis statis "inch", jadi paksa ke mm)
+    let D_Shell_raw = parseFloat($("input[name='diameter_shell']").val()) || 0;
+    let D_Shell = D_Shell_raw * INCH_TO_MM;
+
+    let D_Tube_raw = parseFloat($("input[name='diameter_tube']").val()) || 0;
+    let D_Tube = D_Tube_raw * INCH_TO_MM;
+
+    let R = D / 2; // Radius dalam mm
+
+    // Ambil Corrosion Allowance (CA) dari Step 1 dan JADIKAN MM
+    let CA_in = parseFloat($("input[name='corrosion_allowance']").val()) || 0;
+    let CA_mm = CA_in * INCH_TO_MM; // 25.4 (Konstanta dari atas)
+
+    // Parameter Nozzle (Ubah ke mm)
+    let D_Nozzle_raw = parseFloat($("input[name='nozzle']").val()) || 0;
+    let D_Nozzle =
+      unitNozzle === "inch" ? D_Nozzle_raw * INCH_TO_MM : D_Nozzle_raw;
     let R_Nozzle = D_Nozzle / 2;
+
+    // Input fallback nozzle (kalau pakai input manual inch, ubah ke mm)
     let min_req_nozzle_input =
-      parseFloat($("input[name='min_req_thk_nozzle_inch']").val()) || 0;
+      (parseFloat($("input[name='min_req_thk_nozzle_inch']").val()) || 0) *
+      INCH_TO_MM;
 
     // Equipment Type
     let EQType = $("#select2_equipment option:selected").data("type");
 
-    // Parameter Khusus Torispherical Head
-    let L_crown = parseFloat($("input[name='crown_radius']").val()) || 0;
-    let r_knuckle = parseFloat($("input[name='knuckle_radius']").val()) || 0;
+    // Parameter Khusus Torispherical Head (Ubah ke mm sesuai satuan diameter)
+    let L_crown_raw = parseFloat($("input[name='crown_radius']").val()) || 0;
+    let L_crown = unitDia === "inch" ? L_crown_raw * INCH_TO_MM : L_crown_raw;
+
+    let r_knuckle_raw =
+      parseFloat($("input[name='knuckle_radius']").val()) || 0;
+    let r_knuckle =
+      unitDia === "inch" ? r_knuckle_raw * INCH_TO_MM : r_knuckle_raw;
 
     // Tipe Dimensi & Head
     let dimType = $("input[name='diameter_type']:checked").val();
@@ -1029,36 +1088,36 @@ $(function () {
       yearAct = new Date().getFullYear();
     }
 
-    // Ketebalan SHELL
+    // Ketebalan SHELL (Tetap, karena dari UI sudah mm)
     let t_act_shell = parseFloat($("input[name='act_thick_shell']").val()) || 0;
     let t_prev_shell =
       parseFloat($("input[name='prev_thick_shell']").val()) || 0;
     let t_init_shell =
       parseFloat($("input[name='shell_wall_thickness']").val()) || 0;
 
-    // Ketebalan HEAD
+    // Ketebalan HEAD (Tetap, karena dari UI sudah mm)
     let t_act_head = parseFloat($("input[name='act_thick_head']").val()) || 0;
     let t_prev_head = parseFloat($("input[name='prev_thick_head']").val()) || 0;
     let t_init_head =
       parseFloat($("input[name='head_wall_thickness']").val()) || 0;
 
-    // Ketebalan NOZZLE (Tambahan Baru)
+    // Ketebalan NOZZLE (Tambahan konversi kalau inputnya ambil dari ID inch)
     let t_act_nozzle =
       parseFloat($("input[name='nozzle_actual_thick']").val()) ||
-      parseFloat($("input[name='act_thk_nozzle_inch']").val()) ||
+      parseFloat($("input[name='act_thk_nozzle_inch']").val()) * INCH_TO_MM ||
       0;
     let t_prev_nozzle =
       parseFloat($("input[name='nozzle_previous_thick']").val()) || 0;
     let t_init_nozzle =
       parseFloat($("input[name='nozzle_wall_thick']").val()) ||
-      parseFloat($("input[name='nom_thk_nozzle_inch']").val()) ||
+      parseFloat($("input[name='nom_thk_nozzle_inch']").val()) * INCH_TO_MM ||
       0;
 
     // Variabel Penampung Hasil
     let results = {
       shell: { treq: 0, mawp: 0, cr_st: 0, cr_lt: 0, rl_st: 0, rl_lt: 0 },
       head: { treq: 0, mawp: 0, cr_st: 0, cr_lt: 0, rl_st: 0, rl_lt: 0 },
-      nozzle: { treq: 0, mawp: 0, cr_st: 0, cr_lt: 0, rl_st: 0, rl_lt: 0 }, // Tambahan Nozzle
+      nozzle: { treq: 0, mawp: 0, cr_st: 0, cr_lt: 0, rl_st: 0, rl_lt: 0 },
     };
 
     // ==========================================
@@ -1073,7 +1132,6 @@ $(function () {
     let K = 1.0;
 
     if (EQType === "EQT3" || EQType === "EQT2") {
-      // [Logic EQT3 Shell Side Cylinder dibiarkan sama seperti aslinya...]
       if (P_shell > 0 && S > 0 && R_shell > 0) {
         if (dimShelltype === "inside") {
           results.shell.treq = (P_shell * R_shell) / (S * E - 0.6 * P_shell);
@@ -1088,7 +1146,6 @@ $(function () {
               (S * E * t_act_shell) / (R_shell - 0.4 * t_act_shell);
         }
       }
-      // [Logic EQT3 Tube Side Channel Head dibiarkan sama seperti aslinya...]
       if (P_tube > 0 && S > 0) {
         if (headType === "3") {
           if (dimTubetype === "inside") {
@@ -1135,7 +1192,6 @@ $(function () {
         }
       }
     } else {
-      // [Logic Standard Vessel Shell & Head dibiarkan sama...]
       if (P > 0 && S > 0 && R > 0) {
         // --- SHELL ---
         if (dimType === "inside") {
@@ -1197,16 +1253,27 @@ $(function () {
 
     // --- NOZZLE REQUIRED THICKNESS (Berlaku untuk EQT3 & Vessel) ---
     if (P > 0 && S > 0 && R_Nozzle > 0) {
-      // Kalkulasi normal silinder Nozzle
       results.nozzle.treq = (P * R_Nozzle) / (S * E - 0.6 * P);
       if (t_act_nozzle > 0) {
         results.nozzle.mawp =
           (S * E * t_act_nozzle) / (R_Nozzle + 0.6 * t_act_nozzle);
       }
     } else if (min_req_nozzle_input > 0) {
-      // Fallback: Jika diameter Nozzle gak diinput, pakai minimum requirement dari input manual
       results.nozzle.treq = min_req_nozzle_input;
     }
+
+    // RUMUS: Minimum Thickness = Req Thickness + CA
+    let min_thick_shell =
+      results.shell.treq > 0 ? results.shell.treq + CA_mm : 0;
+    let min_thick_head = results.head.treq > 0 ? results.head.treq + CA_mm : 0;
+    let min_thick_nozzle =
+      results.nozzle.treq > 0 ? results.nozzle.treq + CA_mm : 0;
+
+    // RUMUS: Remaining Thickness = Actual Thickness - Minimum Thickness
+    let rem_thick_shell = t_act_shell > 0 ? t_act_shell - min_thick_shell : 0;
+    let rem_thick_head = t_act_head > 0 ? t_act_head - min_thick_head : 0;
+    let rem_thick_nozzle =
+      t_act_nozzle > 0 ? t_act_nozzle - min_thick_nozzle : 0;
 
     // ==========================================
     // 3. RUMUS CORROSION RATE (CR)
@@ -1226,7 +1293,7 @@ $(function () {
     if (interval_lt > 0 && t_init_head > 0)
       results.head.cr_lt = (t_init_head - t_act_head) / interval_lt;
 
-    // Nozzle CR (Tambahan Baru)
+    // Nozzle CR
     if (interval_st > 0 && t_prev_nozzle > 0)
       results.nozzle.cr_st = (t_prev_nozzle - t_act_nozzle) / interval_st;
     if (interval_lt > 0 && t_init_nozzle > 0)
@@ -1269,7 +1336,6 @@ $(function () {
     // ==========================================
     let inch_conv = 25.4;
 
-    // UPDATE SHELL & HEAD [Dibiarkan sama...]
     if (results.shell.treq > 0 || t_act_shell > 0) {
       $("input[name='req_thick_shell_mm']").val(results.shell.treq.toFixed(3));
       $("input[name='req_thick_shell_in']").val(
@@ -1314,7 +1380,6 @@ $(function () {
       );
     }
 
-    // UPDATE NOZZLE (Tambahan Baru)
     if (results.nozzle.treq > 0 || t_act_nozzle > 0) {
       $("input[name='req_thick_nozzle_mm']").val(
         results.nozzle.treq.toFixed(3),
@@ -1323,7 +1388,6 @@ $(function () {
         (results.nozzle.treq / inch_conv).toFixed(4),
       );
       $("input[name='mawp_nozzle']").val(results.nozzle.mawp.toFixed(2));
-
       $("input[name='cr_st_nozzle_mm']").val(results.nozzle.cr_st.toFixed(4));
       $("input[name='cr_st_nozzle_in']").val(
         (results.nozzle.cr_st / inch_conv).toFixed(5),
@@ -1332,7 +1396,6 @@ $(function () {
       $("input[name='cr_lt_nozzle_in']").val(
         (results.nozzle.cr_lt / inch_conv).toFixed(5),
       );
-
       $("input[name='rem_life_st_nozzle']").val(
         results.nozzle.rl_st > 20 ? "> 20" : results.nozzle.rl_st.toFixed(1),
       );
@@ -1348,11 +1411,10 @@ $(function () {
       results.head.rl_st,
       results.head.rl_lt,
       results.nozzle.rl_st,
-      results.nozzle.rl_lt, // Nozzle dimasukkan dalam penentuan governing
+      results.nozzle.rl_lt,
     ];
     let min_rl = Math.min(...all_rl.filter((v) => v > 0));
 
-    // Tentukan komponen apa yang punya RL paling kecil
     let governing_comp = "-";
     if (min_rl === results.shell.rl_st || min_rl === results.shell.rl_lt)
       governing_comp = "Shell";
@@ -1375,21 +1437,17 @@ $(function () {
     // ==========================================
     // UPDATE TABEL 1: SUMMARY MATRIX
     // ==========================================
-    let cons_shell =
-      t_act_shell > results.shell.treq ? t_act_shell - results.shell.treq : 0;
-    let cons_head =
-      t_act_head > results.head.treq ? t_act_head - results.head.treq : 0;
-    let cons_nozzle =
-      t_act_nozzle > results.nozzle.treq
-        ? t_act_nozzle - results.nozzle.treq
-        : 0;
-
     $("#sum_nom_shell").text(t_init_shell || "-");
     $("#sum_req_shell").text(
       results.shell.treq > 0 ? results.shell.treq.toFixed(2) : "-",
     );
+    $("#sum_min_shell").text(
+      min_thick_shell > 0 ? min_thick_shell.toFixed(2) : "-",
+    );
     $("#sum_act_shell").text(t_act_shell || "-");
-    $("#sum_cons_shell").text(cons_shell > 0 ? cons_shell.toFixed(2) : "0");
+    $("#sum_remaining_shell").text(
+      t_act_shell > 0 ? rem_thick_shell.toFixed(2) : "-",
+    );
     $("#sum_crst_shell").text(
       results.shell.cr_st > 0 ? results.shell.cr_st.toFixed(3) : "-",
     );
@@ -1415,8 +1473,14 @@ $(function () {
     $("#sum_req_head").text(
       results.head.treq > 0 ? results.head.treq.toFixed(2) : "-",
     );
+    $("#sum_min_head").text(
+      min_thick_head > 0 ? min_thick_head.toFixed(2) : "-",
+    );
     $("#sum_act_head").text(t_act_head || "-");
-    $("#sum_cons_head").text(cons_head > 0 ? cons_head.toFixed(2) : "0");
+    $("#sum_remaining_head").text(
+      t_act_head > 0 ? rem_thick_head.toFixed(2) : "-",
+    );
+
     $("#sum_crst_head").text(
       results.head.cr_st > 0 ? results.head.cr_st.toFixed(3) : "-",
     );
@@ -1438,13 +1502,18 @@ $(function () {
           : "-",
     );
 
-    // Tambahan Target jQuery untuk baris tabel Nozzle (Jika lu mau tambahin baris Nozzle di HTML-nya nanti)
     $("#sum_nom_nozzle").text(t_init_nozzle || "-");
     $("#sum_req_nozzle").text(
       results.nozzle.treq > 0 ? results.nozzle.treq.toFixed(2) : "-",
     );
+    $("#sum_min_nozzle").text(
+      min_thick_nozzle > 0 ? min_thick_nozzle.toFixed(2) : "-",
+    );
     $("#sum_act_nozzle").text(t_act_nozzle || "-");
-    $("#sum_cons_nozzle").text(cons_nozzle > 0 ? cons_nozzle.toFixed(2) : "0");
+    $("#sum_remaining_nozzle").text(
+      t_act_nozzle > 0 ? rem_thick_nozzle.toFixed(2) : "-",
+    );
+
     $("#sum_crst_nozzle").text(
       results.nozzle.cr_st > 0 ? results.nozzle.cr_st.toFixed(3) : "-",
     );
