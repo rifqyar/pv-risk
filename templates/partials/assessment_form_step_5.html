@@ -13,43 +13,218 @@
 
   <div class="row g-4 mb-4">
     <div class="col-12">
-      <div class="card border-info mt-4">
-        <div class="card-header bg-info-subtle">
-          <h6 class="fw-bold">Inspection Effectiveness</h6>
-        </div>
-        <div class="card-body">
-
-          <div class="row">
-
-            <div class="col-md-4">
-              <label>Internal Thinning Method</label>
-              <select id="insp_internal_thinning" class="form-select">
-                <option value="UT">UT (High)</option>
-                <option value="RT">RT (Medium)</option>
-                <option value="VT">Visual (Low)</option>
-              </select>
-            </div>
-
-            <div class="col-md-4">
-              <label>External Corrosion Method</label>
-              <select id="insp_external_corrosion" class="form-select">
-                <option value="VT+UT">VT + UT (High)</option>
-                <option value="UT">UT (Medium)</option>
-                <option value="RT">RT (Low)</option>
-              </select>
-            </div>
-
-            <div class="col-md-4">
-              <label>Cracking Inspection</label>
-              <select id="insp_cracking" class="form-select">
-                <option value="WFMT">WFMT (High)</option>
-                <option value="UT">UT (Medium)</option>
-                <option value="RT">RT (Low)</option>
-              </select>
-            </div>
-
+      <div class="card border-info mt-4 shadow-sm">
+        <div class="card-header bg-info-subtle d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="fw-bold mb-0">Inspection Scope, Interval and Method</h6>
+            <small class="text-muted">(Range Interval Inspection : 60, 48, 36, 24, 18, 12 months)</small>
           </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0" style="font-size: 0.85rem;">
+              <thead class="table-light text-center">
+                <tr>
+                  <th style="width: 25%;" class="bg-primary-subtle text-primary">Damage Mechanism</th>
+                  <th style="width: 37.5%;">Non Intrusive</th>
+                  <th style="width: 37.5%;">Intrusive</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="fw-bold text-primary">External Corrosion</td>
+                  <td class="bg-warning-subtle">
+                    <select class="form-select form-select-sm mb-2" id="insp_ext_corr_nonintrusive" name="insp_ext_corr_nonintrusive">
+                      <option value="Visual + Measurement" data-eff="High">Visual + Measurement</option>
+                      <option value="Wall Thickness measurement by UT" data-eff="Medium">Wall Thickness measurement by UT</option>
+                      <option value="Shear Wave Ultrasonic Testing" data-eff="Low">Shear Wave Ultrasonic Testing</option>
+                      <option value="None" data-eff="None">None</option>
+                    </select>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-danger small">Next Inspection period (months):</span>
+                      <span class="text-danger fw-bold fs-6" id="period_ext_corr_nonintrusive">24</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="form-check form-check-sm mb-0">
+                        <input class="form-check-input" type="checkbox" id="opt_ext_corr_nonintrusive">
+                        <label class="form-check-label text-danger small" for="opt_ext_corr_nonintrusive" style="font-size: 0.75rem;">Optimized Insp. Period</label>
+                      </div>
+                      <span class="text-danger small fw-medium" id="eff_ext_corr_nonintrusive">Effectivity: High</span>
+                    </div>
+                  </td>
+                  <td class="bg-warning-subtle">
+                    <select class="form-select form-select-sm mb-2" id="insp_ext_corr_intrusive" name="insp_ext_corr_intrusive">
+                      <option value="Visual + Measurement" data-eff="High">Visual + Measurement</option>
+                      <option value="Wall Thickness measurement by UT" data-eff="Medium">Wall Thickness measurement by UT</option>
+                      <option value="Shear Wave Ultrasonic Testing" data-eff="Low">Shear Wave Ultrasonic Testing</option>
+                      <option value="None" data-eff="None">None</option>
+                    </select>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-danger small">Next Inspection period (months):</span>
+                      <span class="text-danger fw-bold fs-6" id="period_ext_corr_intrusive">120</span>
+                    </div>
+                    <div class="text-end">
+                      <span class="text-danger small fw-medium" id="eff_ext_corr_intrusive">Effectivity: High</span>
+                    </div>
+                  </td>
+                </tr>
 
+                <tr>
+                  <td class="fw-bold text-success">External Surface Cracking</td>
+                  <td class="bg-success-subtle">
+                    <select class="form-select form-select-sm mb-2" id="insp_ext_crack_nonintrusive" name="insp_ext_crack_nonintrusive">
+                      <option value="Wet Fluorescent MPT / DPT" data-eff="High">Wet Fluorescent MPT / DPT</option>
+                      <option value="Shear Wave Ultrasonic Testing" data-eff="Medium">Shear Wave Ultrasonic Testing</option>
+                      <option value="Radiographic" data-eff="Low">Radiographic</option>
+                      <option value="None" data-eff="None">None</option>
+                    </select>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-danger small">Next Inspection period (months):</span>
+                      <span class="text-danger fw-bold fs-6" id="period_ext_crack_nonintrusive">54</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="form-check form-check-sm mb-0">
+                        <input class="form-check-input" type="checkbox" id="opt_ext_crack_nonintrusive">
+                        <label class="form-check-label text-danger small" for="opt_ext_crack_nonintrusive" style="font-size: 0.75rem;">Optimized Insp. Period</label>
+                      </div>
+                      <span class="text-danger small fw-medium" id="eff_ext_crack_nonintrusive">Effectivity: High</span>
+                    </div>
+                  </td>
+                  <td class="bg-success-subtle">
+                    <select class="form-select form-select-sm mb-2" id="insp_ext_crack_intrusive" name="insp_ext_crack_intrusive">
+                      <option value="Wet Fluorescent MPT / DPT" data-eff="High">Wet Fluorescent MPT / DPT</option>
+                      <option value="Shear Wave Ultrasonic Testing" data-eff="Medium">Shear Wave Ultrasonic Testing</option>
+                      <option value="Radiographic" data-eff="Low">Radiographic</option>
+                      <option value="None" data-eff="None">None</option>
+                    </select>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-danger small">Next Inspection period (months):</span>
+                      <span class="text-danger fw-bold fs-6" id="period_ext_crack_intrusive">120</span>
+                    </div>
+                    <div class="text-end">
+                      <span class="text-danger small fw-medium" id="eff_ext_crack_intrusive">Effectivity: High</span>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="fw-bold text-primary">Internal Thinning</td>
+                  <td class="bg-danger-subtle">
+                    <select class="form-select form-select-sm mb-2" id="insp_int_thin_nonintrusive" name="insp_int_thin_nonintrusive">
+                      <option value="Wall Thickness measurement by UT" data-eff="High">Wall Thickness measurement by UT</option>
+                      <option value="Ultrasonic Testing" data-eff="Medium">Ultrasonic Testing</option>
+                      <option value="Radiographic Testing" data-eff="Low">Radiographic Testing</option>
+                      <option value="None" data-eff="None">None</option>
+                    </select>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-danger small">Next Inspection period (months):</span>
+                      <span class="text-danger fw-bold fs-6" id="period_int_thin_nonintrusive">-</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="form-check form-check-sm mb-0">
+                        <input class="form-check-input" type="checkbox" id="opt_int_thin_nonintrusive">
+                        <label class="form-check-label text-danger small" for="opt_int_thin_nonintrusive" style="font-size: 0.75rem;">Optimized Insp. Period</label>
+                      </div>
+                      <span class="text-danger small fw-medium" id="eff_int_thin_nonintrusive">Effectivity: -</span>
+                    </div>
+                  </td>
+                  <td class="bg-danger-subtle">
+                    <select class="form-select form-select-sm mb-2" id="insp_int_thin_intrusive" name="insp_int_thin_intrusive">
+                      <option value="VIE + Wall Thickness measurement by UT" data-eff="High">VIE + Wall Thickness measurement by UT</option>
+                      <option value="Shear Wave Ultrasonic Testing" data-eff="Medium">Shear Wave Ultrasonic Testing</option>
+                      <option value="Radiographic Testing" data-eff="Low">Radiographic Testing</option>
+                      <option value="None" data-eff="None">None</option>
+                    </select>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-danger small">Next Inspection period (months):</span>
+                      <span class="text-danger fw-bold fs-6" id="period_int_thin_intrusive">120</span>
+                    </div>
+                    <div class="text-end">
+                      <span class="text-danger small fw-medium" id="eff_int_thin_intrusive">Effectivity: High</span>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="fw-bold text-primary">Internal Cracking</td>
+                  <td class="bg-secondary-subtle">
+                    <select class="form-select form-select-sm mb-2" id="insp_int_crack_nonintrusive" name="insp_int_crack_nonintrusive">
+                      <option value="Shear Wave Ultrasonic Testing" data-eff="High">Shear Wave Ultrasonic Testing</option>
+                      <option value="Radiographic Testing" data-eff="Medium">Radiographic Testing</option>
+                      <option value="None" data-eff="None">None</option>
+                    </select>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-danger small">Next Inspection period (months):</span>
+                      <span class="text-danger fw-bold fs-6" id="period_int_crack_nonintrusive">-</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="form-check form-check-sm mb-0">
+                        <input class="form-check-input" type="checkbox" id="opt_int_crack_nonintrusive">
+                        <label class="form-check-label text-danger small" for="opt_int_crack_nonintrusive" style="font-size: 0.75rem;">Optimized Insp. Period</label>
+                      </div>
+                      <span class="text-danger small fw-medium" id="eff_int_crack_nonintrusive">Effectivity: -</span>
+                    </div>
+                  </td>
+                  <td class="bg-secondary-subtle">
+                    <select class="form-select form-select-sm mb-2" id="insp_int_crack_intrusive" name="insp_int_crack_intrusive">
+                      <option value="Wet Fluorescent MPT / DPT" data-eff="High">Wet Fluorescent MPT / DPT</option>
+                      <option value="Shear Wave Ultrasonic Testing" data-eff="Medium">Shear Wave Ultrasonic Testing</option>
+                      <option value="Visual + Measurement" data-eff="Low">Visual + Measurement</option>
+                      <option value="None" data-eff="None">None</option>
+                    </select>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-danger small">Next Inspection period (months):</span>
+                      <span class="text-danger fw-bold fs-6" id="period_int_crack_intrusive">120</span>
+                    </div>
+                    <div class="text-end">
+                      <span class="text-danger small fw-medium" id="eff_int_crack_intrusive">Effectivity: High</span>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="fw-bold text-info">Localised Internal Corrosion</td>
+                  <td class="bg-info-subtle">
+                    <select class="form-select form-select-sm mb-2" id="insp_loc_corr_nonintrusive" name="insp_loc_corr_nonintrusive">
+                      <option value="Wall Thickness measurement by UT" data-eff="High">Wall Thickness measurement by UT</option>
+                      <option value="Ultrasonic Testing" data-eff="Medium">Ultrasonic Testing</option>
+                      <option value="Radiographic Testing" data-eff="Low">Radiographic Testing</option>
+                      <option value="None" data-eff="None">None</option>
+                    </select>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-danger small">Next Inspection period (months):</span>
+                      <div class="text-end">
+                        <span class="text-danger fw-bold fs-6 d-block" id="period_loc_corr_nonintrusive">33</span>
+                        <span class="text-danger fw-bold fs-6 d-block mt-2" id="period_loc_corr_opt_nonintrusive" style="display: none;">42</span>
+                      </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="form-check form-check-sm mb-0">
+                        <input class="form-check-input" type="checkbox" id="opt_loc_corr_nonintrusive" checked>
+                        <label class="form-check-label text-danger small" for="opt_loc_corr_nonintrusive" style="font-size: 0.75rem;">Optimized Insp. Period</label>
+                      </div>
+                      <span class="text-danger small fw-medium" id="eff_loc_corr_nonintrusive">Effectivity: High</span>
+                    </div>
+                  </td>
+                  <td class="bg-info-subtle">
+                    <select class="form-select form-select-sm mb-2" id="insp_loc_corr_intrusive" name="insp_loc_corr_intrusive">
+                      <option value="VIE + Wall Thickness measurement by UT" data-eff="High">VIE + Wall Thickness measurement by UT</option>
+                      <option value="Shear Wave Ultrasonic Testing" data-eff="Medium">Shear Wave Ultrasonic Testing</option>
+                      <option value="Radiographic Testing" data-eff="Low">Radiographic Testing</option>
+                      <option value="None" data-eff="None">None</option>
+                    </select>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="text-danger small">Next Inspection period (months):</span>
+                      <span class="text-danger fw-bold fs-6" id="period_loc_corr_intrusive">120</span>
+                    </div>
+                    <div class="text-end">
+                      <span class="text-danger small fw-medium" id="eff_loc_corr_intrusive">Effectivity: High</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

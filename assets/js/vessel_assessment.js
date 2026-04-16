@@ -45,7 +45,7 @@ $(function () {
 
   // Initialize Bootstrap Stepper
   const stepperEl = document.querySelector("#wizard-vessel-assessment");
-  const stepper = new Stepper(stepperEl, { linear: true });
+  const stepper = new Stepper(stepperEl, { linear: false });
 
   // Cache frequent DOM elements
   const elements = {
@@ -108,11 +108,11 @@ $(function () {
     "keyup change",
     generateEquipmentName,
   );
-  $("#select2_ph_contents, #select2_h2s_contents").on(
-    "change",
-    calculateEnvironmentalSeverity,
-    calculateDamageMechanisms,
-  );
+
+  $("#select2_ph_contents, #select2_h2s_contents").on("change", function () {
+    calculateEnvironmentalSeverity();
+    calculateDamageMechanisms();
+  });
 
   // Step 4 Triggers (Damage Mechanisms)
   $("#step-3 input, #step-3 select, #step-3 textarea").on(
@@ -129,6 +129,48 @@ $(function () {
     "change",
     calculateCriticalityMatrix,
   );
+
+  // Step 5 Trigger (Dropdown Effectivity Update)
+  $("select[id^='insp_'], input[type='checkbox'][id^='opt_']").on(
+    "change",
+    function () {
+      // --- 1. Logika Warna Teks Effectivity (Hanya jalan kalau yang diganti itu dropdown) ---
+      if ($(this).is("select")) {
+        let val = $(this).val();
+        let effectivity = $(this).find("option:selected").data("eff") || "None";
+        let $effSpan = $(this).closest("td").find("span[id^='eff_']");
+
+        if (val === "None" || val === "" || effectivity === "None") {
+          $effSpan
+            .text("Effectivity: None")
+            .removeClass("text-danger text-warning text-success fw-medium")
+            .addClass("text-secondary");
+        } else {
+          let colorClass = "text-danger";
+          if (effectivity === "Medium") colorClass = "text-warning";
+          if (effectivity === "Low") colorClass = "text-dark";
+
+          $effSpan
+            .text("Effectivity: " + effectivity)
+            .removeClass(
+              "text-secondary text-danger text-warning text-dark text-success",
+            )
+            .addClass(colorClass + " fw-medium");
+        }
+      }
+
+      // --- 2. Panggil fungsi hitung bulan interval ---
+      calculateInspectionPeriods();
+
+      // --- 3. Trigger kalkulasi ulang DM supaya Final Risk-nya otomatis update ---
+      if (typeof calculateDamageMechanisms === "function") {
+        calculateDamageMechanisms();
+      }
+    },
+  );
+
+  // Panggil sekali pas awal render biar statusnya sinkron
+  $("select[id^='insp_']").trigger("change");
 
   $("#step6-calculation, #recalc-step6, #btn-next-5").on(
     "click",
@@ -587,6 +629,7 @@ $(function () {
 
     const cisccData = localStorage.getItem("master_ciscc");
     let cisccMaster = cisccData ? JSON.parse(JSON.parse(cisccData)) : [];
+    console.log("Loaded CISCC Master Data:", cisccMaster);
 
     let severity = "Unknown";
     const matrixMatch = cisccMaster.find(
@@ -1124,37 +1167,48 @@ $(function () {
     // 2. RUMUS REQUIRED THICKNESS (treq) & MAWP
     // ==========================================
 
-    let P_shell =
-      EQType != "EQT1" ? parseFloat($("input[name='design_press']").val()) : 0;
-    let P_tube = parseFloat($("input[name='design_press_tube']").val()) || 0;
+    if (EQType === "EQT1") {
+      P_shell =
+        parseFloat($("#design_eq1 input[name='design_press']").val()) || 0;
+    } else {
+      // EQT2 & EQT3 menggunakan div design_eq3
+      P_shell =
+        parseFloat($("#design_eq3 input[name='design_press']").val()) || 0;
+      P_tube =
+        parseFloat($("#design_eq3 input[name='design_press_tube']").val()) || 0;
+    }
+
     let R_shell = D_Shell / 2;
     let R_tube = D_Tube / 2;
     let K = 1.0;
 
-    if (EQType === "EQT3" || EQType === "EQT2") {
+    // Pisahkan logika EQT3 (Heat Exchanger) dengan EQT2/EQT1
+    if (EQType === "EQT3") {
+      // --- EQT3: HEAT EXCHANGER (Punya Shell & Tube terpisah) ---
+      // 1. Hitung Shell EQT3
       if (P_shell > 0 && S > 0 && R_shell > 0) {
         if (dimShelltype === "inside") {
           results.shell.treq = (P_shell * R_shell) / (S * E - 0.6 * P_shell);
           if (t_act_shell > 0)
             results.shell.mawp =
               (S * E * t_act_shell) / (R_shell + 0.6 * t_act_shell);
-        }
-        if (dimShelltype === "outside") {
+        } else if (dimShelltype === "outside") {
           results.shell.treq = (P_shell * R_shell) / (S * E + 0.4 * P_shell);
           if (t_act_shell > 0)
             results.shell.mawp =
               (S * E * t_act_shell) / (R_shell - 0.4 * t_act_shell);
         }
       }
-      if (P_tube > 0 && S > 0) {
+
+      // 2. Hitung Head EQT3 (Menggunakan parameter Tube)
+      if (P_tube > 0 && S > 0 && D_Tube > 0) {
         if (headType === "3") {
           if (dimTubetype === "inside") {
             results.head.treq = (P_tube * D_Tube) / (2 * S * E - 0.2 * P_tube);
             if (t_act_head > 0)
               results.head.mawp =
                 (2 * S * E * t_act_head) / (D_Tube + 0.2 * t_act_head);
-          }
-          if (dimTubetype === "outside") {
+          } else if (dimTubetype === "outside") {
             results.head.treq =
               (P_tube * D_Tube * K) / (2 * S * E + 2 * P_tube * (K - 0.1));
             if (t_act_head > 0)
@@ -1162,38 +1216,43 @@ $(function () {
                 (2 * S * E * t_act_head) /
                 (K * D_Tube - 2 * t_act_head * (K - 0.1));
           }
-        }
-        if (headType === "4") {
+        } else if (headType === "4") {
           if (dimTubetype === "inside") {
             results.head.treq = (P_tube * R_tube) / (2 * S * E - 0.2 * P_tube);
             if (t_act_head > 0)
               results.head.mawp =
                 (2 * S * E * t_act_head) / (R_tube + 0.2 * t_act_head);
-          }
-          if (dimTubetype === "outside") {
+          } else if (dimTubetype === "outside") {
             results.head.treq = (P_tube * R_tube) / (2 * S * E + 0.8 * P_tube);
             if (t_act_head > 0)
               results.head.mawp =
                 (2 * S * E * t_act_head) / (R_tube - 0.8 * t_act_head);
           }
-        }
-        if (headType === "5") {
+        } else if (headType === "5") {
           if (L_crown > 0 && r_knuckle > 0) {
             let M = 0.25 * (3 + Math.sqrt(L_crown / r_knuckle));
             if (dimTubetype === "inside") {
               results.head.treq =
                 (P_tube * L_crown * M) / (2 * S * E - 0.2 * P_tube);
-            }
-            if (dimTubetype === "outside") {
+              if (t_act_head > 0)
+                results.head.mawp =
+                  (2 * S * E * t_act_head) / (M * L_crown + 0.2 * t_act_head);
+            } else if (dimTubetype === "outside") {
               results.head.treq =
                 (P_tube * L_crown * M) / (2 * S * E + P_tube * (M - 0.2));
+              if (t_act_head > 0)
+                results.head.mawp =
+                  (2 * S * E * t_act_head) /
+                  (M * L_crown - t_act_head * (M - 0.2));
             }
           }
         }
       }
     } else {
+      let P = P_shell;
+
       if (P > 0 && S > 0 && R > 0) {
-        // --- SHELL ---
+        // 1. Hitung Shell
         if (dimType === "inside") {
           results.shell.treq = (P * R) / (S * E - 0.6 * P);
           if (t_act_shell > 0)
@@ -1205,7 +1264,8 @@ $(function () {
             results.shell.mawp =
               (S * E * t_act_shell) / (R - 0.4 * t_act_shell);
         }
-        // --- HEAD ---
+
+        // 2. Hitung Head
         if (headType === "3") {
           if (dimType === "inside") {
             results.head.treq = (P * D) / (2 * S * E - 0.2 * P);
@@ -1251,9 +1311,9 @@ $(function () {
       }
     }
 
-    // --- NOZZLE REQUIRED THICKNESS (Berlaku untuk EQT3 & Vessel) ---
-    if (P > 0 && S > 0 && R_Nozzle > 0) {
-      results.nozzle.treq = (P * R_Nozzle) / (S * E - 0.6 * P);
+    // --- NOZZLE REQUIRED THICKNESS (Berlaku untuk semua) ---
+    if (P_shell > 0 && S > 0 && R_Nozzle > 0) {
+      results.nozzle.treq = (P_shell * R_Nozzle) / (S * E - 0.6 * P_shell);
       if (t_act_nozzle > 0) {
         results.nozzle.mawp =
           (S * E * t_act_nozzle) / (R_Nozzle + 0.6 * t_act_nozzle);
@@ -1589,6 +1649,75 @@ $(function () {
     localStorage.setItem("governing", governing_comp);
   }
 
+  // ==========================================
+  // FUNGSI HITUNG BULAN INSPEKSI (API 581 LOGIC)
+  // ==========================================
+  function calculateInspectionPeriods() {
+    // 1. Ambil Remaining Life (RL) dari Step 2 yang disimpen di localStorage
+    // Jika data RL belum ada, kita asumsikan 20 tahun (240 bulan)
+    let rl_years = parseFloat(localStorage.getItem("min_rl")) || 20;
+    let rl_months = rl_years * 12;
+
+    // Daftar semua kode Damage Mechanism di HTML kita
+    let mechanisms = [
+      "ext_corr",
+      "ext_crack",
+      "int_thin",
+      "int_crack",
+      "loc_corr",
+    ];
+
+    mechanisms.forEach((mech) => {
+      // --- A. LOGIKA INTRUSIVE (Maks 120 bulan) ---
+      let effInt =
+        $(`#insp_${mech}_intrusive option:selected`).data("eff") || "None";
+      let $periodInt = $(`#period_${mech}_intrusive`);
+
+      if (effInt === "None" || effInt === "") {
+        $periodInt.text("-");
+      } else {
+        // Base API: Half Life (RL / 2)
+        let calcInt = rl_months / 2;
+
+        // Penalti kalau metode inspeksinya kurang efektif
+        if (effInt === "Medium") calcInt *= 0.8;
+        if (effInt === "Low") calcInt *= 0.5;
+
+        // Cap Maksimal 120 bulan (10 tahun)
+        let finalInt = Math.min(120, Math.round(calcInt));
+        $periodInt.text(finalInt);
+      }
+
+      // --- B. LOGIKA NON-INTRUSIVE (Maks 60 bulan) ---
+      let effNonInt =
+        $(`#insp_${mech}_nonintrusive option:selected`).data("eff") || "None";
+      let $periodNonInt = $(`#period_${mech}_nonintrusive`);
+      let isOptimized = $(`#opt_${mech}_nonintrusive`).is(":checked");
+
+      if (effNonInt === "None" || effNonInt === "") {
+        $periodNonInt.text("-");
+      } else {
+        // Base API: RL / 3 (Lebih cepet karena ga buka alat)
+        let calcNonInt = rl_months / 3;
+
+        if (effNonInt === "High") calcNonInt = rl_months / 2.5; // High confidence
+        if (effNonInt === "Medium") calcNonInt = rl_months / 3;
+        if (effNonInt === "Low") calcNonInt = rl_months / 4;
+
+        // Jika Optimized dicentang, extend waktunya 25%
+        if (isOptimized) {
+          calcNonInt *= 1.25;
+        }
+
+        // Cap Maksimal 60 bulan (Atau 72 bulan kalau optimized, bebas lu tentuin)
+        let maxBulan = isOptimized ? 72 : 60;
+        let finalNonInt = Math.min(maxBulan, Math.round(calcNonInt));
+
+        $periodNonInt.text(finalNonInt);
+      }
+    });
+  }
+
   function calculateCriticalityMatrix() {
     let lof_cat = $("#lof_category").val();
 
@@ -1701,60 +1830,29 @@ $(function () {
     let rl_shell = parseRL("#sum_rlst_shell");
     let rl_head = parseRL("#sum_rlst_head");
     let rl_nozzle = parseRL("#sum_rlst_nozzle");
-    // Cari RL terkecil (Governing Component)
     let min_rl = Math.min(rl_shell, rl_head, rl_nozzle);
 
     // ==========================================
     // 3. KALKULASI DAMAGE FACTOR (DF) - API 581
     // ==========================================
-    // a. Thinning DF (Berdasarkan Remaining Life)
-    // Di API 581, DF Thinning meroket tajam eksponensial saat RL mendekati 0
-    // function calcTimeToFailure(t_act, t_req, cr) {
-    //   if (cr <= 0) return 999;
-    //   return (t_act - t_req) / cr;
-    // }
 
-    // function calcPoFThinning(time, ttf) {
-    //   if (ttf <= 0) return 1;
-    //   let lambda = 1 / ttf;
-    //   let PoF = 1 - Math.exp(-lambda * time);
-    //   return PoF;
-    // }
+    // FUNGSI BARU: Ambil Diskon Resiko dari Tabel Step 5!
+    // API 581 Logic: Inspeksi "High" ngasih diskon DF sampai 80% (multiplier 0.2)
+    function getEffDiscount(mechCode) {
+      let effInt =
+        $(`#insp_${mechCode}_intrusive option:selected`).data("eff") || "None";
+      let effNon =
+        $(`#insp_${mechCode}_nonintrusive option:selected`).data("eff") ||
+        "None";
 
-    // function calcDFThinning(PoF, GFF = 3.06e-5) {
-    //   return PoF / GFF;
-    // }
+      let levels = [effInt, effNon];
+      if (levels.includes("High")) return 0.2; // Resiko didiskon 80%
+      if (levels.includes("Medium")) return 0.5; // Resiko didiskon 50%
+      if (levels.includes("Low")) return 0.8; // Resiko didiskon 20%
+      return 1.0; // None (Resiko mentok / tidak didiskon)
+    }
 
-    // function getDFThinning({ t_act, t_req, cr, age }) {
-    //   let ttf = calcTimeToFailure(t_act, t_req, cr);
-    //   let PoF = calcPoFThinning(age, ttf);
-    //   let DF = calcDFThinning(PoF);
-
-    //   return {
-    //     ttf,
-    //     PoF,
-    //     DF,
-    //   };
-    // }
-
-    // let resultStep2 = JSON.parse(localStorage.getItem("resultStep2"));
-    // let t_act_shell = parseFloat($("input[name='act_thick_shell']").val()) || 0;
-    // let yearAct = extractYear($("input[name='act_inspection']").val());
-    // if (yearAct === 0) {
-    //   yearAct = new Date().getFullYear();
-    // }
-    // let yearBuilt = parseInt($("select[name='first_use']").val()) || 0;
-
-    // let thinning = getDFThinning({
-    //   t_act: t_act_shell,
-    //   t_req: resultStep2.shell.treq,
-    //   cr: resultStep2.shell.cr_lt,
-    //   age: yearAct - yearBuilt,
-    // });
-
-    // let df_thinning = thinning.DF;
-
-    // OLD FUNCTION DF_THINNING
+    // a. Thinning DF (Base)
     let df_thinning = 1.0;
     if (min_rl <= 0)
       df_thinning = 2000.0; // Kritis / Past Failure
@@ -1764,89 +1862,86 @@ $(function () {
     else if (min_rl <= 20) df_thinning = 5.0;
     else df_thinning = 1.0; // Aman (> 20 tahun)
 
-    // b. Cracking & External DF (Berdasarkan Severity dari Step 4)
+    // APLIKASIKAN DISKON EFFECTIVENESS KE THINNING
+    df_thinning = df_thinning * getEffDiscount("int_thin");
+
+    // b. Cracking & External DF (Base)
     function getCrackingDF(severity) {
-      if (severity === "HIGH") return 100.0; // API 581 Cracking High DF
+      if (severity === "HIGH") return 100.0;
       if (severity === "MEDIUM") return 20.0;
       if (severity === "LOW") return 5.0;
       return 1.0; // Not Susceptible
     }
 
-    let df_cracks = [
-      getCrackingDF(dms.ext_cracking),
-      getCrackingDF(dms.amine_scc),
-      getCrackingDF(dms.hic),
-      getCrackingDF(dms.ciscc),
-      getCrackingDF(dms.ssc),
-    ];
-    let max_df_cracking = Math.max(...df_cracks);
+    // APLIKASIKAN DISKON EFFECTIVENESS KE MASING-MASING DM
+    let df_ext_crack =
+      getCrackingDF(dms.ext_cracking) * getEffDiscount("ext_crack");
 
-    // TOTAL DF (Skenario terburuk antara korosi menipis vs retak)
+    // Untuk Internal Cracking, ambil resiko cracking paling parah di dalam alat
+    let df_int_crack =
+      Math.max(
+        getCrackingDF(dms.amine_scc),
+        getCrackingDF(dms.hic),
+        getCrackingDF(dms.ciscc),
+        getCrackingDF(dms.ssc),
+      ) * getEffDiscount("int_crack");
+
+    let df_ext_corr =
+      getCrackingDF(dms.atmospheric) * getEffDiscount("ext_corr");
+    let df_loc_corr =
+      Math.max(getCrackingDF(dms.co2), getCrackingDF(dms.mic)) *
+      getEffDiscount("loc_corr");
+
+    let max_df_cracking = Math.max(
+      df_ext_crack,
+      df_int_crack,
+      df_ext_corr,
+      df_loc_corr,
+    );
+
+    // TOTAL DF (Skenario terburuk)
     let total_df = Math.max(df_thinning, max_df_cracking);
 
     // ==========================================
     // 4. KALKULASI PROBABILITY OF FAILURE (PoF)
     // ==========================================
-    // Konstanta API 581 untuk Pressure Vessel
-    const GFF = 3.06e-5; // Generic Failure Frequency
-    const FMS = 1.0; // Management System Factor (Diasumsikan 1.0 / Average)
-
+    const GFF = 3.06e-5;
+    const FMS = 1.0;
     const PoF = GFF * FMS * total_df;
 
     // ==========================================
     // 5. MAPPING PoF KE LIKELIHOOD CATEGORY (1-5)
-    // Tabel Patokan API 581 Part 3
     // ==========================================
     let autoLofCat = "1";
-    if (PoF > 1e-2)
-      autoLofCat = "5"; // PoF > 0.01 (Very High)
-    else if (PoF > 1e-3)
-      autoLofCat = "4"; // PoF > 0.001 (High)
-    else if (PoF > 1e-4)
-      autoLofCat = "3"; // PoF > 0.0001 (Medium)
-    else if (PoF > 1e-5)
-      autoLofCat = "2"; // PoF > 0.00001 (Low)
-    else autoLofCat = "1"; // PoF <= 0.00001 (Very Low)
+    if (PoF > 1e-2) autoLofCat = "5";
+    else if (PoF > 1e-3) autoLofCat = "4";
+    else if (PoF > 1e-4) autoLofCat = "3";
+    else if (PoF > 1e-5) autoLofCat = "2";
+    else autoLofCat = "1";
 
     // ==========================================
     // 6. UPDATE UI & TRIGGER MATRIX
     // ==========================================
-    // Format PoF jadi scientific (Contoh: 3.06e-4) biar kelihatan sangat "Engineering"
     let displayPoF = PoF.toExponential(2).toUpperCase();
+    $("#ui_lof_score").val(`PoF: ${displayPoF} (DF: ${total_df.toFixed(2)})`);
 
-    // Tembak angka PoF beserta penjelasan singkat ke input UI LoF
-    $("#ui_lof_score").val(`PoF: ${displayPoF} (DF: ${total_df})`);
-
-    // Cek apakah nilai LoF berubah, kalau berubah set valuenya lalu trigger matrix
     if ($("#lof_category").val() !== autoLofCat) {
       $("#lof_category").val(autoLofCat).trigger("change");
     }
-
-    // Buat Debugging lu di console
-    console.log(`--- API 581 PoF CALCULATION ---`);
-    console.log(`Min RL: ${min_rl} -> DF Thinning: ${df_thinning}`);
-    console.log(`Max Cracking DF: ${max_df_cracking}`);
-    console.log(`Total DF: ${total_df}`);
-    console.log(`PoF: ${PoF} -> LoF Category: ${autoLofCat}`);
   }
 
   function calculateInspectionStrategy() {
-    console.log("test");
     // ==========================================
-    // 1. AMBIL DATA
+    // 1. AMBIL DATA & BASE INTERVAL
     // ==========================================
     let minRL = parseFloat(localStorage.getItem("min_rl")) || 20;
     let governing = localStorage.getItem("governing") || "-";
+    let riskLevel = $("#risk_level").val() || "LOW RISK";
 
-    let riskLevel = $("#risk_level").val();
-
-    // ==========================================
-    // 2. BASE INTERVAL (API STYLE)
-    // ==========================================
     let baseInterval = Math.min(minRL / 2, 10);
 
     // ==========================================
-    // 3. RISK FACTOR
+    // 2. RISK & MECH FACTOR (FACTOR BREAKDOWN)
     // ==========================================
     let riskFactorMap = {
       "LOW RISK": 1.0,
@@ -1854,20 +1949,14 @@ $(function () {
       "HIGH RISK": 0.5,
       "EXTREME RISK": 0.25,
     };
+    let riskFactor = riskFactorMap[riskLevel] || 1.0;
 
-    let riskFactor = riskFactorMap[riskLevel] || 1;
-
-    // ==========================================
-    // 4. DAMAGE MECHANISM SEVERITY (AMBIL TERBURUK)
-    // ==========================================
     function getWorstDM() {
       let levels = [];
-
       $(".dm-badge").each(function () {
-        let val = $(this).data("value"); // pastikan badge punya data-value
-        if (val) levels.push(val);
+        let val = $(this).text().trim();
+        if (val && val !== "Not") levels.push(val);
       });
-
       if (levels.includes("High")) return "High";
       if (levels.includes("Medium")) return "Medium";
       if (levels.includes("Low")) return "Low";
@@ -1875,83 +1964,180 @@ $(function () {
     }
 
     let worstDM = getWorstDM();
-
-    let mechFactorMap = {
-      High: 0.5,
-      Medium: 0.75,
-      Low: 1.0,
-      Not: 1.1,
-    };
-
-    let mechFactor = mechFactorMap[worstDM];
+    let mechFactorMap = { High: 0.5, Medium: 0.75, Low: 1.0, Not: 1.1 };
+    let mechFactor = mechFactorMap[worstDM] || 1.0;
 
     // ==========================================
-    // 5. FINAL INTERVAL
+    // 3. FINAL MASTER INTERVAL
     // ==========================================
     let finalInterval = baseInterval * riskFactor * mechFactor;
-
-    // Clamp biar realistis
-    finalInterval = Math.max(1, Math.min(finalInterval, 10));
+    finalInterval = Math.max(1, Math.min(finalInterval, 10)); // Clamp 1-10 years
 
     let currentYear = new Date().getFullYear();
     let nextInspection = Math.floor(currentYear + finalInterval);
 
     // ==========================================
-    // 6. INSPECTION STRATEGY (API 571 BASED)
-    // ==========================================
-    function getInspectionMethod(dm) {
-      const map = {
-        co2: "UT Thickness + Corrosion Loop Monitoring",
-        mic: "UT + Microbiological Analysis",
-        ssc: "WFMT / ACFM / UT Shear Wave",
-        hic: "UT Shear Wave + TOFD",
-        ciscc: "PT + UT Shear Wave",
-        cui: "CUI Inspection + UT Spot Check",
-        atmospheric: "Visual + Coating Assessment",
-        ext_cracking: "PT / MT + Visual",
-      };
-
-      return map[dm] || "General Visual + UT";
-    }
-
-    // Cari dominant DM
-    let dominantDM = localStorage.getItem("dominant_dm") || "-";
-
-    // for (let dm of priorityList) {
-    //   let val = $(`#dm_${dm}`).data("value");
-    //   if (val === "High") {
-    //     dominantDM = dm;
-    //     break;
-    //   }
-    // }
-
-    let inspectionMethod = getInspectionMethod(dominantDM);
-
-    // ==========================================
-    // 7. UPDATE UI (Tambahan)
+    // 4. UPDATE UI - KARTU ATAS & FACTOR BREAKDOWN
     // ==========================================
     $("#insp_interval").text(finalInterval.toFixed(1) + " Years");
     $("#insp_next_year").text(nextInspection);
-    $("#insp_method").text(inspectionMethod);
     $("#insp_governing").text(governing);
 
-    // Update UI Breakdown Faktor
+    // List Factor Breakdown
     $("#ui_factor_risklevel").text(riskLevel || "Not Set");
     $("#ui_factor_risk").text("x " + riskFactor);
-    $("#ui_factor_worst_dm").text(worstDM);
+
+    // Set Badge Warna untuk Worst DM
+    let badgeColor = "bg-secondary";
+    if (worstDM === "High") badgeColor = "bg-danger";
+    if (worstDM === "Medium") badgeColor = "bg-warning text-dark";
+    $("#ui_factor_worst_dm")
+      .text(worstDM)
+      .attr("class", "badge rounded-pill " + badgeColor);
+
     $("#ui_factor_mech").text("x " + mechFactor);
 
-    console.log({
-      RL: minRL,
-      baseInterval,
-      riskLevel,
-      riskFactor,
-      worstDM,
-      mechFactor,
-      finalInterval,
-      nextInspection,
-      method: inspectionMethod,
+    // ==========================================
+    // 5. KOMPILASI RECOMMENDED NDT METHOD (TOP CARD)
+    // ==========================================
+    const mechs = [
+      { id: "ext_corr", label: "External Corrosion" },
+      { id: "ext_crack", label: "External Surface Cracking" },
+      { id: "int_thin", label: "Internal Thinning" },
+      { id: "int_crack", label: "Internal Cracking" },
+      { id: "loc_corr", label: "Localised Internal Corrosion" },
+    ];
+
+    function getShortMethod(val) {
+      if (!val || val === "None") return null;
+      let txt = val.toLowerCase();
+      if (txt.includes("ut") || txt.includes("ultrasonic")) return "UT";
+      if (txt.includes("rt") || txt.includes("radiographic")) return "RT";
+      if (txt.includes("visual") || txt.includes("vie")) return "VT";
+      if (txt.includes("mpt") || txt.includes("dpt") || txt.includes("wfmt"))
+        return "MT/PT";
+      return val;
+    }
+
+    let allMethods = [];
+    mechs.forEach((m) => {
+      let s1 = getShortMethod($(`#insp_${m.id}_nonintrusive`).val());
+      let s2 = getShortMethod($(`#insp_${m.id}_intrusive`).val());
+      if (s1) allMethods.push(s1);
+      if (s2) allMethods.push(s2);
     });
+
+    let uniqueMethods = [...new Set(allMethods)];
+
+    // KAMUS DETAIL METODE NDT
+    const ndtDetails = {
+      UT: "Ultrasonic Testing: Mengukur ketebalan aktual & mendeteksi cacat internal menggunakan gelombang suara.",
+      RT: "Radiographic Testing: Mendeteksi cacat internal (volumetric) menggunakan paparan sinar-X / Gamma.",
+      VT: "Visual Testing: Pemeriksaan kondisi fisik permukaan secara langsung atau menggunakan alat bantu optik.",
+      "MT/PT":
+        "Magnetic/Penetrant Testing: Mendeteksi retak (cracking) di area permukaan dan pengelasan.",
+    };
+
+    // Buat elemen HTML span dengan fitur Tooltip Bootstrap
+    let methodHtmlArray = uniqueMethods.map((method) => {
+      let detail = ndtDetails[method] || "Metode inspeksi khusus.";
+      // Dikasih garis bawah putus-putus & cursor help biar user tau itu bisa di-hover
+      return `<span class="fw-bold text-primary" 
+                      style="cursor: help; border-bottom: 1px dashed #696cff;" 
+                      data-bs-toggle="tooltip" 
+                      data-bs-placement="bottom" 
+                      title="${detail}">
+                  ${method}
+                </span>`;
+    });
+
+    // Gabungkan dengan tanda "+"
+    let finalMethodHtml =
+      methodHtmlArray.length > 0
+        ? methodHtmlArray.join(' <span class="text-dark mx-1">+</span> ')
+        : "No Inspection Planned";
+
+    // ⚠️ PENTING: Gunakan .html() bukan .text() karena kita masukin tag <span>
+    $("#insp_method").html(finalMethodHtml);
+
+    // ==========================================
+    // INITIALIZE BOOTSTRAP TOOLTIP
+    // ==========================================
+    // Hancurkan tooltip lama (kalau ada) biar gak error pas recalculate, lalu pasang yang baru
+    $('[data-bs-toggle="tooltip"]').tooltip("dispose");
+    $('[data-bs-toggle="tooltip"]').tooltip();
+
+    // ==========================================
+    // 6. RENDER TIMELINE SERIES (PROGRESS BAR) BAWAH
+    // ==========================================
+    let tbodyHtml = "";
+
+    mechs.forEach((m) => {
+      let ni_eff =
+        $(`#insp_${m.id}_nonintrusive option:selected`).data("eff") || "None";
+      let ni_period = parseInt($(`#period_${m.id}_nonintrusive`).text()) || 0;
+
+      let in_eff =
+        $(`#insp_${m.id}_intrusive option:selected`).data("eff") || "None";
+      let in_period = parseInt($(`#period_${m.id}_intrusive`).text()) || 0;
+
+      let plans = [];
+      if (ni_eff !== "None" && ni_period > 0)
+        plans.push({ type: "(On-Stream)", eff: ni_eff, period: ni_period });
+      if (in_eff !== "None" && in_period > 0)
+        plans.push({ type: "(Off-Stream)", eff: in_eff, period: in_period });
+
+      if (plans.length === 0) {
+        tbodyHtml += `
+            <tr>
+               <td class="fw-bold text-muted">${m.label}</td>
+               <td class="text-center text-muted">-</td>
+               <td class="text-center text-muted">-</td>
+               <td class="px-3">
+                  <div class="progress shadow-none" style="height: 22px; background-color: #f0f2f5; border-radius: 6px;">
+                     <div class="progress-bar bg-transparent" style="width: 100%;"></div>
+                  </div>
+               </td>
+            </tr>`;
+      } else {
+        plans.forEach((plan, index) => {
+          let dmLabel =
+            index === 0
+              ? `<td class="fw-bold text-dark" rowspan="${plans.length}">${m.label}</td>`
+              : "";
+
+          let badgeClass = "bg-secondary";
+          let barClass = "bg-secondary";
+          if (plan.eff === "High") {
+            badgeClass = "bg-danger";
+            barClass = "bg-danger";
+          }
+          if (plan.eff === "Medium") {
+            badgeClass = "bg-warning text-dark";
+            barClass = "bg-warning";
+          }
+
+          let widthPercent = Math.min((plan.period / 120) * 100, 100);
+
+          tbodyHtml += `
+                <tr>
+                   ${dmLabel}
+                   <td class="text-center">
+                      <span class="badge ${badgeClass} mb-1 d-block">${plan.eff}</span>
+                      <small class="text-dark" style="font-size: 0.65rem;">${plan.type}</small>
+                   </td>
+                   <td class="text-center fw-bold fs-6">${plan.period} <span class="fw-normal text-muted" style="font-size: 0.7rem;">mo</span></td>
+                   <td class="align-middle px-3">
+                      <div class="progress shadow-none" style="height: 22px; background-color: #f0f2f5; border-radius: 6px;">
+                         <div class="progress-bar progress-bar-striped progress-bar-animated ${barClass}" role="progressbar" style="width: ${widthPercent}%"></div>
+                      </div>
+                   </td>
+                </tr>`;
+        });
+      }
+    });
+
+    $("#final_inspection_timeline tbody").html(tbodyHtml);
   }
 
   function getInspectionFactor(mech, method) {
