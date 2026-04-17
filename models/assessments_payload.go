@@ -1,6 +1,6 @@
 package models
 
-// Struct ini persis ngikutin format JSON Payload dari JavaScript
+// Struct ini persis ngikutin format JSON Payload dari JavaScript vessel_assessment.js
 type AssessmentPayload struct {
 	Equipment        EquipmentPayload       `json:"equipment"`
 	Assessment       AssessmentGeneral      `json:"assessment"`
@@ -8,59 +8,86 @@ type AssessmentPayload struct {
 	Environment      EnvironmentPayload     `json:"environment"`
 	DamageMechanisms DamageMechanismPayload `json:"damage_mechanisms"`
 	Results          ResultPayload          `json:"results"`
+	CladdingData     CladdingPayload        `json:"cladding_data"`
 }
 
 type EquipmentPayload struct {
-	MasterEquipmentID  int      `json:"master_equipment_id" binding:"required"`
-	TagNumber          string   `json:"tag_number" binding:"required"`
-	YearBuilt          int      `json:"year_built" binding:"required"`
-	ShellMaterialID    int      `json:"shell_material_id"`
-	DesignPressure     float64  `json:"design_pressure"`
-	DesignPressureTube *float64 `json:"design_pressure_tube"`
-	DesignTemp         float64  `json:"design_temp"`
-	DesignTempTube     *float64 `json:"design_temp_tube"`
-	Diameter           float64  `json:"diameter"`
-	DiameterTube       float64  `json:"diameter_tube"`
-	Volume             float64  `json:"volume"`
+	MasterEquipmentID int    `json:"master_equipment_id" binding:"required"`
+	TagNumber         string `json:"tag_number" binding:"required"`
+	YearBuilt         int    `json:"year_built" binding:"required"`
+	Location          string `json:"location"`
+	ShellMaterialID   int    `json:"shell_material_id"`
 
-	// --- TAMBAHAN DARI MIGRATION BARU ---
-	Location           string  `json:"location"`
+	DesignPressure     float64 `json:"design_pressure"`
+	DesignPressureTube float64 `json:"design_pressure_tube"`
+	DesignTemp         float64 `json:"design_temp"`
+	DesignTempTube     float64 `json:"design_temp_tube"`
+	Diameter           float64 `json:"diameter"`
+	DiameterTube       float64 `json:"diameter_tube"`
+	Volume             float64 `json:"volume"`
+	Length             float64 `json:"length"`
+	Nozzle             float64 `json:"nozzle"`
+
+	// Tipe Data Text / String
 	DiameterType       string  `json:"diameter_type"`
 	DiameterUnit       string  `json:"diameter_unit"`
-	DiameterTubeType   string  `json:"diameter_tube_type"`
-	DiameterTubeUnit   string  `json:"diameter_tube_unit"`
-	Length             float64 `json:"length"`
+	DiameterTubeType   *string `json:"diameter_tube_type"` // Pointer karena bisa null dari JS
+	DiameterTubeUnit   *string `json:"diameter_tube_unit"`
 	LengthUnit         string  `json:"length_unit"`
 	VolumeUnit         string  `json:"volume_unit"`
 	TempDesignUnit     string  `json:"temp_design_unit"`
-	TempDesignTubeUnit string  `json:"temp_design_tube_unit"`
+	TempDesignTubeUnit *string `json:"temp_design_tube_unit"`
 	Pwht               string  `json:"pwht"`
 	Certificate        string  `json:"certificate"`
 	DataReference      string  `json:"data_reference"`
-	Nozzle             float64 `json:"nozzle"`
 	NozzleUnit         string  `json:"nozzle_unit"`
-	PhaseType          string  `json:"phase_type"`
-	InternalLining     string  `json:"internal_lining"`
-	Insulation         string  `json:"insulation"`
-	SpecialService     string  `json:"special_service"`
-	Protection         string  `json:"protection"`
-	CathodicProtection string  `json:"cathodic_protection"`
+
+	// FIX: Dipindahkan ke sini dari Environment agar cocok dengan JS
+	PhaseType          string `json:"phase_type"`
+	InternalLining     string `json:"internal_lining"`
+	Insulation         string `json:"insulation"`
+	SpecialService     string `json:"special_service"`
+	Protection         string `json:"protection"`
+	CathodicProtection string `json:"cathodic_protection"`
 }
+
 type AssessmentGeneral struct {
-	AssessmentDate        string  `json:"assessment_date"`
-	PrevInspectionDate    string  `json:"prev_inspection_date"`
-	ActInspectionDate     string  `json:"act_inspection_date"`
+	AssessmentDate     string `json:"assessment_date"`
+	PrevInspectionDate string `json:"prev_inspection_date"`
+	ActInspectionDate  string `json:"act_inspection_date"`
+
 	OperatingPressure     float64 `json:"operating_pressure"`
-	OperatingTemp         float64 `json:"operating_temp"`
 	OperatingPressureTube float64 `json:"operating_pressure_tube"`
+	OperatingTemp         float64 `json:"operating_temp"`
 	OperatingTempTube     float64 `json:"operating_temp_tube"`
-	TempOpUnit            string  `json:"temp_op_unit"`
-	TempOpTubeUnit        string  `json:"temp_op_tube_unit"`
+
+	TempOpUnit     string  `json:"temp_op_unit"`
+	TempOpTubeUnit *string `json:"temp_op_tube_unit"`
+}
+
+type EnvironmentPayload struct {
+	Phase         string  `json:"phase"`
+	H2SContent    float64 `json:"h2s_content"`
+	CO2Content    float64 `json:"co2_content"`
+	H2OContent    float64 `json:"h2o_content"`
+	ChlorideIndex int     `json:"chloride_index"`
+	PHIndex       int     `json:"ph_index"`
+
+	// FIX: Data Step 3 dipindahkan ke sini agar cocok dengan JS
+	ImpactProduction      string  `json:"impact_production"`
+	InsulationCondition   string  `json:"insulation_condition"`
+	InsulationDamageLevel string  `json:"insulation_damage_level"`
+	CoatingCondition      string  `json:"coating_condition"`
+	CoatingDamageLevel    string  `json:"coating_damage_level"`
+	CorrectiveDescription string  `json:"corrective_description"`
+	CorrectiveAction      string  `json:"corrective_action"`
+	CorrectiveDate        *string `json:"corrective_date"` // Pointer karena bisa null
 }
 
 type ThicknessDataPayload struct {
-	Shell ComponentThickness `json:"shell"`
-	Head  ComponentThickness `json:"head"`
+	Shell  ComponentThickness `json:"shell"`
+	Head   ComponentThickness `json:"head"`
+	Nozzle ComponentThickness `json:"nozzle"`
 }
 
 type ComponentThickness struct {
@@ -69,23 +96,6 @@ type ComponentThickness struct {
 	TReq          float64 `json:"t_req"`
 	CorrosionRate float64 `json:"corrosion_rate"`
 	RemainingLife float64 `json:"remaining_life"`
-}
-
-type EnvironmentPayload struct {
-	Phase                 string  `json:"phase"`
-	H2sContent            float64 `json:"h2s_content"`
-	Co2Content            float64 `json:"co2_content"`
-	H2oContent            float64 `json:"h2o_content"`
-	ChlorideIndex         int     `json:"chloride_index"`
-	PhIndex               int     `json:"ph_index"`
-	ImpactProduction      string  `json:"impact_production"`
-	InsulationCondition   string  `json:"insulation_condition"`
-	InsulationDamageLevel string  `json:"insulation_damage_level"`
-	CoatingCondition      string  `json:"coating_condition"`
-	CoatingDamageLevel    string  `json:"coating_damage_level"`
-	CorrectiveDescription string  `json:"corrective_description"`
-	CorrectiveAction      string  `json:"corrective_action"`
-	CorrectiveDate        *string `json:"corrective_date"` // Pointer string buat ngakalin NULL kalau kosong
 }
 
 type DamageMechanismPayload struct {
@@ -104,17 +114,30 @@ type DamageMechanismPayload struct {
 }
 
 type ResultPayload struct {
-	LofCategory           int     `json:"lof_category"`
-	CofFinancial          string  `json:"cof_financial"` // Tambahan
-	CofSafety             string  `json:"cof_safety"`    // Tambahan
-	CofCategory           string  `json:"cof_category"`
-	RiskLevel             string  `json:"risk_level"`
-	RiskIndex             int     `json:"risk_index"`
-	InspInternalThinning  string  `json:"insp_internal_thinning"`  // Tambahan
-	InspExternalCorrosion string  `json:"insp_external_corrosion"` // Tambahan
-	InspCracking          string  `json:"insp_cracking"`           // Tambahan
-	GoverningComponent    string  `json:"governing_component"`
-	MaxIntervalYears      float64 `json:"max_interval_years"`
-	NextInspectionYear    int     `json:"next_inspection_year"`
-	RecommendedMethod     string  `json:"recommended_method"`
+	LofCategory        int               `json:"lof_category"`
+	CofFinancial       string            `json:"cof_financial"`
+	CofSafety          string            `json:"cof_safety"`
+	CofCategory        string            `json:"cof_category"`
+	RiskLevel          string            `json:"risk_level"`
+	RiskIndex          int               `json:"risk_index"`
+	InspectionData     map[string]string `json:"inspection_data"`
+	GoverningComponent string            `json:"governing_component"`
+	MaxIntervalYears   float64           `json:"max_interval_years"`
+	NextInspectionYear int               `json:"next_inspection_year"`
+	RecommendedMethod  string            `json:"recommended_method"`
+}
+
+type CladdingPayload struct {
+	Shell  CladDetail `json:"shell"`
+	Head   CladDetail `json:"head"`
+	Nozzle CladDetail `json:"nozzle"`
+}
+
+type CladDetail struct {
+	BaseMetal float64 `json:"base_metal"`
+	Cladding  float64 `json:"cladding"`
+	TotalInit float64 `json:"total_init"`
+	ActNow    float64 `json:"act_now"`
+	ActCons   float64 `json:"act_cons"`
+	Status    string  `json:"status"`
 }

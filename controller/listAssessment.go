@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"encoding/json"
 	"net/http"
 	"pv-risk/config"
+	"pv-risk/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -74,6 +76,7 @@ type AssessmentFullDetail struct {
 	Description       string
 	AssessmentDate    string
 	YearBuilt         int
+	Location          string
 	DesignPressure    float64
 	DesignTemp        float64
 	OperatingPressure float64
@@ -82,21 +85,19 @@ type AssessmentFullDetail struct {
 	Volume            float64
 	Phase             string
 
-	// --- KOLOM BARU: GEOMETRY, UNIT, & DOCS ---
-	DiameterType   string
-	DiameterUnit   string
-	Length         float64
-	LengthUnit     string
-	VolumeUnit     string
-	TempDesignUnit string
-	TempOpUnit     string
-	Pwht           string
-	Certificate    string
-	DataReference  string
-	Nozzle         float64
-	NozzleUnit     string
-
-	// --- KOLOM BARU: ENVIRONMENT & PROTECTION ---
+	// --- GEOMETRY & ENVIRONMENT ---
+	DiameterType       string
+	DiameterUnit       string
+	Length             float64
+	LengthUnit         string
+	VolumeUnit         string
+	TempDesignUnit     string
+	TempOpUnit         string
+	Pwht               string
+	Certificate        string
+	DataReference      string
+	Nozzle             float64
+	NozzleUnit         string
 	PhaseType          string
 	InternalLining     string
 	Insulation         string
@@ -110,7 +111,7 @@ type AssessmentFullDetail struct {
 	ChlorideIndex int
 	PhIndex       int
 
-	// --- DAMAGE MECHANISM (Termasuk CISCC) ---
+	// --- DAMAGE MECHANISM ---
 	Atmospheric string
 	Cui         string
 	ExtCracking string
@@ -118,6 +119,7 @@ type AssessmentFullDetail struct {
 	Hic         string
 	Co2         string
 	Ciscc       string
+	Galvanic    string
 	LofScore    string
 
 	// --- RESULTS & STRATEGY ---
@@ -129,86 +131,130 @@ type AssessmentFullDetail struct {
 	MaxIntervalYears   float64
 	NextInspectionYear int
 	RecommendedMethod  string
+
+	// --- THICKNESS SUMMARY (UI) ---
+	CorrosionRate float64
+	RemainingLife float64
+
+	// --- THICKNESS DETAIL (PDF SECTION 3) ---
+	ShellActThick      float64
+	ShellTReq          float64
+	ShellCR            float64
+	ShellRL            float64
+	HeadActThick       float64
+	HeadTReq           float64
+	HeadCR             float64
+	HeadRL             float64
+	NozActThick        float64
+	NozTReq            float64
+	NozCR              float64
+	NozRL              float64
+	InspectionPlanJSON string
+	InspectionPlan     map[string]string
+	CladdingJSON       string
+	CladdingData       models.CladdingPayload
 }
 
-// 2. Update Fungsi View-nya
 func ViewAssessmentDetail(c *gin.Context) {
 	id := c.Param("id")
 	db := config.DB
 	var d AssessmentFullDetail
 
-	// Query JOIN 5 Tabel
 	query := `
 		SELECT 
-			a.id, COALESCE(t.tag_number, '-'), COALESCE(e.name, '-') as description, COALESCE(a.assessment_date, '-'), COALESCE(t.year_built, 0),
+			a.id, COALESCE(t.tag_number, '-'), COALESCE(e.name, '-') as description, COALESCE(a.assessment_date, '-'), COALESCE(t.year_built, 0), COALESCE(t.location, '-'),
 			COALESCE(t.design_pressure, 0), COALESCE(t.design_temp, 0), COALESCE(a.operating_pressure, 0), COALESCE(a.operating_temp, 0),
 			COALESCE(t.diameter, 0), COALESCE(t.volume, 0), COALESCE(a.phase, '-'),
 			
-			-- KOLOM BARU: GEOMETRY & DOCS (Dari tabel trx_equipments & assessments)
-			COALESCE(t.diameter_type, 'Inside'), COALESCE(t.diameter_unit, 'inch'), COALESCE(t.length, 0), COALESCE(t.length_unit, 'ft'),
+			COALESCE(t.diameter_type, 'Inside'), COALESCE(t.diameter_unit, 'inch'), 
+			COALESCE(CAST(NULLIF(t.length, '-') AS REAL), 0), COALESCE(t.length_unit, 'ft'),
 			COALESCE(t.volume_unit, 'm3'), COALESCE(t.temp_design_unit, 'C'), COALESCE(a.temp_op_unit, 'C'), 
-			COALESCE(t.pwht, 'No'), COALESCE(t.certificate, '-'), COALESCE(t.data_reference, '-'), COALESCE(t.nozzle, 0), COALESCE(t.nozzle_unit, 'inch'),
+			COALESCE(t.pwht, 'No'), COALESCE(t.certificate, '-'), COALESCE(t.data_reference, '-'), 
+			COALESCE(CAST(NULLIF(t.nozzle, '-') AS REAL), 0), COALESCE(t.nozzle_unit, 'inch'),
 			
-			-- KOLOM BARU: ENVIRONMENT & PROTECTION (Dari tabel trx_equipments)
 			COALESCE(t.phase_type, 'multi phase'), COALESCE(t.internal_lining, 'None'), COALESCE(t.insulation, 'No'), 
 			COALESCE(t.special_service, '-'), COALESCE(t.protection, '-'), COALESCE(t.cathodic_protection, 'No'),
 
-			-- FLUIDA
 			COALESCE(a.h2s_content, 0), COALESCE(a.co2_content, 0), COALESCE(a.chloride_index, 0), COALESCE(a.ph_index, 0),
 			
-			-- DAMAGE MECHANISMS
 			COALESCE(dm.atmospheric, 'Not'), COALESCE(dm.cui, 'Not'), COALESCE(dm.ext_cracking, 'Not'), COALESCE(dm.ssc, 'Not'), 
-			COALESCE(dm.hic, 'Not'), COALESCE(dm.co2, 'Not'), COALESCE(dm.ciscc, 'Not'), COALESCE(dm.lof_score, '-'),
+			COALESCE(dm.hic, 'Not'), COALESCE(dm.co2, 'Not'), COALESCE(dm.ciscc, 'Not'), COALESCE(dm.galvanic, 'Not'), COALESCE(dm.lof_score, '-'),
 			
-			-- RESULTS
 			COALESCE(r.lof_category, 0), COALESCE(r.cof_category, '-'), COALESCE(r.risk_level, 'Pending'), COALESCE(r.risk_index, 0),
-			COALESCE(r.governing_component, '-'), COALESCE(r.max_interval_years, 0), COALESCE(r.next_inspection_year, 0), COALESCE(r.recommended_method, '-')
+			COALESCE(r.governing_component, '-'), COALESCE(r.max_interval_years, 0), COALESCE(r.next_inspection_year, 0), COALESCE(r.recommended_method, '-'),
+
+			COALESCE(th.cr, 0), COALESCE(th.rl, 0),
+			COALESCE(th.shell_act, 0), COALESCE(th.shell_treq, 0), COALESCE(th.shell_cr, 0), COALESCE(th.shell_rl, 0),
+			COALESCE(th.head_act, 0), COALESCE(th.head_treq, 0), COALESCE(th.head_cr, 0), COALESCE(th.head_rl, 0),
+			COALESCE(th.noz_act, 0), COALESCE(th.noz_treq, 0), COALESCE(th.noz_cr, 0), COALESCE(th.noz_rl, 0),
+
+			-- TAMBAHAN BARU UNTUK 10 PLAN JSON
+			COALESCE(r.inspection_plan_json, '{}'),
+			COALESCE(r.cladding_json, '{}')
+
 		FROM assessments a
 		JOIN trx_equipments t ON a.equipment_id = t.id
 		JOIN equipments e ON t.equipment_id = e.id
 		LEFT JOIN assessment_damage_mechanisms dm ON dm.assessment_id = a.id
 		LEFT JOIN assessment_results r ON r.assessment_id = a.id
+		LEFT JOIN (
+			SELECT assessment_id, 
+				MAX(corrosion_rate) as cr, MIN(remaining_life) as rl,
+				MAX(CASE WHEN component_type = 'shell' THEN act_thick END) as shell_act,
+				MAX(CASE WHEN component_type = 'shell' THEN t_req END) as shell_treq,
+				MAX(CASE WHEN component_type = 'shell' THEN corrosion_rate END) as shell_cr,
+				MAX(CASE WHEN component_type = 'shell' THEN remaining_life END) as shell_rl,
+				MAX(CASE WHEN component_type = 'head' THEN act_thick END) as head_act,
+				MAX(CASE WHEN component_type = 'head' THEN t_req END) as head_treq,
+				MAX(CASE WHEN component_type = 'head' THEN corrosion_rate END) as head_cr,
+				MAX(CASE WHEN component_type = 'head' THEN remaining_life END) as head_rl,
+				MAX(CASE WHEN component_type = 'nozzle' THEN act_thick END) as noz_act,
+				MAX(CASE WHEN component_type = 'nozzle' THEN t_req END) as noz_treq,
+				MAX(CASE WHEN component_type = 'nozzle' THEN corrosion_rate END) as noz_cr,
+				MAX(CASE WHEN component_type = 'nozzle' THEN remaining_life END) as noz_rl
+			FROM assessment_thicknesses
+			GROUP BY assessment_id
+		) th ON th.assessment_id = a.id
 		WHERE a.id = ?
 	`
 
-	// Scanning harus urut persis sama SELECT di atas
 	err := db.QueryRow(query, id).Scan(
-		&d.AssessmentID, &d.TagNumber, &d.Description, &d.AssessmentDate, &d.YearBuilt,
+		&d.AssessmentID, &d.TagNumber, &d.Description, &d.AssessmentDate, &d.YearBuilt, &d.Location,
 		&d.DesignPressure, &d.DesignTemp, &d.OperatingPressure, &d.OperatingTemp,
 		&d.Diameter, &d.Volume, &d.Phase,
-
-		// SCAN KOLOM BARU GEOMETRY
 		&d.DiameterType, &d.DiameterUnit, &d.Length, &d.LengthUnit,
 		&d.VolumeUnit, &d.TempDesignUnit, &d.TempOpUnit,
 		&d.Pwht, &d.Certificate, &d.DataReference, &d.Nozzle, &d.NozzleUnit,
-
-		// SCAN KOLOM BARU ENVIRONMENT
 		&d.PhaseType, &d.InternalLining, &d.Insulation,
 		&d.SpecialService, &d.Protection, &d.CathodicProtection,
-
-		// FLUIDA
 		&d.H2sContent, &d.Co2Content, &d.ChlorideIndex, &d.PhIndex,
-
-		// DM
-		&d.Atmospheric, &d.Cui, &d.ExtCracking, &d.Ssc, &d.Hic, &d.Co2, &d.Ciscc, &d.LofScore,
-
-		// RESULTS
+		&d.Atmospheric, &d.Cui, &d.ExtCracking, &d.Ssc, &d.Hic, &d.Co2, &d.Ciscc, &d.Galvanic, &d.LofScore,
 		&d.LofCategory, &d.CofCategory, &d.RiskLevel, &d.RiskIndex,
 		&d.GoverningComponent, &d.MaxIntervalYears, &d.NextInspectionYear, &d.RecommendedMethod,
+		&d.CorrosionRate, &d.RemainingLife,
+		&d.ShellActThick, &d.ShellTReq, &d.ShellCR, &d.ShellRL,
+		&d.HeadActThick, &d.HeadTReq, &d.HeadCR, &d.HeadRL,
+		&d.NozActThick, &d.NozTReq, &d.NozCR, &d.NozRL,
+
+		// SCAN JSON-NYA
+		&d.InspectionPlanJSON,
+		&d.CladdingJSON,
 	)
 
 	if err != nil {
-		// Ini bakal nampilin error aslinya langsung di layar browser lu gede-gede!
 		c.String(http.StatusInternalServerError, "❌ ERROR GET DETAIL: "+err.Error())
 		return
 	}
 
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Report not found or incomplete data"})
-		return
+	// CONVERT JSON STRING JADI MAP BIAR BISA DILOOPING DI HTML
+	if d.InspectionPlanJSON != "" {
+		json.Unmarshal([]byte(d.InspectionPlanJSON), &d.InspectionPlan)
 	}
 
-	// Render file HTML-nya
+	if d.CladdingJSON != "" && d.CladdingJSON != "{}" {
+		json.Unmarshal([]byte(d.CladdingJSON), &d.CladdingData)
+	}
+
 	c.HTML(http.StatusOK, "detail_assessment.html", gin.H{
 		"Detail":     d,
 		"ActiveMenu": "detail-assessment",

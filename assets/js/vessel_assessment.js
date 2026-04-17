@@ -280,8 +280,24 @@ $(function () {
         });
       },
       error: function (xhr, status, error) {
-        console.error("Error saving data:", error);
-        alert("Failed to save assessment. Please check the console.");
+        console.error("Error saving data:", xhr.responseText);
+
+        let errorMessage =
+          "Terjadi kesalahan saat menyimpan data. Silakan hubungi tim IT.";
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+          errorMessage = xhr.responseJSON.message;
+        }
+
+        Swal.fire({
+          title: "Gagal Menyimpan Assessment",
+          text: errorMessage,
+          icon: "error",
+          showDenyButton: false,
+          showCancelButton: false,
+          customClass: {
+            confirmButton: "btn btn-danger waves-effect waves-light",
+          },
+        });
       },
       complete: function () {
         $btn.html(originalText);
@@ -2019,46 +2035,50 @@ $(function () {
       return val;
     }
 
+    // 1. Ambil semua metode yang dipilih dari tabel di Step 5
     let allMethods = [];
-    mechs.forEach((m) => {
-      let s1 = getShortMethod($(`#insp_${m.id}_nonintrusive`).val());
-      let s2 = getShortMethod($(`#insp_${m.id}_intrusive`).val());
-      if (s1) allMethods.push(s1);
-      if (s2) allMethods.push(s2);
+    
+    // Daftar ID Damage Mechanism di tabel Step 5 lu
+    const dmKeys = ['ext_corr', 'ext_crack', 'int_thin', 'int_crack', 'loc_corr'];
+
+    dmKeys.forEach((key) => {
+      // Ambil TEKS yang tampil di layar (bukan value-nya)
+      let nonIntrusiveText = $(`#insp_${key}_nonintrusive option:selected`).text().trim();
+      let intrusiveText = $(`#insp_${key}_intrusive option:selected`).text().trim();
+
+      // Hanya masukkan jika bukan "None"
+      if (nonIntrusiveText !== "None" && nonIntrusiveText !== "") {
+        allMethods.push(nonIntrusiveText);
+      }
+      if (intrusiveText !== "None" && intrusiveText !== "") {
+        allMethods.push(intrusiveText);
+      }
     });
 
+    // 2. Hilangkan duplikasi (biar kalau ada metode sama di DM berbeda nggak dobel)
     let uniqueMethods = [...new Set(allMethods)];
 
-    // KAMUS DETAIL METODE NDT
-    const ndtDetails = {
-      UT: "Ultrasonic Testing: Mengukur ketebalan aktual & mendeteksi cacat internal menggunakan gelombang suara.",
-      RT: "Radiographic Testing: Mendeteksi cacat internal (volumetric) menggunakan paparan sinar-X / Gamma.",
-      VT: "Visual Testing: Pemeriksaan kondisi fisik permukaan secara langsung atau menggunakan alat bantu optik.",
-      "MT/PT":
-        "Magnetic/Penetrant Testing: Mendeteksi retak (cracking) di area permukaan dan pengelasan.",
-    };
-
-    // Buat elemen HTML span dengan fitur Tooltip Bootstrap
+    // 3. Buat tampilan UI yang "Manusiawi" (Tanpa Singkatan membingungkan)
     let methodHtmlArray = uniqueMethods.map((method) => {
-      let detail = ndtDetails[method] || "Metode inspeksi khusus.";
-      // Dikasih garis bawah putus-putus & cursor help biar user tau itu bisa di-hover
-      return `<span class="fw-bold text-primary" 
-                      style="cursor: help; border-bottom: 1px dashed #696cff;" 
-                      data-bs-toggle="tooltip" 
-                      data-bs-placement="bottom" 
-                      title="${detail}">
-                  ${method}
-                </span>`;
+      return `<div class="d-flex align-items-center mb-2">
+                <i class="mdi mdi-check-circle text-primary me-2"></i>
+                <span class="fw-bold text-dark">${method}</span>
+              </div>`;
     });
 
-    // Gabungkan dengan tanda "+"
-    let finalMethodHtml =
-      methodHtmlArray.length > 0
-        ? methodHtmlArray.join(' <span class="text-dark mx-1">+</span> ')
-        : "No Inspection Planned";
+    // 4. Render ke UI Step 6
+    let finalMethodHtml = methodHtmlArray.length > 0
+        ? `<div class="bg-light p-3 rounded-3 border-start border-primary border-4">
+             ${methodHtmlArray.join('')}
+           </div>`
+        : '<span class="text-danger fw-bold">No Inspection Planned</span>';
 
-    // ⚠️ PENTING: Gunakan .html() bukan .text() karena kita masukin tag <span>
     $("#insp_method").html(finalMethodHtml);
+
+    // 5. SIMPAN KE PAYLOAD (Teks Lengkap untuk Database & PDF)
+    // Kita gabung pake tanda " + " biar di laporan PDF nanti bacanya enak
+    localStorage.setItem('recommended_methods', uniqueMethods.join(" + "));
+    // payload.results.recommended_method = uniqueMethods.join(" + ");
 
     // ==========================================
     // INITIALIZE BOOTSTRAP TOOLTIP
@@ -2226,11 +2246,11 @@ $(function () {
     ).map((el) => el.value);
 
     let payload = {
-      // 1. HEADER: Equipment Data (Akan di-insert/update ke tabel `equipments`)
+      // 1. HEADER: Equipment Data
       equipment: {
         tag_number: tagNumber,
         master_equipment_id: parseInt(eqId),
-        year_built: $("input[name='location']").val(),
+        location: $("input[name='location']").val() || "", // FIX BUG TYPO DI SINI
         year_built: parseInt($("select[name='first_use']").val()) || 0,
         shell_material_id: parseInt(shellMaterial) || 0,
         design_pressure: parseFloat($("input[name='design_press']").val()) || 0,
@@ -2278,17 +2298,17 @@ $(function () {
         special_service: specialArray.join(", ") || "-",
         protection: protArray.join(", ") || "-",
         cathodic_protection:
-          $("input[name='cathodic_protection']").val() || "No",
+          $("input[name='cathodic_protection']:checked").val() || "No",
       },
 
       // 2. DETAIL: Assessment General Info
       assessment: {
-        assessment_date: new Date().toISOString().split("T")[0], // YYYY-MM-DD
+        assessment_date: new Date().toISOString().split("T")[0],
         prev_inspection_date: $("input[name='prev_inspection']").val() || null,
         act_inspection_date: $("input[name='act_inspection']").val() || null,
         operating_pressure:
           (eqType == "EQT1"
-            ? parseFloat($("input[name='operating_press").val())
+            ? parseFloat($("input[name='operating_press']").val())
             : parseFloat($("input[name='operating_press_top']").val())) || 0,
         operating_temp:
           (eqType == "EQT1"
@@ -2321,7 +2341,7 @@ $(function () {
           corrosion_rate:
             parseFloat($("input[name='cr_st_shell_mm']").val()) || 0,
           remaining_life:
-            parseFloat($("input[name='rem_life_st_shell']").val()) || 0,
+            parseRemainingLife($("input[name='rem_life_st_shell']").val()) || 0,
         },
         head: {
           prev_thick: parseFloat($("input[name='prev_thick_head']").val()) || 0,
@@ -2330,7 +2350,20 @@ $(function () {
           corrosion_rate:
             parseFloat($("input[name='cr_st_head_mm']").val()) || 0,
           remaining_life:
-            parseFloat($("input[name='rem_life_st_head']").val()) || 0,
+            parseRemainingLife($("input[name='rem_life_st_head']").val()) || 0,
+        },
+        // Tambahan object nozzle biar komplit ngikutin struct Go-nya
+        nozzle: {
+          prev_thick:
+            parseFloat($("input[name='nozzle_previous_thick']").val()) || 0,
+          act_thick:
+            parseFloat($("input[name='nozzle_actual_thick']").val()) || 0,
+          t_req: parseFloat($("input[name='req_thick_nozzle_mm']").val()) || 0,
+          corrosion_rate:
+            parseFloat($("input[name='cr_st_nozzle_mm']").val()) || 0,
+          remaining_life:
+            parseRemainingLife($("input[name='rem_life_st_nozzle']").val()) ||
+            0,
         },
       },
 
@@ -2374,24 +2407,81 @@ $(function () {
       // 6. DETAIL: Final Risk & Strategy (Dari Step 5 & 6)
       results: {
         lof_category: parseInt($("#lof_category").val()) || 0,
-        cof_financial: $("#cof_financial").val() || "", // Tarik dari select
+        cof_financial: $("#cof_financial").val() || "",
         cof_safety: $("#cof_safety").val() || "",
         cof_category: $("#cof_category").val() || "",
         risk_level: finalRiskLevel,
         risk_index: parseInt($("#risk_index").val()) || 0,
 
-        insp_internal_thinning: $("#insp_internal_thinning").val() || "",
-        insp_external_corrosion: $("#insp_external_corrosion").val() || "",
-        insp_cracking: $("#insp_cracking").val() || "",
+        // FIX TERPENTING: Form Step 5 yang kompleks ditampung di 1 objek ini
+        inspection_data: {
+          ext_corr_nonintrusive:
+            $("#insp_ext_corr_nonintrusive").val() || "None",
+          ext_corr_intrusive: $("#insp_ext_corr_intrusive").val() || "None",
+          ext_crack_nonintrusive:
+            $("#insp_ext_crack_nonintrusive").val() || "None",
+          ext_crack_intrusive: $("#insp_ext_crack_intrusive").val() || "None",
+          int_thin_nonintrusive:
+            $("#insp_int_thin_nonintrusive").val() || "None",
+          int_thin_intrusive: $("#insp_int_thin_intrusive").val() || "None",
+          int_crack_nonintrusive:
+            $("#insp_int_crack_nonintrusive").val() || "None",
+          int_crack_intrusive: $("#insp_int_crack_intrusive").val() || "None",
+          loc_corr_nonintrusive:
+            $("#insp_loc_corr_nonintrusive").val() || "None",
+          loc_corr_intrusive: $("#insp_loc_corr_intrusive").val() || "None",
+        },
 
         governing_component: localStorage.getItem("governing") || "-",
         max_interval_years: parseFloat($("#insp_interval").text()) || 0,
         next_inspection_year: parseInt($("#insp_next_year").text()) || 0,
-        recommended_method: $("#insp_method").text() || "",
+
+        // .text() aman dipakai untuk ambil isi tooltip (buang HTML <span> nya)
+        recommended_method: localStorage.getItem('recommended_methods') //$("#insp_method").text().trim() || "",
+      },
+
+      cladding_data: {
+        shell: {
+          base_metal: parseFloat($("#clad_base_shell").text()) || 0,
+          cladding: parseFloat($("#clad_thick_shell").text()) || 0,
+          total_init: parseFloat($("#clad_total_shell").text()) || 0,
+          act_now: parseFloat($("#clad_act_shell").text()) || 0,
+          act_cons: parseFloat($("#clad_cons_shell").text()) || 0,
+          status: $("#clad_stat_shell").text().trim() || "No Data",
+        },
+        head: {
+          base_metal: parseFloat($("#clad_base_head").text()) || 0,
+          cladding: parseFloat($("#clad_thick_head").text()) || 0,
+          total_init: parseFloat($("#clad_total_head").text()) || 0,
+          act_now: parseFloat($("#clad_act_head").text()) || 0,
+          act_cons: parseFloat($("#clad_cons_head").text()) || 0,
+          status: $("#clad_stat_head").text().trim() || "No Data",
+        },
+        nozzle: {
+          base_metal: parseFloat($("#clad_base_nozzle").text()) || 0,
+          cladding: parseFloat($("#clad_thick_nozzle").text()) || 0,
+          total_init: parseFloat($("#clad_total_nozzle").text()) || 0,
+          act_now: parseFloat($("#clad_act_nozzle").text()) || 0,
+          act_cons: parseFloat($("#clad_cons_nozzle").text()) || 0,
+          status: $("#clad_stat_nozzle").text().trim() || "No Data",
+        },
       },
     };
 
     return payload;
+  }
+
+  // Fungsi buat ngekstrak angka dari string (misal: "> 20" jadi 20)
+  function parseRemainingLife(val) {
+    if (!val) return 0;
+
+    // Pastikan jadi string dulu, lalu hapus semua karakter selain angka dan titik (desimal)
+    let cleanString = String(val).replace(/[^0-9.]/g, "");
+
+    // Ubah balik jadi Float (angka desimal)
+    let num = parseFloat(cleanString);
+
+    return isNaN(num) ? 0 : num;
   }
 });
 

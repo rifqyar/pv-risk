@@ -4,15 +4,53 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strings"
 )
 
+// ==========================================
+// HELPER: SMART MIGRATION (Biar Kodingan Nggak Berulang)
+// ==========================================
+func checkAndAddColumn(db *sql.DB, tableName, columnName, columnType string) {
+	query := fmt.Sprintf("PRAGMA table_info(%s);", tableName)
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Printf("Gagal cek tabel %s: %v", tableName, err)
+		return
+	}
+	defer rows.Close()
+
+	exists := false
+	for rows.Next() {
+		var cid int
+		var name, ctype string
+		var notnull, pk int
+		var dfltValue interface{}
+
+		err := rows.Scan(&cid, &name, &ctype, &notnull, &dfltValue, &pk)
+		if err == nil && name == columnName {
+			exists = true
+			break
+		}
+	}
+
+	if !exists {
+		alterQuery := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s;", tableName, columnName, columnType)
+		_, err := db.Exec(alterQuery)
+		if err != nil {
+			log.Printf("Gagal nambahin kolom %s ke %s: %v", columnName, tableName, err)
+		} else {
+			log.Printf("✅ Auto-Migration: Berhasil nambah kolom '%s' ke tabel '%s'", columnName, tableName)
+		}
+	}
+}
+
+// ==========================================
 // 1. Tabel Master Equipment (Header)
+// ==========================================
 func EquipmentsTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS trx_equipments (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		equipment_id INTEGER UNIQUE NOT NULL, -- FK ke master equipments.id
+		equipment_id INTEGER UNIQUE NOT NULL,
 		tag_number TEXT UNIQUE NOT NULL,
 		year_built INTEGER,
 		shell_material_id INTEGER,
@@ -31,70 +69,33 @@ func EquipmentsTable(db *sql.DB) {
 		log.Fatalf("Error creating trx_equipments table: %v", err)
 	}
 
-	// helper function cek kolom
-	columnExists := func(columnName string) bool {
-		rows, err := db.Query(`PRAGMA table_info(trx_equipments);`)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer rows.Close()
-
-		var cid int
-		var name, ctype string
-		var notnull, pk int
-		var dfltValue interface{}
-
-		for rows.Next() {
-			err := rows.Scan(&cid, &name, &ctype, &notnull, &dfltValue, &pk)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if name == columnName {
-				return true
-			}
-		}
-		return false
-	}
-
-	columns := []string{
-		// sebelumnya
-		"location REAL DEFAULT ''",
-		"diameter_type REAL DEFAULT 'inside'",
-		"diameter_unit REAL DEFAULT 'inch'",
-		"diameter_tube_type REAL DEFAULT 'inside'",
-		"diameter_tube_unit REAL DEFAULT 'inch'",
-		"length FLOAT DEFAULT 0",
-		"length_unit REAL DEFAULT 'ft'",
-		"volume_unit REAL DEFAULT 'm'",
-		"temp_design_unit REAL DEFAULT 'c'",
-		"temp_design_tube_unit REAL DEFAULT 'c'",
-		"pwht REAL DEFAULT 'No'",
-		"certificate REAL DEFAULT '-'",
-		"data_reference REAL DEFAULT '-'",
-		"nozzle FLOAT DEFAULT 0",
-		"nozzle_unit REAL DEFAULT 'inch'",
-		"phase_type REAL DEFAULT 'multi phase'",
-		"internal_lining REAL DEFAULT 'None'",
-		"insulation REAL DEFAULT 'No'",
-		"special_service REAL DEFAULT '-'",
-		"protection REAL DEFAULT '-'",
-		"cathodic_protection REAL DEFAULT 'No'",
-	}
-
-	// add column kalau belum ada
-	for _, col := range columns {
-		colName := strings.Split(col, " ")[0]
-
-		if !columnExists(colName) {
-			alterQuery := fmt.Sprintf("ALTER TABLE trx_equipments ADD COLUMN %s;", col)
-			if _, err := db.Exec(alterQuery); err != nil {
-				log.Fatalf("Error adding column %s: %v", colName, err)
-			}
-		}
-	}
+	// Add missing columns (DIUBAH KE TEXT AGAR SESUAI DENGAN VALUE STRING)
+	checkAndAddColumn(db, "trx_equipments", "location", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "trx_equipments", "diameter_type", "TEXT DEFAULT 'inside'")
+	checkAndAddColumn(db, "trx_equipments", "diameter_unit", "TEXT DEFAULT 'inch'")
+	checkAndAddColumn(db, "trx_equipments", "diameter_tube_type", "TEXT DEFAULT 'inside'")
+	checkAndAddColumn(db, "trx_equipments", "diameter_tube_unit", "TEXT DEFAULT 'inch'")
+	checkAndAddColumn(db, "trx_equipments", "length", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "length_unit", "TEXT DEFAULT 'ft'")
+	checkAndAddColumn(db, "trx_equipments", "volume_unit", "TEXT DEFAULT 'm'")
+	checkAndAddColumn(db, "trx_equipments", "temp_design_unit", "TEXT DEFAULT 'c'")
+	checkAndAddColumn(db, "trx_equipments", "temp_design_tube_unit", "TEXT DEFAULT 'c'")
+	checkAndAddColumn(db, "trx_equipments", "pwht", "TEXT DEFAULT 'No'")
+	checkAndAddColumn(db, "trx_equipments", "certificate", "TEXT DEFAULT '-'")
+	checkAndAddColumn(db, "trx_equipments", "data_reference", "TEXT DEFAULT '-'")
+	checkAndAddColumn(db, "trx_equipments", "nozzle", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "nozzle_unit", "TEXT DEFAULT 'inch'")
+	checkAndAddColumn(db, "trx_equipments", "phase_type", "TEXT DEFAULT 'multi phase'")
+	checkAndAddColumn(db, "trx_equipments", "internal_lining", "TEXT DEFAULT 'None'")
+	checkAndAddColumn(db, "trx_equipments", "insulation", "TEXT DEFAULT 'No'")
+	checkAndAddColumn(db, "trx_equipments", "special_service", "TEXT DEFAULT '-'")
+	checkAndAddColumn(db, "trx_equipments", "protection", "TEXT DEFAULT '-'")
+	checkAndAddColumn(db, "trx_equipments", "cathodic_protection", "TEXT DEFAULT 'No'")
 }
 
+// ==========================================
 // 2. Tabel General Assessment (Detail Utama)
+// ==========================================
 func AssessmentsTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS assessments (
@@ -113,72 +114,35 @@ func AssessmentsTable(db *sql.DB) {
 		h2o_content REAL,
 		chloride_index INTEGER,
 		ph_index INTEGER,
-		
-		-- TAMBAHAN STEP 3:
-		impact_production TEXT,
-		insulation_condition TEXT,
-		insulation_damage_level TEXT,
-		coating_condition TEXT,
-		coating_damage_level TEXT,
-		corrective_description TEXT,
-		corrective_action TEXT,
-		corrective_date DATE,
-
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (equipment_id) REFERENCES trx_equipments(id) ON DELETE CASCADE
 	);`
 	db.Exec(query)
 
-	// helper function cek kolom
-	columnExists := func(columnName string) bool {
-		rows, err := db.Query(`PRAGMA table_info(assessments);`)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer rows.Close()
+	// Add missing columns via Smart Migration
+	checkAndAddColumn(db, "assessments", "temp_op_unit", "TEXT DEFAULT 'c'")
+	checkAndAddColumn(db, "assessments", "temp_op_tube_unit", "TEXT DEFAULT 'c'")
 
-		var cid int
-		var name, ctype string
-		var notnull, pk int
-		var dfltValue interface{}
-
-		for rows.Next() {
-			err := rows.Scan(&cid, &name, &ctype, &notnull, &dfltValue, &pk)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if name == columnName {
-				return true
-			}
-		}
-		return false
-	}
-
-	columns := []string{
-		"temp_op_unit REAL DEFAULT 'c'",
-		"temp_op_tube_unit REAL DEFAULT 'c'",
-	}
-
-	// add column kalau belum ada
-	for _, col := range columns {
-		colName := strings.Split(col, " ")[0]
-
-		if !columnExists(colName) {
-			alterQuery := fmt.Sprintf("ALTER TABLE assessments ADD COLUMN %s;", col)
-			if _, err := db.Exec(alterQuery); err != nil {
-				log.Fatalf("Error adding column %s: %v", colName, err)
-			}
-		}
-	}
+	// TAMBAHAN STEP 3:
+	checkAndAddColumn(db, "assessments", "impact_production", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "insulation_condition", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "insulation_damage_level", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "coating_condition", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "coating_damage_level", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "corrective_description", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "corrective_action", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "corrective_date", "DATE")
 }
 
+// ==========================================
 // 3. Tabel Data Ketebalan (Sub-Detail)
+// ==========================================
 func AssessmentThicknessesTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS assessment_thicknesses (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		assessment_id INTEGER,
-		component_type TEXT, -- isinya: 'shell', 'head', atau 'nozzle'
+		component_type TEXT, 
 		prev_thick REAL,
 		act_thick REAL,
 		t_req REAL,
@@ -186,13 +150,12 @@ func AssessmentThicknessesTable(db *sql.DB) {
 		remaining_life REAL,
 		FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE
 	);`
-
-	if _, err := db.Exec(query); err != nil {
-		log.Fatalf("Error creating assessment_thicknesses table: %v", err)
-	}
+	db.Exec(query)
 }
 
+// ==========================================
 // 4. Tabel Damage Mechanism (Sub-Detail)
+// ==========================================
 func AssessmentDamageMechanismsTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS assessment_damage_mechanisms (
@@ -207,30 +170,26 @@ func AssessmentDamageMechanismsTable(db *sql.DB) {
 		amine_scc TEXT,
 		hic TEXT,
 		ciscc TEXT,
-		galvanic TEXT,     -- TAMBAHAN STEP 4
-		lof_score TEXT,    -- DIUBAH DARI FLOAT KE TEXT (Biar bisa nampung "PoF: 1.5E-3 (DF: 50)")
 		FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE
 	);`
 	db.Exec(query)
+
+	// Tambahan Step 4
+	checkAndAddColumn(db, "assessment_damage_mechanisms", "galvanic", "TEXT")
+	checkAndAddColumn(db, "assessment_damage_mechanisms", "lof_score", "TEXT")
 }
 
+// ==========================================
 // 5. Tabel Final Result & Strategy (Sub-Detail)
+// ==========================================
 func AssessmentResultsTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS assessment_results (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		assessment_id INTEGER,
 		lof_category INTEGER,
-		cof_financial TEXT, -- TAMBAHAN STEP 5
-		cof_safety TEXT,    -- TAMBAHAN STEP 5
-		cof_category TEXT,
 		risk_level TEXT,
 		risk_index INTEGER,
-
-		insp_internal_thinning TEXT,  -- TAMBAHAN STEP 5 (Inspection Effectiveness)
-		insp_external_corrosion TEXT, -- TAMBAHAN STEP 5
-		insp_cracking TEXT,           -- TAMBAHAN STEP 5
-
 		governing_component TEXT, 
 		max_interval_years REAL,
 		next_inspection_year INTEGER,
@@ -238,11 +197,19 @@ func AssessmentResultsTable(db *sql.DB) {
 		FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE
 	);`
 	db.Exec(query)
+
+	// Tambahan Step 5 (Termasuk kolom JSON baru)
+	checkAndAddColumn(db, "assessment_results", "cof_financial", "TEXT")
+	checkAndAddColumn(db, "assessment_results", "cof_safety", "TEXT")
+	checkAndAddColumn(db, "assessment_results", "cof_category", "TEXT")
+
+	// FIX TERPENTING: JSON untuk nampung semua form inspection yg kompleks
+	checkAndAddColumn(db, "assessment_results", "inspection_plan_json", "TEXT")
+	checkAndAddColumn(db, "assessment_results", "cladding_json", "TEXT")
 }
 
 func RunAllAssessmentMigrations(db *sql.DB) {
 	// PENTING: Untuk mengaktifkan fitur ON DELETE CASCADE di SQLite
-	// harus eksekusi pragma ini setiap kali koneksi baru dibuka
 	db.Exec("PRAGMA foreign_keys = ON;")
 
 	EquipmentsTable(db)
