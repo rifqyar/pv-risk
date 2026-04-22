@@ -379,7 +379,7 @@ func GetEquipmentAutofill(c *gin.Context) {
 			COALESCE(a.contaminant_amine, ''), COALESCE(a.flow_velocity, ''), COALESCE(a.preventive_corrosion, ''), COALESCE(a.inhibitor_effectivity, ''), COALESCE(a.env_ext_cracking, ''), COALESCE(a.vibration, ''),
 			COALESCE(a.impact_production, ''), COALESCE(a.comp_nitrogen, 0), COALESCE(a.comp_methane, 0), COALESCE(a.comp_ethane, 0), COALESCE(a.comp_propane, 0), COALESCE(a.comp_butane, 0), COALESCE(a.comp_solvent, 0), COALESCE(a.comp_air, 0),
 			COALESCE(a.fluida, ''), COALESCE(a.pollutant, ''), COALESCE(a.cp_condition, ''), COALESCE(a.corrosion_monitoring, ''), COALESCE(a.biocide_treatment, ''), COALESCE(a.release_fluid_containment, ''), COALESCE(a.clean_up_time, ''), COALESCE(a.heat_traced, 0), COALESCE(a.steam_out, 0),
-			COALESCE(a.prev_ext_corrosion, ''), COALESCE(a.conf_ext_corrosion, ''), COALESCE(a.prev_int_cracking, ''), COALESCE(a.conf_int_cracking, ''), COALESCE(a.prev_int_thinning, ''), COALESCE(a.conf_int_thinning, ''), COALESCE(a.prev_loc_int_corrosion, ''), COALESCE(a.conf_loc_int_corrosion, '')
+			COALESCE(a.prev_ext_corrosion, ''), COALESCE(a.conf_ext_corrosion, ''), COALESCE(a.prev_int_cracking, ''), COALESCE(a.conf_int_cracking, ''), COALESCE(a.prev_int_thinning, ''), COALESCE(a.conf_int_thinning, ''), COALESCE(a.prev_loc_int_corrosion, ''), COALESCE(a.conf_loc_int_corrosion, ''), COALESCE(a.h2s_ppm, '')
 		FROM equipments e
 		LEFT JOIN trx_equipments t ON e.id = t.equipment_id
 		LEFT JOIN assessments a ON t.id = a.equipment_id
@@ -400,7 +400,7 @@ func GetEquipmentAutofill(c *gin.Context) {
 		&d.ContaminantAmine, &d.FlowVelocity, &d.PreventiveCorrosion, &d.InhibitorEffectivity, &d.EnvExtCracking, &d.Vibration,
 		&d.ImpactProduction, &d.CompNitrogen, &d.CompMethane, &d.CompEthane, &d.CompPropane, &d.CompButane, &d.CompSolvent, &d.CompAir,
 		&d.Fluida, &d.Pollutant, &d.CpCondition, &d.CorrosionMonitoring, &d.BiocideTreatment, &d.ReleaseFluidContainment, &d.CleanUpTime, &d.HeatTraced, &d.SteamOut,
-		&d.PrevExtCorrosion, &d.ConfExtCorrosion, &d.PrevIntCracking, &d.ConfIntCracking, &d.PrevIntThinning, &d.ConfIntThinning, &d.PrevLocIntCorrosion, &d.ConfLocIntCorrosion,
+		&d.PrevExtCorrosion, &d.ConfExtCorrosion, &d.PrevIntCracking, &d.ConfIntCracking, &d.PrevIntThinning, &d.ConfIntThinning, &d.PrevLocIntCorrosion, &d.ConfLocIntCorrosion, &d.H2SPpm,
 	)
 
 	if err != nil {

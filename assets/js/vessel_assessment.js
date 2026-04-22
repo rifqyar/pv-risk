@@ -557,6 +557,7 @@ $(function () {
           $("input[name='comp_butane']").val(d.comp_butane);
           $("input[name='comp_solvent']").val(d.comp_solvent);
           $("input[name='comp_air']").val(d.comp_air);
+          $("select[name='h2s_contents']").val(d.h2s_ppm).trigger("change");
 
           $("select[name='fluida']").val(d.fluida).trigger("change");
           $("select[name='pollutant']").val(d.pollutant).trigger("change");
@@ -1436,58 +1437,88 @@ $(function () {
     // ==========================================
     // SISA KODINGAN DF MAPPING & UPDATE UI (Tidak Berubah)
     // ==========================================
+    // =================================================================
+    // DAMAGE FACTOR & LIKELIHOOD OF FAILURE (LoF) - API 581 STANDARD
+    // =================================================================
+
+    // 1. Matriks Damage Factor Dasar (Disesuaikan mendekati skala API)
     function mapToDF(level, mech) {
       const table = {
-        co2: { Low: 2, Medium: 10, High: 50, Not: 1 },
-        mic: { Low: 3, Medium: 15, High: 40, Not: 1 },
-        galvanic: { Low: 2, Medium: 5, High: 15, Not: 1 },
-        ssc: { Low: 5, Medium: 20, High: 80, Not: 1 },
-        amine_scc: { Low: 3, Medium: 10, High: 30, Not: 1 },
-        hic: { Low: 5, Medium: 25, High: 70, Not: 1 },
-        ciscc: { Low: 3, Medium: 15, High: 50, Not: 1 },
-        atmospheric: { Low: 2, Medium: 10, High: 30, Not: 1 },
-        cui: { Low: 5, Medium: 20, High: 50, Not: 1 },
-        ext_cracking: { Low: 5, Medium: 15, High: 40, Not: 1 },
+        // Thinning Mechanisms (Skalanya moderat, tergantung laju korosi)
+        co2:          { Low: 2,  Medium: 10, High: 50,  Not: 1 },
+        mic:          { Low: 3,  Medium: 15, High: 50,  Not: 1 },
+        galvanic:     { Low: 2,  Medium: 10, High: 30,  Not: 1 },
+        atmospheric:  { Low: 2,  Medium: 10, High: 30,  Not: 1 },
+        cui:          { Low: 5,  Medium: 20, High: 50,  Not: 1 },
+        
+        // Cracking Mechanisms (Skala API 581 lebih agresif untuk retak)
+        ssc:          { Low: 10, Medium: 50, High: 500, Not: 1 },
+        amine_scc:    { Low: 10, Medium: 50, High: 500, Not: 1 },
+        hic:          { Low: 10, Medium: 50, High: 100, Not: 1 },
+        ciscc:        { Low: 10, Medium: 50, High: 500, Not: 1 },
+        ext_cracking: { Low: 10, Medium: 50, High: 500, Not: 1 },
       };
       return table[mech]?.[level] || 1;
     }
 
-    // (Lanjutkan dengan kode DF_list push, localstorage, dst. seperti aslinya...)
-    let DF_list = [];
-    Object.keys(res).forEach((key) => {
-      let df = mapToDF(res[key], key);
-      let df_adj = df * 1; // getInspectionFactor disederhanakan utk contoh, pastikan fungsi aslinya dipanggil
+    let df_thinning_list = [];
+    let df_cracking_list = [];
 
-      DF_list.push({ mech: key, df: df, df_adj: df_adj });
+    // Kategori Mechanism
+    const thinning_mechs = ["co2", "mic", "galvanic", "atmospheric", "cui"];
+    const cracking_mechs = ["ssc", "amine_scc", "hic", "ciscc", "ext_cracking"];
+
+    // 2. Eksekusi Pencarian Base DF dan Inspection Factor
+    Object.keys(res).forEach((key) => {
+      let base_df = mapToDF(res[key], key);
+      
+      // Asumsi lu udah ada fungsi getInspectionFactor di atasnya
+      let df_adj = base_df * 1; // Ubah angka 1 jadi fungsi inspection_factor lu
+      
+      if (thinning_mechs.includes(key)) {
+          df_thinning_list.push(df_adj);
+      } else if (cracking_mechs.includes(key)) {
+          df_cracking_list.push(df_adj);
+      }
     });
 
-    let DF_after_inspection = Math.max(...DF_list.map((d) => d.df_adj));
-
-    let minRL =
-      assessmentSide === "shell"
+    // 3. Logika Sisa Umur (Remaining Life) Khusus untuk Grup Thinning
+    let minRL = assessmentSide === "shell"
         ? parseFloat($("#sum_rlst_shell").text()) || 20
         : parseFloat($("#sum_rlst_head").text()) || 20;
 
     function getDFfromRL(rl) {
-      if (rl < 2) return 5;
-      if (rl < 5) return 3;
+      if (rl < 2) return 10;
+      if (rl < 5) return 5;
       if (rl < 10) return 2;
       if (rl < 20) return 1.5;
       return 1;
     }
+    let rl_multiplier = getDFfromRL(minRL);
 
-    let RL_factor = getDFfromRL(minRL);
-    let DF_final = DF_after_inspection * RL_factor;
+    // 4. ATURAN PENGGABUNGAN DF (API 581 SECTION 3.4)
+    // DF_Thinning = Nilai MAX dari semua jenis thinning * Faktor Umur
+    let DF_thinning_final = Math.max(...df_thinning_list, 1) * rl_multiplier;
+    
+    // DF_Cracking = JUMLAH TOTAL dari semua jenis retak (Karena retak bisa terjadi simultan)
+    let DF_cracking_final = df_cracking_list.reduce((acc, curr) => acc + (curr > 1 ? curr : 0), 0);
+    // Jika tidak ada retak, nilainya 0 (hanya base 1 di akhir)
 
+    // Total DF Keseluruhan
+    let DF_final = DF_thinning_final + DF_cracking_final;
+    if (DF_final < 1) DF_final = 1; // Minimal DF adalah 1
+
+    // 5. PERHITUNGAN PROBABILITY OF FAILURE (PoF)
     const gff = 3.06e-5;
-    const FMS = 1.0;
+    const FMS = 1.0; 
     const PoF = gff * FMS * DF_final;
 
+    // 6. MAPPING LIKELIHOOD OF FAILURE (LoF)
     function mapPoFToLoF(p) {
-      if (p < 1e-5) return 1;
-      if (p < 1e-4) return 2;
-      if (p < 1e-3) return 3;
-      if (p < 1e-2) return 4;
+      if (p <= 1e-5) return 1;
+      if (p <= 1e-4) return 2;
+      if (p <= 1e-3) return 3;
+      if (p <= 1e-2) return 4;
       return 5;
     }
 
@@ -2310,71 +2341,73 @@ $(function () {
 
   function calculateCriticalityMatrix() {
     let lof_cat = $("#lof_category").val();
-
     let cof_fin = $("#cof_financial").val() || "";
     let cof_saf = $("#cof_safety").val() || "";
 
     // Tentukan Final CoF (Ambil huruf yang paling tinggi / paling parah)
     let cof_final = "";
     if (cof_fin && cof_saf) {
-      cof_final = cof_saf > cof_fin ? cof_saf : cof_fin; // 'E' > 'A' di JavaScript string comparison
+      cof_final = cof_saf > cof_fin ? cof_saf : cof_fin; // 'E' > 'A'
     } else {
       cof_final = cof_saf || cof_fin;
     }
 
-    // Tembak hasil Final CoF ke input text
     $("#cof_category").val(cof_final);
 
-    // Jika LoF dan Final CoF sudah terisi, jalankan Matrix
     if (lof_cat && cof_final) {
       updateRiskMatrix(lof_cat, cof_final);
     } else {
-      // Reset kalau data belum lengkap
-      resetRiskMatrix();
+      // Reset kalau data belum lengkap (Pastikan lu punya fungsi ini)
+      if (typeof resetRiskMatrix === "function") resetRiskMatrix();
     }
   }
 
   function updateRiskMatrix(lof, cof) {
     // 1. Redupkan semua sel matriks (Reset)
     $("#risk_matrix_table td")
-      .removeClass("border border-3 border-dark fw-bolder fs-5 shadow-lg")
+      .removeClass("border border-3 border-dark fw-bolder fs-5 shadow-lg active-risk-ui")
       .css("opacity", "0.2");
-    $("#risk_matrix_table td.bg-label-dark").css("opacity", "1"); // Kembalikan header A,B,C dan 1,2,3
+    $("#risk_matrix_table td.bg-label-dark").css("opacity", "1"); 
 
-    // 2. Cari target sel (Contoh: #cell-3-C)
+    // 2. Cari target sel (Sesuai HTML lu: 1A, 2C, dst)
     let targetCellId = `#cell-${lof}-${cof}`;
     let $targetCell = $(targetCellId);
 
     // 3. Nyalakan sel target!
     $targetCell
-      .addClass("border border-3 border-dark fw-bolder fs-5 shadow-lg")
+      .addClass("border border-3 border-dark fw-bolder fs-5 shadow-lg active-risk-ui")
       .css("opacity", "1");
 
-    // 4. Tentukan Risk Level berdasarkan warna sel yang menyala
-    let riskLevel = "";
-    let badgeClass = "";
+    // =======================================================
+    // 4. API 581 DIAGONAL RISK MATRIX LOGIC (PENTING!)
+    // =======================================================
+    const riskMatrixValues = {
+        1: { "A": 1, "B": 3, "C": 6, "D": 10, "E": 15 },
+        2: { "A": 2, "B": 5, "C": 9, "D": 14, "E": 19 },
+        3: { "A": 4, "B": 8, "C": 13, "D": 18, "E": 22 },
+        4: { "A": 7, "B": 12, "C": 17, "D": 21, "E": 24 },
+        5: { "A": 11, "B": 16, "C": 20, "D": 23, "E": 25 }
+    };
 
-    // Kita hitung skor indeks sederhana untuk database (A=1, B=2, dst)
-    let cofIndex = cof.charCodeAt(0) - 64;
-    let riskIndex = parseInt(lof) * cofIndex;
+    const riskMatrixLevels = {
+        1: { "A": "LOW RISK", "B": "LOW RISK", "C": "LOW RISK", "D": "MEDIUM RISK", "E": "MEDIUM RISK" },
+        2: { "A": "LOW RISK", "B": "LOW RISK", "C": "MEDIUM RISK", "D": "MEDIUM RISK", "E": "HIGH RISK" },
+        3: { "A": "LOW RISK", "B": "MEDIUM RISK", "C": "HIGH RISK", "D": "HIGH RISK", "E": "HIGH RISK" },
+        4: { "A": "LOW RISK", "B": "MEDIUM RISK", "C": "HIGH RISK", "D": "HIGH RISK", "E": "EXTREME RISK" },
+        5: { "A": "MEDIUM RISK", "B": "HIGH RISK", "C": "HIGH RISK", "D": "EXTREME RISK", "E": "EXTREME RISK" }
+    };
 
-    if ($targetCell.hasClass("bg-dark")) {
-      riskLevel = "EXTREME RISK";
-      badgeClass = "bg-dark text-white";
-    } else if ($targetCell.hasClass("bg-danger")) {
-      riskLevel = "HIGH RISK";
-      badgeClass = "bg-danger text-white";
-    } else if ($targetCell.hasClass("bg-warning")) {
-      riskLevel = "MEDIUM RISK";
-      badgeClass = "bg-warning text-dark";
-    } else {
-      riskLevel = "LOW RISK";
-      badgeClass = "bg-success text-white";
-    }
+    let riskIndex = riskMatrixValues[lof]?.[cof] || 1;
+    let riskLevel = riskMatrixLevels[lof]?.[cof] || "LOW RISK";
+    let badgeClass = "bg-success text-white"; // Default Low
+
+    if (riskLevel === "EXTREME RISK") badgeClass = "bg-dark text-white";
+    else if (riskLevel === "HIGH RISK") badgeClass = "bg-danger text-white";
+    else if (riskLevel === "MEDIUM RISK") badgeClass = "bg-warning text-dark";
 
     // 5. Update UI Badge Final & Hidden Inputs
     $("#final_risk_label").html(
-      `<span class="badge ${badgeClass} rounded-pill px-5 py-3 fs-5 shadow-sm">${riskLevel}</span>`,
+      `<span class="badge ${badgeClass} rounded-pill px-5 py-3 fs-5 shadow-sm">${riskLevel}</span>`
     );
     $("#risk_level").val(riskLevel);
     $("#risk_index").val(riskIndex);
@@ -2392,9 +2425,7 @@ $(function () {
   }
 
   function syncStep5Data() {
-    // ==========================================
     // 1. KUMPULKAN SEVERITY DARI STEP 4
-    // ==========================================
     let dms = {
       atmospheric: $("#dm_atmospheric").text().trim().toUpperCase(),
       ext_cracking: $("#dm_ext_cracking").text().trim().toUpperCase(),
@@ -2406,13 +2437,9 @@ $(function () {
       ssc: $("#dm_ssc").text().trim().toUpperCase(),
     };
 
-    // ==========================================
     // 2. AMBIL REMAINING LIFE (RL) DARI STEP 2
-    // ==========================================
     function parseRL(selector) {
-      let text = $(selector)
-        .text()
-        .replace(/[^0-9.-]/g, "");
+      let text = $(selector).text().replace(/[^0-9.-]/g, "");
       let val = parseFloat(text);
       return isNaN(val) ? 999 : val;
     }
@@ -2422,86 +2449,73 @@ $(function () {
     let rl_nozzle = parseRL("#sum_rlst_nozzle");
     let min_rl = Math.min(rl_shell, rl_head, rl_nozzle);
 
-    // ==========================================
-    // 3. KALKULASI DAMAGE FACTOR (DF) - API 581
-    // ==========================================
-
-    // FUNGSI BARU: Ambil Diskon Resiko dari Tabel Step 5!
-    // API 581 Logic: Inspeksi "High" ngasih diskon DF sampai 80% (multiplier 0.2)
+    // 3. KALKULASI DAMAGE FACTOR (DF)
     function getEffDiscount(mechCode) {
-      let effInt =
-        $(`#insp_${mechCode}_intrusive option:selected`).data("eff") || "None";
-      let effNon =
-        $(`#insp_${mechCode}_nonintrusive option:selected`).data("eff") ||
-        "None";
-
+      let effInt = $(`#insp_${mechCode}_intrusive option:selected`).data("eff") || "None";
+      let effNon = $(`#insp_${mechCode}_nonintrusive option:selected`).data("eff") || "None";
       let levels = [effInt, effNon];
-      if (levels.includes("High")) return 0.2; // Resiko didiskon 80%
-      if (levels.includes("Medium")) return 0.5; // Resiko didiskon 50%
-      if (levels.includes("Low")) return 0.8; // Resiko didiskon 20%
-      return 1.0; // None (Resiko mentok / tidak didiskon)
+      
+      if (levels.includes("High")) return 0.2; 
+      if (levels.includes("Medium")) return 0.5; 
+      if (levels.includes("Low")) return 0.8; 
+      return 1.0; 
     }
 
     // a. Thinning DF (Base)
     let df_thinning = 1.0;
-    if (min_rl <= 0)
-      df_thinning = 2000.0; // Kritis / Past Failure
+    if (min_rl <= 0) df_thinning = 2000.0; 
     else if (min_rl <= 2) df_thinning = 500.0;
     else if (min_rl <= 5) df_thinning = 100.0;
     else if (min_rl <= 10) df_thinning = 20.0;
     else if (min_rl <= 20) df_thinning = 5.0;
-    else df_thinning = 1.0; // Aman (> 20 tahun)
 
-    // APLIKASIKAN DISKON EFFECTIVENESS KE THINNING
     df_thinning = df_thinning * getEffDiscount("int_thin");
 
-    // b. Cracking & External DF (Base)
+    // b. Cracking & External DF (Base) - Standar API Retak lebih parah
     function getCrackingDF(severity) {
-      if (severity === "HIGH") return 100.0;
-      if (severity === "MEDIUM") return 20.0;
-      if (severity === "LOW") return 5.0;
-      return 1.0; // Not Susceptible
+      if (severity === "HIGH") return 500.0; // API 581 Cracking High itu bahaya bgt
+      if (severity === "MEDIUM") return 50.0;
+      if (severity === "LOW") return 10.0;
+      return 1.0; 
     }
 
-    // APLIKASIKAN DISKON EFFECTIVENESS KE MASING-MASING DM
-    let df_ext_crack =
-      getCrackingDF(dms.ext_cracking) * getEffDiscount("ext_crack");
-
-    // Untuk Internal Cracking, ambil resiko cracking paling parah di dalam alat
-    let df_int_crack =
-      Math.max(
+    let df_ext_crack = getCrackingDF(dms.ext_cracking) * getEffDiscount("ext_crack");
+    
+    let df_int_crack = Math.max(
         getCrackingDF(dms.amine_scc),
         getCrackingDF(dms.hic),
         getCrackingDF(dms.ciscc),
-        getCrackingDF(dms.ssc),
+        getCrackingDF(dms.ssc)
       ) * getEffDiscount("int_crack");
 
-    let df_ext_corr =
-      getCrackingDF(dms.atmospheric) * getEffDiscount("ext_corr");
-    let df_loc_corr =
-      Math.max(getCrackingDF(dms.co2), getCrackingDF(dms.mic)) *
-      getEffDiscount("loc_corr");
+    // Local Corrosion disamakan skalanya dengan Thinning
+    function getLocalCorrDF(severity) {
+        if (severity === "HIGH") return 100.0;
+        if (severity === "MEDIUM") return 20.0;
+        if (severity === "LOW") return 5.0;
+        return 1.0;
+    }
 
-    let max_df_cracking = Math.max(
-      df_ext_crack,
-      df_int_crack,
-      df_ext_corr,
-      df_loc_corr,
-    );
-
-    // TOTAL DF (Skenario terburuk)
-    let total_df = Math.max(df_thinning, max_df_cracking);
+    let df_ext_corr = getLocalCorrDF(dms.atmospheric) * getEffDiscount("ext_corr");
+    let df_loc_corr = Math.max(getLocalCorrDF(dms.co2), getLocalCorrDF(dms.mic)) * getEffDiscount("loc_corr");
 
     // ==========================================
-    // 4. KALKULASI PROBABILITY OF FAILURE (PoF)
+    // 4. ATURAN PENGGABUNGAN DF (API 581)
     // ==========================================
+    // DF Thinning dan Corrosion (Lokal/Eksternal) diambil MAX
+    let df_thinning_total = Math.max(df_thinning, df_loc_corr, df_ext_corr);
+    
+    // DF Cracking (Retak) DIJUMLAHKAN dengan Thinning
+    let total_df = df_thinning_total + df_int_crack + df_ext_crack;
+    
+    if (total_df < 1) total_df = 1.0;
+
+    // 5. KALKULASI PROBABILITY OF FAILURE (PoF)
     const GFF = 3.06e-5;
     const FMS = 1.0;
     const PoF = GFF * FMS * total_df;
 
-    // ==========================================
-    // 5. MAPPING PoF KE LIKELIHOOD CATEGORY (1-5)
-    // ==========================================
+    // 6. MAPPING PoF KE LIKELIHOOD CATEGORY (1-5)
     let autoLofCat = "1";
     if (PoF > 1e-2) autoLofCat = "5";
     else if (PoF > 1e-3) autoLofCat = "4";
@@ -2509,11 +2523,18 @@ $(function () {
     else if (PoF > 1e-5) autoLofCat = "2";
     else autoLofCat = "1";
 
-    // ==========================================
-    // 6. UPDATE UI & TRIGGER MATRIX
-    // ==========================================
+    // 7. UPDATE UI & TRIGGER MATRIX
     let displayPoF = PoF.toExponential(2).toUpperCase();
     $("#ui_lof_score").val(`PoF: ${displayPoF} (DF: ${total_df.toFixed(2)})`);
+
+    // Taruh nilai DF di hidden text supaya kebaca waktu create payload
+    if ($("#calc_tdf").length === 0) {
+        $("body").append(`<span id="calc_tdf" class="d-none">${total_df}</span>`);
+        $("body").append(`<span id="calc_lof_score" class="d-none">${displayPoF}</span>`);
+    } else {
+        $("#calc_tdf").text(total_df);
+        $("#calc_lof_score").text(displayPoF);
+    }
 
     if ($("#lof_category").val() !== autoLofCat) {
       $("#lof_category").val(autoLofCat).trigger("change");
@@ -2841,7 +2862,7 @@ $(function () {
 
         shell_material_id: parseInt($("#shell_material_spec").val()) || 0,
         head_material_id: parseInt($("#head_material_spec").val()) || 0,
-        type_head: parseInt($("#type_head").val()) || 0,
+        type_head: parseInt(type_head) || 0,
         neck_material_id: parseInt($("#neck_material_spec").val()) || 0,
         nozzle_material_id: parseInt($("#nozzle_material_spec").val()) || 0,
 
