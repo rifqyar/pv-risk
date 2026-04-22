@@ -548,7 +548,7 @@ $(function () {
             .trigger("change"); // Ext Cracking
           $("select[name='vibration']").val(d.vibration).trigger("change"); // Ext Cracking
           $("select[name='impact_for_production']")
-            .val(d.impact_for_production)
+            .val(d.impact_production)
             .trigger("change");
           $("input[name='comp_nitrogen']").val(d.comp_nitrogen);
           $("input[name='comp_methane']").val(d.comp_methane);
@@ -2955,7 +2955,7 @@ $(function () {
         env_ext_cracking: $("select[name='env_ext_cracking']").val() || "",
         vibration: $("select[name='vibration']").val() || "",
 
-        impact_production: $("select[name='impact_production']").val() || "",
+        impact_production: $("select[name='impact_for_production']").val() || "",
         insulation_condition:
           $("select[name='insulation_condition']").val() || "",
         insulation_damage_level:
@@ -2968,8 +2968,6 @@ $(function () {
         corrective_action:
           $("textarea[name='corrective_action_taken']").val() || "",
         corrective_date: $("input[name='corrective_date']").val() || null,
-        impact_for_production:
-          $("select[name='impact_for_production']").val() || "",
         comp_nitrogen: parseFloat($("input[name='comp_nitrogen']").val()) || 0,
         comp_methane: parseFloat($("input[name='comp_methane']").val()) || 0,
         comp_ethane: parseFloat($("input[name='comp_ethane']").val()) || 0,
@@ -3117,9 +3115,9 @@ $(function () {
       payload.equipment.diameter_tube =
         parseFloat($("input[name='diameter_tube']").val()) || 0;
       payload.equipment.diameter_type =
-        $("select[name='diameter_type_shell']").val() || "inside";
+        $("input[name='diameter_type_shell']:checked").val() || "inside";
       payload.equipment.diameter_tube_type =
-        $("select[name='diameter_type_tube']").val() || "inside";
+        $("input[name='diameter_type_tube']:checked").val() || "inside";
       payload.equipment.temp_design_tube_unit =
         $("select[name='suhu_design_tube']").val() || "C";
 
@@ -3144,7 +3142,7 @@ $(function () {
       payload.equipment.diameter =
         parseFloat($("input[name='diameter']").val()) || 0;
       payload.equipment.diameter_type =
-        $("select[name='diameter_type']").val() || "inside";
+        $("input[name='diameter_type']:checked").val() || "inside";
       payload.equipment.diameter_unit =
         $("select[name='satuan_diameter']").val() || "inch";
       payload.equipment.temp_design_unit =

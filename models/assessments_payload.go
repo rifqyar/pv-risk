@@ -137,15 +137,14 @@ type EnvironmentPayload struct {
 	Vibration            string `json:"vibration"`
 
 	// --- TAMBAHAN FULL STEP 3 ---
-	ImpactForProduction string  `json:"impact_for_production"`
-	CompNitrogen        float64 `json:"comp_nitrogen"`
-	CompMethane         float64 `json:"comp_methane"`
-	CompEthane          float64 `json:"comp_ethane"`
-	CompPropane         float64 `json:"comp_propane"`
-	CompButane          float64 `json:"comp_butane"`
-	CompSolvent         float64 `json:"comp_solvent"`
-	CompAir             float64 `json:"comp_air"`
-	H2SPpm              int     `json:"h2s_ppm"`
+	CompNitrogen float64 `json:"comp_nitrogen"`
+	CompMethane  float64 `json:"comp_methane"`
+	CompEthane   float64 `json:"comp_ethane"`
+	CompPropane  float64 `json:"comp_propane"`
+	CompButane   float64 `json:"comp_butane"`
+	CompSolvent  float64 `json:"comp_solvent"`
+	CompAir      float64 `json:"comp_air"`
+	H2SPpm       int     `json:"h2s_ppm"`
 
 	Fluida                  string `json:"fluida"`
 	Pollutant               string `json:"pollutant"`

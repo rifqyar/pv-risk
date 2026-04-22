@@ -186,7 +186,6 @@ func AssessmentsTable(db *sql.DB) {
 
 	// --- NEW COLUMNS (STEP 3 LENGKAP SESUAI HTML) ---
 	// Header & Section A (Composition)
-	checkAndAddColumn(db, "assessments", "impact_for_production", "TEXT DEFAULT ''")
 	checkAndAddColumn(db, "assessments", "comp_nitrogen", "REAL DEFAULT 0")
 	checkAndAddColumn(db, "assessments", "comp_methane", "REAL DEFAULT 0")
 	checkAndAddColumn(db, "assessments", "comp_ethane", "REAL DEFAULT 0")

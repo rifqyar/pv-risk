@@ -190,15 +190,15 @@ func SubmitAssessment(c *gin.Context) {
 			temp_op_unit, temp_op_tube_unit, phase, h2s_content, co2_content, h2o_content, chloride_index, ph_index, 
 			impact_production, insulation_condition, insulation_damage_level, coating_condition, coating_damage_level, corrective_description, corrective_action, corrective_date,
 			contaminant_amine, flow_velocity, preventive_corrosion, inhibitor_effectivity, env_ext_cracking, vibration,
-			impact_for_production, comp_nitrogen, comp_methane, comp_ethane, comp_propane, comp_butane, comp_solvent, comp_air, h2s_ppm,
+			comp_nitrogen, comp_methane, comp_ethane, comp_propane, comp_butane, comp_solvent, comp_air, h2s_ppm,
 			fluida, pollutant, cp_condition, corrosion_monitoring, biocide_treatment, release_fluid_containment, clean_up_time, heat_traced, steam_out,
 			prev_ext_corrosion, conf_ext_corrosion, prev_int_cracking, conf_int_cracking, prev_int_thinning, conf_int_thinning, prev_loc_int_corrosion, conf_loc_int_corrosion
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		trxEqID, payload.Assessment.AssessmentDate, prevInsp, actInsp, payload.Assessment.OperatingPressure, payload.Assessment.OperatingTemp, payload.Assessment.OperatingPressureTube, payload.Assessment.OperatingTempTube,
 		payload.Assessment.TempOpUnit, payload.Assessment.TempOpTubeUnit, payload.Environment.Phase, payload.Environment.H2SContent, payload.Environment.CO2Content, payload.Environment.H2OContent, payload.Environment.ChlorideIndex, payload.Environment.PHIndex,
 		payload.Environment.ImpactProduction, payload.Environment.InsulationCondition, payload.Environment.InsulationDamageLevel, payload.Environment.CoatingCondition, payload.Environment.CoatingDamageLevel, payload.Environment.CorrectiveDescription, payload.Environment.CorrectiveAction, corrDate,
 		payload.Environment.ContaminantAmine, payload.Environment.FlowVelocity, payload.Environment.PreventiveCorrosion, payload.Environment.InhibitorEffectivity, payload.Environment.EnvExtCracking, payload.Environment.Vibration,
-		payload.Environment.ImpactForProduction, payload.Environment.CompNitrogen, payload.Environment.CompMethane, payload.Environment.CompEthane, payload.Environment.CompPropane, payload.Environment.CompButane, payload.Environment.CompSolvent, payload.Environment.CompAir, payload.Environment.H2SPpm,
+		payload.Environment.CompNitrogen, payload.Environment.CompMethane, payload.Environment.CompEthane, payload.Environment.CompPropane, payload.Environment.CompButane, payload.Environment.CompSolvent, payload.Environment.CompAir, payload.Environment.H2SPpm,
 		payload.Environment.Fluida, payload.Environment.Pollutant, payload.Environment.CpCondition, payload.Environment.CorrosionMonitoring, payload.Environment.BiocideTreatment, payload.Environment.ReleaseFluidContainment, payload.Environment.CleanUpTime, payload.Environment.HeatTraced, payload.Environment.SteamOut,
 		payload.Environment.PrevExtCorrosion, payload.Environment.ConfExtCorrosion, payload.Environment.PrevIntCracking, payload.Environment.ConfIntCracking, payload.Environment.PrevIntThinning, payload.Environment.ConfIntThinning, payload.Environment.PrevLocIntCorrosion, payload.Environment.ConfLocIntCorrosion,
 	)
@@ -332,7 +332,7 @@ type AutofillData struct {
 	InhibitorEffectivity    string  `json:"inhibitor_effectivity"`
 	EnvExtCracking          string  `json:"env_ext_cracking"`
 	Vibration               string  `json:"vibration"`
-	ImpactForProduction     string  `json:"impact_for_production"`
+	ImpactProduction        string  `json:"impact_production"`
 	CompNitrogen            float64 `json:"comp_nitrogen"`
 	CompMethane             float64 `json:"comp_methane"`
 	CompEthane              float64 `json:"comp_ethane"`
@@ -377,7 +377,7 @@ func GetEquipmentAutofill(c *gin.Context) {
 			
 			COALESCE(a.operating_pressure, 0), COALESCE(a.operating_temp, 0), COALESCE(a.temp_op_unit, 'C'), COALESCE(a.phase, ''), COALESCE(a.h2s_content, 0), COALESCE(a.h2o_content, 0), COALESCE(a.co2_content, 0), COALESCE(a.chloride_index, 0), COALESCE(a.ph_index, 0),
 			COALESCE(a.contaminant_amine, ''), COALESCE(a.flow_velocity, ''), COALESCE(a.preventive_corrosion, ''), COALESCE(a.inhibitor_effectivity, ''), COALESCE(a.env_ext_cracking, ''), COALESCE(a.vibration, ''),
-			COALESCE(a.impact_for_production, ''), COALESCE(a.comp_nitrogen, 0), COALESCE(a.comp_methane, 0), COALESCE(a.comp_ethane, 0), COALESCE(a.comp_propane, 0), COALESCE(a.comp_butane, 0), COALESCE(a.comp_solvent, 0), COALESCE(a.comp_air, 0),
+			COALESCE(a.impact_production, ''), COALESCE(a.comp_nitrogen, 0), COALESCE(a.comp_methane, 0), COALESCE(a.comp_ethane, 0), COALESCE(a.comp_propane, 0), COALESCE(a.comp_butane, 0), COALESCE(a.comp_solvent, 0), COALESCE(a.comp_air, 0),
 			COALESCE(a.fluida, ''), COALESCE(a.pollutant, ''), COALESCE(a.cp_condition, ''), COALESCE(a.corrosion_monitoring, ''), COALESCE(a.biocide_treatment, ''), COALESCE(a.release_fluid_containment, ''), COALESCE(a.clean_up_time, ''), COALESCE(a.heat_traced, 0), COALESCE(a.steam_out, 0),
 			COALESCE(a.prev_ext_corrosion, ''), COALESCE(a.conf_ext_corrosion, ''), COALESCE(a.prev_int_cracking, ''), COALESCE(a.conf_int_cracking, ''), COALESCE(a.prev_int_thinning, ''), COALESCE(a.conf_int_thinning, ''), COALESCE(a.prev_loc_int_corrosion, ''), COALESCE(a.conf_loc_int_corrosion, '')
 		FROM equipments e
@@ -398,7 +398,7 @@ func GetEquipmentAutofill(c *gin.Context) {
 
 		&d.OperatingPressure, &d.OperatingTemp, &d.TempOpUnit, &d.Phase, &d.H2sContent, &d.H2oContent, &d.Co2Content, &d.ChlorideIndex, &d.PhIndex,
 		&d.ContaminantAmine, &d.FlowVelocity, &d.PreventiveCorrosion, &d.InhibitorEffectivity, &d.EnvExtCracking, &d.Vibration,
-		&d.ImpactForProduction, &d.CompNitrogen, &d.CompMethane, &d.CompEthane, &d.CompPropane, &d.CompButane, &d.CompSolvent, &d.CompAir,
+		&d.ImpactProduction, &d.CompNitrogen, &d.CompMethane, &d.CompEthane, &d.CompPropane, &d.CompButane, &d.CompSolvent, &d.CompAir,
 		&d.Fluida, &d.Pollutant, &d.CpCondition, &d.CorrosionMonitoring, &d.BiocideTreatment, &d.ReleaseFluidContainment, &d.CleanUpTime, &d.HeatTraced, &d.SteamOut,
 		&d.PrevExtCorrosion, &d.ConfExtCorrosion, &d.PrevIntCracking, &d.ConfIntCracking, &d.PrevIntThinning, &d.ConfIntThinning, &d.PrevLocIntCorrosion, &d.ConfLocIntCorrosion,
 	)
