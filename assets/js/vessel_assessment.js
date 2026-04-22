@@ -356,49 +356,141 @@ $(function () {
 
           // --- A. PENGISIAN DATA TEKNIS (STEP 1) ---
           $("input[name='tag_number']").val(d.tag_number);
-          $("select[name='first_use']").val(d.year_built).trigger("change");
-          $("#shell_material").val(d.shell_material_id).trigger("change");
+          $("select[name='year_build']").val(d.year_built).trigger("change");
+          $("select[name='first_use']").val(d.first_use).trigger("change");
+          $("#shell_material_spec").val(d.shell_material_id).trigger("change");
+          $("#head_material_spec").val(d.shell_material_id).trigger("change");
+          $("select[name='type_head']").val(d.type_head).trigger("change");
+          $("select[name='neck_material']")
+            .val(d.neck_material_id)
+            .trigger("change");
+          $("select[name='nozzle_material']")
+            .val(d.nozzle_material_id)
+            .trigger("change");
           $("input[name='location']").val(d.location);
+
+          // NEW FIELD: Basic & Design
+          $("input[name='serial_number']").val(d.serial_number);
+          $("input[name='equip_life']").val(d.equip_life);
+          $("select[name='part_type']").val(d.part_type).trigger("change");
+          $("select[name='construction_code']")
+            .val(d.construction_code)
+            .trigger("change");
+          $("input[name='joint_efficiency']").val(d.joint_efficiency);
+          $("input[name='joint_efficiency_head']").val(d.joint_efficiency_head);
+          $("select[name='joint_type']").val(d.joint_type).trigger("change");
+          $("select[name='radiographic']")
+            .val(d.radiographic)
+            .trigger("change");
+          $("select[name='construction_type']")
+            .val(d.construction_type)
+            .trigger("change");
+          $("input[name='mawp']").val(d.mawp);
+          $("input[name='hydro_test']").val(d.hydro_test);
 
           // Design Data
           $("input[name='design_press']").val(d.design_pressure);
           $("input[name='design_temp']").val(d.design_temp);
-          $("select[name='suhu_design']").val(d.temp_design_unit);
+          $("select[name='suhu_design']")
+            .val(d.temp_design_unit)
+            .trigger("change");
 
           if (eqType === "EQT3") {
             $("input[name='design_press_tube']").val(d.design_pressure_tube);
             $("input[name='design_temp_tube']").val(d.design_temp_tube);
-            $("select[name='suhu_design_tube']").val(d.temp_design_tube_unit);
+            $("select[name='suhu_design_tube']")
+              .val(d.temp_design_tube_unit)
+              .trigger("change");
             $("input[name='diameter_shell']").val(d.diameter);
             $("input[name='diameter_tube']").val(d.diameter_tube);
-            $("select[name='diameter_type_shell']").val(d.diameter_type);
-            $("select[name='diameter_type_tube']").val(d.diameter_tube_type);
+            $(`input[name='diameter_type_shell'][value="${d.diameter_type}"]`)
+              .prop("checked", true)
+              .trigger("change");
+            $(
+              `input[name='diameter_type_tube'][value="${d.diameter_tube_type}"]`,
+            )
+              .prop("checked", true)
+              .trigger("change");
           } else {
             $("input[name='diameter']").val(d.diameter);
-            $("select[name='diameter_type']").val(d.diameter_type);
-            $("select[name='satuan_diameter']").val(d.diameter_unit);
+            $(`input[name='diameter_type'][value="${d.diameter_type}"]`)
+              .prop("checked", true)
+              .trigger("change");
+            $("select[name='satuan_diameter']")
+              .val(d.diameter_unit)
+              .trigger("change");
           }
 
           // Geometry & Units
           $("input[name='length']").val(d.length);
-          $("select[name='satuan_pjg']").val(d.length_unit);
+          $("select[name='satuan_pjg']").val(d.length_unit).trigger("change");
           $("input[name='total_volume']").val(d.volume);
-          $("select[name='volume_type']").val(d.volume_unit);
+          $("select[name='volume_type']").val(d.volume_unit).trigger("change");
           $("input[name='nozzle']").val(d.nozzle);
-          $("input[name='satuan_nozzle']").val(d.nozzle_unit);
+          $("select[name='satuan_nozzle']")
+            .val(d.nozzle_unit)
+            .trigger("change");
 
-          // Specs & Services
-          $("select[name='pwht']").val(d.pwht);
-          $("select[name='phase_type']").val(d.phase_type);
-          $("select[name='internal_lining']").val(d.internal_lining);
-          $("select[name='insulation']").val(d.insulation);
-          $("input[name='cathodic_protection']").val(d.cathodic_protection);
+          // NEW FIELD: Material Properties & Specs
+          $("input[name='crown_radius']").val(d.crown_radius);
+          $("input[name='knuckle_radius']").val(d.knuckle_radius);
+          $("input[name='internal_parts_material']").val(
+            d.internal_parts_material,
+          );
+          $("select[name='shell_contaminant']")
+            .val(d.shell_contaminant)
+            .trigger("change"); // Untuk HIC
+          $("select[name='max_brinell']").val(d.max_brinell).trigger("change");
+          $("input[name='allowable_stress']").val(d.allowable_stress);
 
-          // --- B. PENGISIAN CHECKBOX ARRAYS (SPECIAL TRICK) ---
+          // Specs & Services (Lama)
+          $(`input[name='pwht'][value="${d.pwht}"]`)
+            .prop("checked", true)
+            .trigger("change");
+          $("select[name='phase_type']").val(d.phase_type).trigger("change");
+          $("select[name='internal_lining']")
+            .val(d.internal_lining)
+            .trigger("change");
+          $("select[name='insulation']").val(d.insulation).trigger("change");
+          $(
+            `input[name='cathodic_protection'][value="${d.cathodic_protection}"]`,
+          )
+            .prop("checked", true)
+            .trigger("change");
+
+          // NEW FIELD: Thickness Baseline
+          $("input[name='inspection_interval']").val(d.inspection_interval);
+          $("input[name='prev_inspection']").val(d.prev_inspection);
+          $("input[name='act_inspection']").val(d.act_inspection);
+          $("input[name='corrosion_allowance']").val(d.corrosion_allowance);
+
+          $("input[name='shell_clad_base_metal']").val(d.shell_clad_base_metal);
+          $("input[name='head_clad_base_metal']").val(d.head_clad_base_metal);
+          $("input[name='nozzle_clad_base_metal']").val(
+            d.nozzle_clad_base_metal,
+          );
+
+          $("input[name='shell_wall_thickness']").val(d.shell_wall_thickness);
+          $("input[name='head_wall_thickness']").val(d.head_wall_thickness);
+          $("input[name='nozzle_wall_thick']").val(d.nozzle_wall_thick);
+
+          $("input[name='shell_thick_cladded']").val(d.shell_thick_cladded);
+          $("input[name='head_thick_cladded']").val(d.head_thick_cladded);
+          $("input[name='nozzle_thick_cladded']").val(d.nozzle_thick_cladded);
+
+          $("input[name='prev_thick_shell']").val(d.prev_thick_shell);
+          $("input[name='prev_thick_head']").val(d.prev_thick_head);
+          $("input[name='nozzle_previous_thick']").val(d.nozzle_previous_thick);
+
+          $("input[name='act_thick_shell']").val(d.act_thick_shell);
+          $("input[name='act_thick_head']").val(d.act_thick_head);
+          $("input[name='nozzle_actual_thick']").val(d.nozzle_actual_thick);
+
+          // --- B. PENGISIAN CHECKBOX ARRAYS ---
           const setCheckboxes = (className, valueString) => {
             $(`.${className}`).prop("checked", false); // Reset dulu
             if (valueString && valueString !== "-") {
-              const vals = valueString.split(", ");
+              const vals = valueString.split(",").map((v) => v.trim());
               vals.forEach((v) => {
                 $(`.${className}[value="${v}"]`).prop("checked", true);
               });
@@ -409,35 +501,116 @@ $(function () {
           setCheckboxes("ref-checkbox", d.data_reference);
           setCheckboxes("special-checkbox", d.special_service);
           setCheckboxes("prot-checkbox", d.protection);
+          setCheckboxes("amine-checkbox", d.contaminant_amine); // NEW: Amine Contaminants
 
           // --- C. DATA OPERATING (STEP 3) ---
           if (eqType === "EQT1") {
             $("#step3_op_pressure").val(d.operating_pressure);
             $("#step3_op_temperature").val(d.operating_temp);
-            $("select[name='suhu_opr']").val(d.temp_op_unit);
+            $("select[name='suhu_opr']").val(d.temp_op_unit).trigger("change");
             $("input[name='operating_press']").val(d.operating_pressure);
             $("input[name='operating_temp']").val(d.operating_temp);
           } else {
             $("input[name='operating_press_top']").val(d.operating_pressure);
             $("input[name='operating_temp_top']").val(d.operating_temp);
-            $("select[name='suhu_opr_top']").val(d.temp_op_unit);
+            $("select[name='suhu_opr_top']")
+              .val(d.temp_op_unit)
+              .trigger("change");
             $("input[name='operating_press_bottom']").val(
               d.operating_pressure_tube,
             );
             $("input[name='operating_temp_bottom']").val(d.operating_temp_tube);
-            $("select[name='suhu_opr_bottom']").val(d.temp_op_tube_unit);
+            $("select[name='suhu_opr_bottom']")
+              .val(d.temp_op_tube_unit)
+              .trigger("change");
           }
 
           // Fluid Comp
-          $("select[name='phase']").val(d.phase);
+          $("select[name='phase']").val(d.phase).trigger("change");
           $("input[name='comp_h2s']").val(d.h2s_content);
           $("input[name='comp_co2']").val(d.co2_content);
+          $("input[name='comp_h2o']").val(d.h2o_content);
           $("#select2_chloride_contents")
             .val(d.chloride_index)
             .trigger("change");
           $("#select2_ph_contents").val(d.ph_index).trigger("change");
 
-          // Notifikasi Toast Sukses
+          // NEW FIELD: Environment & Mitigation Step 3
+          $("select[name='velocity']").val(d.flow_velocity).trigger("change"); // MIC
+          $("select[name='preventive_corrosion']")
+            .val(d.preventive_corrosion)
+            .trigger("change"); // CO2 Mit
+          $("select[name='inhibitor_effectivity']")
+            .val(d.inhibitor_effectivity)
+            .trigger("change");
+          $("select[name='env_ext_cracking']")
+            .val(d.env_ext_cracking)
+            .trigger("change"); // Ext Cracking
+          $("select[name='vibration']").val(d.vibration).trigger("change"); // Ext Cracking
+          $("select[name='impact_for_production']")
+            .val(d.impact_for_production)
+            .trigger("change");
+          $("input[name='comp_nitrogen']").val(d.comp_nitrogen);
+          $("input[name='comp_methane']").val(d.comp_methane);
+          $("input[name='comp_ethane']").val(d.comp_ethane);
+          $("input[name='comp_propane']").val(d.comp_propane);
+          $("input[name='comp_butane']").val(d.comp_butane);
+          $("input[name='comp_solvent']").val(d.comp_solvent);
+          $("input[name='comp_air']").val(d.comp_air);
+
+          $("select[name='fluida']").val(d.fluida).trigger("change");
+          $("select[name='pollutant']").val(d.pollutant).trigger("change");
+          $("select[name='cp_condition']")
+            .val(d.cp_condition)
+            .trigger("change");
+          $("select[name='corrosion_monitoring']")
+            .val(d.corrosion_monitoring)
+            .trigger("change");
+          $("select[name='biocide_treatment']")
+            .val(d.biocide_treatment)
+            .trigger("change");
+          $("select[name='release_fluid_containment']")
+            .val(d.release_fluid_containment)
+            .trigger("change");
+          $("select[name='clean_up_time']")
+            .val(d.clean_up_time)
+            .trigger("change");
+
+          $(`input[name='heat_traced'][value='${d.heat_traced}']`).prop(
+            "checked",
+            true,
+          );
+          $(`input[name='steam_out'][value='${d.steam_out}']`).prop(
+            "checked",
+            true,
+          );
+
+          $("select[name='prev_ext_corrosion']")
+            .val(d.prev_ext_corrosion)
+            .trigger("change");
+          $("select[name='conf_ext_corrosion']")
+            .val(d.conf_ext_corrosion)
+            .trigger("change");
+          $("select[name='prev_int_cracking']")
+            .val(d.prev_int_cracking)
+            .trigger("change");
+          $("select[name='conf_int_cracking']")
+            .val(d.conf_int_cracking)
+            .trigger("change");
+          $("select[name='prev_int_thinning']")
+            .val(d.prev_int_thinning)
+            .trigger("change");
+          $("select[name='conf_int_thinning']")
+            .val(d.conf_int_thinning)
+            .trigger("change");
+          $("select[name='prev_loc_int_corrosion']")
+            .val(d.prev_loc_int_corrosion)
+            .trigger("change");
+          $("select[name='conf_loc_int_corrosion']")
+            .val(d.conf_loc_int_corrosion)
+            .trigger("change");
+
+          // Notifikasi Toast
           const Toast = Swal.mixin({
             toast: true,
             position: "top-end",
@@ -450,9 +623,36 @@ $(function () {
           });
 
           initDefaultStates();
-          runStep2Calculations();
+
+          // Wajib jalankan Master Calc biar skor Damage Mechanism lgsg update!
+          if (typeof runMasterCalculations === "function") {
+            runMasterCalculations();
+          } else {
+            runStep2Calculations();
+          }
         } else {
-          // Jika data kosong, beri notifikasi ringan saja
+          const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+          });
+          Toast.fire({
+            icon: "info",
+            title: "No previous data found. Form cleared.",
+          });
+
+          // Clear all form
+          $("#vesselAssessmentForm")
+            .find(
+              'input[type="text"], input[type="number"], input[type="radio"] input[type="checkbox"], select',
+            )
+            .val("")
+            .trigger("change");
+          $("#vesselAssessmentForm")
+            .find('input[type="checkbox"], input[type="radio"]')
+            .prop("checked", false)
+            .trigger("change");
           console.log("No previous assessment for this equipment.");
         }
       })
@@ -737,9 +937,9 @@ $(function () {
     const envExtCracking = $("select[name='env_ext_cracking']").val();
 
     // Input PWHT, Joint Type, Hardness untuk Cracking Logic Baru
-    let pwhtStatus = $("input[name='pwht']:checked").val();
-    let jointType = $("select[name='joint_type']").val(); // Welded, As-Welded, atau Seamless
-    let hardnessCategory = $("select[name='max_brinell']").val(); // Value nya langsung "A", "B", atau "C"
+    let pwhtStatus = $("input[name='pwht']:checked").val() ?? "";
+    let jointType = $("select[name='joint_type']").val() ?? ""; // Welded, As-Welded, atau Seamless
+    let hardnessCategory = $("select[name='max_brinell']").val() ?? ""; // Value nya langsung "A", "B", atau "C"
 
     const steamOut = $("input[name='steam_out']:checked").val() === "1";
     const heatTraced = $("input[name='heat_traced']:checked").val() === "1";
@@ -1406,8 +1606,6 @@ $(function () {
     }
 
     // --- LOGIKA AMINE ---
-    let resultAmine = "None";
-
     if (material.amine_cracking === "Res") {
       resultAmine = "Not";
     } else {
@@ -2565,7 +2763,6 @@ $(function () {
   // ==========================================
   // 8. DATA COLLECTION & PAYLOAD GENERATION
   // ==========================================
-
   function validateAndCollectPayload() {
     // --- A. VALIDASI INPUTAN WAJIB (Mencegah data sampah masuk DB) ---
     let errors = [];
@@ -2575,10 +2772,18 @@ $(function () {
     let eqId = $("#select2_equipment").val();
     let eqType = $("#select2_equipment option:selected").data("type");
     let shellMaterial = $("select[name='shell_material']").val();
+    let headMaterial = $("select[name='head_material']").val();
+    let type_head = $("select[name='type_head']").val();
+    let neck_material = $("select[name='neck_material']").val();
+    let nozzle_material = $("select[name='nozzle_material']").val();
 
     if (!tagNumber) errors.push("Step 1: Tag Number is required.");
     if (!eqId) errors.push("Step 1: Equipment must be selected.");
     if (!shellMaterial) errors.push("Step 1: Shell Material must be selected.");
+    if (!headMaterial) errors.push("Step 1: Head Material must be selected.");
+    if (!type_head) errors.push("Step 1: Type Head must be selected.");
+    if (!neck_material) errors.push("Step 1: Neck Material must be selected.");
+    if (!nozzle_material) errors.push("Step 1: Nozzle Material must be selected.");
 
     // Validasi Wajib (Mandatory)
     if (!tagNumber) {
@@ -2617,108 +2822,187 @@ $(function () {
       return null;
     }
 
-    // --- B. BENTUK JSON PAYLOAD ---
-    // 1. Kumpulin data Checkbox Arrays menjadi String (separator koma)
-    const certArray = Array.from(
-      document.querySelectorAll(".cert-checkbox:checked"),
-    ).map((el) => el.value);
-    const refArray = Array.from(
-      document.querySelectorAll(".ref-checkbox:checked"),
-    ).map((el) => el.value);
-    const specialArray = Array.from(
-      document.querySelectorAll(".special-checkbox:checked"),
-    ).map((el) => el.value);
-    const protArray = Array.from(
-      document.querySelectorAll(".prot-checkbox:checked"),
-    ).map((el) => el.value);
+    // Helper checkbox array
+    const getCheckedValues = (className) => {
+      let vals = [];
+      $(`.${className}:checked`).each(function () {
+        vals.push($(this).val());
+      });
+      return vals.join(", ") || "-";
+    };
 
     let payload = {
-      // 1. HEADER: Equipment Data
       equipment: {
-        tag_number: tagNumber,
         master_equipment_id: parseInt(eqId),
-        location: $("input[name='location']").val() || "", // FIX BUG TYPO DI SINI
-        year_built: parseInt($("select[name='first_use']").val()) || 0,
-        shell_material_id: parseInt(shellMaterial) || 0,
-        design_pressure: parseFloat($("input[name='design_press']").val()) || 0,
-        design_pressure_tube:
-          parseFloat($("input[name='design_press_tube']").val()) || 0,
-        design_temp: parseFloat($("input[name='design_temp']").val()) || 0,
-        design_temp_tube:
-          parseFloat($("input[name='design_temp_tube']").val()) || 0,
-        diameter:
-          (eqType == "EQT3"
-            ? parseFloat($("input[name='diameter_shell']").val())
-            : parseFloat($("input[name='diameter']").val())) || 0,
-        diameter_tube:
-          (eqType == "EQT3"
-            ? parseFloat($("input[name='diameter_tube']").val())
-            : parseFloat($("input[name='diameter']").val())) || 0,
-        volume: parseFloat($("input[name='total_volume']").val()) || 0,
-        diameter_type:
-          (eqType == "EQT3"
-            ? $("select[name='diameter_type_shell']").val()
-            : $("select[name='diameter_type']").val()) || "inside",
-        diameter_unit:
-          (eqType == "EQT3"
-            ? "inch"
-            : $("select[name='satuan_diameter']").val()) || "inch",
-        diameter_tube_type:
-          eqType == "EQT3"
-            ? $("select[name='diameter_type_tube']").val()
-            : null,
-        diameter_tube_unit: eqType == "EQT3" ? "inch" : null,
+        tag_number: $("input[name='tag_number']").val() || "",
+        year_built: parseInt($("select[name='year_build']").val()) || 0,
+        first_use: parseInt($("select[name='first_use']").val()) || 0,
+        location: $("input[name='location']").val() || "",
+
+        shell_material_id: parseInt($("#shell_material_spec").val()) || 0,
+        head_material_id: parseInt($("#head_material_spec").val()) || 0,
+        type_head: parseInt($("#type_head").val()) || 0,
+        neck_material_id: parseInt($("#neck_material_spec").val()) || 0,
+        nozzle_material_id: parseInt($("#nozzle_material_spec").val()) || 0,
+
+        // NEW FIELD STEP 1 (Basic & Spec)
+        serial_number: $("input[name='serial_number']").val() || "",
+        equip_life: parseInt($("input[name='equip_life']").val()) || 0,
+        part_type: $("select[name='part_type']").val() || "",
+        construction_code: $("select[name='construction_code']").val() || "",
+        joint_efficiency:
+          parseFloat($("input[name='joint_efficiency']").val()) || 0,
+        joint_efficiency_head:
+          parseFloat($("input[name='joint_efficiency_head']").val()) || 0,
+        joint_type: $("select[name='joint_type']").val() || "",
+        radiographic: $("select[name='radiographic']").val() || "",
+        construction_type: $("select[name='construction_type']").val() || "",
+        mawp: parseFloat($("input[name='mawp']").val()) || 0,
+        hydro_test: parseFloat($("input[name='hydro_test']").val()) || 0,
+        crown_radius: parseFloat($("input[name='crown_radius']").val()) || 0,
+        knuckle_radius:
+          parseFloat($("input[name='knuckle_radius']").val()) || 0,
+        internal_parts_material:
+          $("input[name='internal_parts_material']").val() || "",
+        shell_contaminant: $("select[name='shell_contaminant']").val() || "",
+        max_brinell: $("select[name='max_brinell']").val() || "",
+        allowable_stress:
+          parseFloat($("input[name='allowable_stress']").val()) || 0,
+
+        // NEW FIELD STEP 1 (Thickness)
+        inspection_interval:
+          parseInt($("input[name='inspection_interval']").val()) || 0,
+        prev_inspection: $("input[name='prev_inspection']").val() || "",
+        act_inspection: $("input[name='act_inspection']").val() || "",
+        corrosion_allowance:
+          parseFloat($("input[name='corrosion_allowance']").val()) || 0,
+
+        shell_clad_base_metal:
+          parseFloat($("input[name='shell_clad_base_metal']").val()) || 0,
+        head_clad_base_metal:
+          parseFloat($("input[name='head_clad_base_metal']").val()) || 0,
+        nozzle_clad_base_metal:
+          parseFloat($("input[name='nozzle_clad_base_metal']").val()) || 0,
+
+        shell_wall_thickness:
+          parseFloat($("input[name='shell_wall_thickness']").val()) || 0,
+        head_wall_thickness:
+          parseFloat($("input[name='head_wall_thickness']").val()) || 0,
+        nozzle_wall_thick:
+          parseFloat($("input[name='nozzle_wall_thick']").val()) || 0,
+
+        shell_thick_cladded:
+          parseFloat($("input[name='shell_thick_cladded']").val()) || 0,
+        head_thick_cladded:
+          parseFloat($("input[name='head_thick_cladded']").val()) || 0,
+        nozzle_thick_cladded:
+          parseFloat($("input[name='nozzle_thick_cladded']").val()) || 0,
+
+        prev_thick_shell:
+          parseFloat($("input[name='prev_thick_shell']").val()) || 0,
+        prev_thick_head:
+          parseFloat($("input[name='prev_thick_head']").val()) || 0,
+        nozzle_previous_thick:
+          parseFloat($("input[name='nozzle_previous_thick']").val()) || 0,
+
+        act_thick_shell:
+          parseFloat($("input[name='act_thick_shell']").val()) || 0,
+        act_thick_head:
+          parseFloat($("input[name='act_thick_head']").val()) || 0,
+        nozzle_actual_thick:
+          parseFloat($("input[name='nozzle_actual_thick']").val()) || 0,
+
         length: parseFloat($("input[name='length']").val()) || 0,
         length_unit: $("select[name='satuan_pjg']").val() || "ft",
+        volume: parseFloat($("input[name='total_volume']").val()) || 0,
+        volume_unit: $("select[name='volume_type']").val() || "m3",
         nozzle: parseFloat($("input[name='nozzle']").val()) || 0,
-        nozzle_unit: $("input[name='satuan_nozzle']").val() || "inch",
-        volume_unit: $("select[name='volume_type']").val() || "m",
-        temp_design_unit: $("select[name='suhu_design']").val() || "c",
-        temp_design_tube_unit:
-          eqType == "EQT3" ? $("select[name='suhu_design_tube']").val() : null,
+        nozzle_unit: $("select[name='satuan_nozzle']").val() || "inch",
+
         pwht: $("select[name='pwht']").val() || "No",
-        certificate: certArray.join(", ") || "-",
-        data_reference: refArray.join(", ") || "-",
+        certificate: getCheckedValues("cert-checkbox"),
+        data_reference: getCheckedValues("ref-checkbox"),
         phase_type: $("select[name='phase_type']").val() || "multi phase",
         internal_lining: $("select[name='internal_lining']").val() || "None",
         insulation: $("select[name='insulation']").val() || "No",
-        special_service: specialArray.join(", ") || "-",
-        protection: protArray.join(", ") || "-",
+        special_service: getCheckedValues("special-checkbox"),
+        protection: getCheckedValues("prot-checkbox"),
         cathodic_protection:
-          $("input[name='cathodic_protection']:checked").val() || "No",
+          $("input[name='cathodic_protection']").val() || "No",
       },
-
-      // 2. DETAIL: Assessment General Info
       assessment: {
-        assessment_date: new Date().toISOString().split("T")[0],
-        prev_inspection_date: $("input[name='prev_inspection']").val() || null,
-        act_inspection_date: $("input[name='act_inspection']").val() || null,
-        operating_pressure:
-          (eqType == "EQT1"
-            ? parseFloat($("input[name='operating_press']").val())
-            : parseFloat($("input[name='operating_press_top']").val())) || 0,
-        operating_temp:
-          (eqType == "EQT1"
-            ? parseFloat($("input[name='operating_temp']").val())
-            : parseFloat($("input[name='operating_temp_top']").val())) || 0,
-        operating_pressure_tube:
-          (eqType == "EQT1"
-            ? 0
-            : parseFloat($("input[name='operating_press_bottom']").val())) || 0,
-        operating_temp_tube:
-          (eqType == "EQT1"
-            ? 0
-            : parseFloat($("input[name='operating_temp_bottom']").val())) || 0,
-
-        temp_op_unit:
-          (eqType == "EQT3"
-            ? $("select[name='suhu_opr_top']").val()
-            : $("select[name='suhu_opr']").val()) || "c",
-        temp_op_tube_unit:
-          eqType == "EQT3" ? $("select[name='suhu_opr_bottom']").val() : null,
+        assessment_date:
+          $("input[name='assessment_date']").val() ||
+          new Date().toISOString().split("T")[0],
+        prev_inspection_date: $("input[name='prev_inspection']").val() || "",
+        act_inspection_date: $("input[name='act_inspection']").val() || "",
       },
+      environment: {
+        phase: $("select[name='phase']").val() || "vapor",
+        h2s_content: parseFloat($("input[name='comp_h2s']").val()) || 0,
+        co2_content: parseFloat($("input[name='comp_co2']").val()) || 0,
+        h2o_content: parseFloat($("input[name='comp_h2o']").val()) || 0,
+        chloride_index: parseInt($("#select2_chloride_contents").val()) || 0,
+        ph_index: parseInt($("#select2_ph_contents").val()) || 0,
 
-      // 3. DETAIL: Thickness & Corrosion Rate Data
+        // NEW FIELD STEP 3
+        contaminant_amine: getCheckedValues("amine-checkbox"),
+        flow_velocity: $("select[name='velocity']").val() || "",
+        preventive_corrosion:
+          $("select[name='preventive_corrosion']").val() || "",
+        inhibitor_effectivity:
+          $("select[name='inhibitor_effectivity']").val() || "",
+        env_ext_cracking: $("select[name='env_ext_cracking']").val() || "",
+        vibration: $("select[name='vibration']").val() || "",
+
+        impact_production: $("select[name='impact_production']").val() || "",
+        insulation_condition:
+          $("select[name='insulation_condition']").val() || "",
+        insulation_damage_level:
+          $("select[name='insulation_level']").val() || "",
+        coating_condition:
+          $("select[name='ext_coating_condition']").val() || "",
+        coating_damage_level: $("select[name='ext_coating_level']").val() || "",
+        corrective_description:
+          $("textarea[name='corrective_description']").val() || "",
+        corrective_action:
+          $("textarea[name='corrective_action_taken']").val() || "",
+        corrective_date: $("input[name='corrective_date']").val() || null,
+        impact_for_production:
+          $("select[name='impact_for_production']").val() || "",
+        comp_nitrogen: parseFloat($("input[name='comp_nitrogen']").val()) || 0,
+        comp_methane: parseFloat($("input[name='comp_methane']").val()) || 0,
+        comp_ethane: parseFloat($("input[name='comp_ethane']").val()) || 0,
+        comp_propane: parseFloat($("input[name='comp_propane']").val()) || 0,
+        comp_butane: parseFloat($("input[name='comp_butane']").val()) || 0,
+        comp_solvent: parseFloat($("input[name='comp_solvent']").val()) || 0,
+        comp_air: parseFloat($("input[name='comp_air']").val()) || 0,
+        h2s_ppm: parseInt($("select[name='h2s_contents']").val()) || 0,
+
+        fluida: $("select[name='fluida']").val() || "",
+        pollutant: $("select[name='pollutant']").val() || "",
+        cp_condition: $("select[name='cp_condition']").val() || "",
+        corrosion_monitoring:
+          $("select[name='corrosion_monitoring']").val() || "",
+        biocide_treatment: $("select[name='biocide_treatment']").val() || "",
+        release_fluid_containment:
+          $("select[name='release_fluid_containment']").val() || "",
+        clean_up_time: $("select[name='clean_up_time']").val() || "",
+        heat_traced:
+          parseInt($("input[name='heat_traced']:checked").val()) || 0,
+        steam_out: parseInt($("input[name='steam_out']:checked").val()) || 0,
+
+        prev_ext_corrosion: $("select[name='prev_ext_corrosion']").val() || "",
+        conf_ext_corrosion: $("select[name='conf_ext_corrosion']").val() || "",
+        prev_int_cracking: $("select[name='prev_int_cracking']").val() || "",
+        conf_int_cracking: $("select[name='conf_int_cracking']").val() || "",
+        prev_int_thinning: $("select[name='prev_int_thinning']").val() || "",
+        conf_int_thinning: $("select[name='conf_int_thinning']").val() || "",
+        prev_loc_int_corrosion:
+          $("select[name='prev_loc_int_corrosion']").val() || "",
+        conf_loc_int_corrosion:
+          $("select[name='conf_loc_int_corrosion']").val() || "",
+      },
       thickness_data: {
         shell: {
           prev_thick:
@@ -2739,7 +3023,6 @@ $(function () {
           remaining_life:
             parseRemainingLife($("input[name='rem_life_st_head']").val()) || 0,
         },
-        // Tambahan object nozzle biar komplit ngikutin struct Go-nya
         nozzle: {
           prev_thick:
             parseFloat($("input[name='nozzle_previous_thick']").val()) || 0,
@@ -2753,30 +3036,6 @@ $(function () {
             0,
         },
       },
-
-      // 4. DETAIL: Operating Environment (Dari Step 3)
-      environment: {
-        phase: $("select[name='phase']").val() || "",
-        h2s_content: parseFloat($("input[name='comp_h2s']").val()) || 0,
-        co2_content: parseFloat($("input[name='comp_co2']").val()) || 0,
-        h2o_content: parseFloat($("input[name='comp_h2o']").val()) || 0,
-        chloride_index: parseInt($("#select2_chloride_contents").val()) || 0,
-        ph_index: parseInt($("#select2_ph_contents").val()) || 0,
-
-        impact_production:
-          $("select[name='impact_for_production']").val() || "",
-        insulation_condition: $("#insulation_condition").val() || "",
-        insulation_damage_level: $("#insulation_damage_level").val() || "",
-        coating_condition: $("#ext_coating_condition").val() || "",
-        coating_damage_level: $("#ext_coating_damage_level").val() || "",
-        corrective_description:
-          $("textarea[name='corrective_description']").val() || "",
-        corrective_action:
-          $("textarea[name='corrective_action_taken']").val() || "",
-        corrective_date: $("input[name='corrective_date']").val() || null,
-      },
-
-      // 5. DETAIL: Damage Mechanisms (Dari Step 4)
       damage_mechanisms: {
         atmospheric: $("#dm_atmospheric").data("value") || "Not",
         cui: $("#dm_cui").data("value") || "Not",
@@ -2790,8 +3049,6 @@ $(function () {
         galvanic: $("#dm_galvanic").text().trim() || "Not",
         lof_score: $("#ui_lof_score").val() || "",
       },
-
-      // 6. DETAIL: Final Risk & Strategy (Dari Step 5 & 6)
       results: {
         lof_category: parseInt($("#lof_category").val()) || 0,
         cof_financial: $("#cof_financial").val() || "",
@@ -2799,8 +3056,6 @@ $(function () {
         cof_category: $("#cof_category").val() || "",
         risk_level: finalRiskLevel,
         risk_index: parseInt($("#risk_index").val()) || 0,
-
-        // FIX TERPENTING: Form Step 5 yang kompleks ditampung di 1 objek ini
         inspection_data: {
           ext_corr_nonintrusive:
             $("#insp_ext_corr_nonintrusive").val() || "None",
@@ -2818,15 +3073,11 @@ $(function () {
             $("#insp_loc_corr_nonintrusive").val() || "None",
           loc_corr_intrusive: $("#insp_loc_corr_intrusive").val() || "None",
         },
-
         governing_component: localStorage.getItem("governing") || "-",
         max_interval_years: parseFloat($("#insp_interval").text()) || 0,
         next_inspection_year: parseInt($("#insp_next_year").text()) || 0,
-
-        // .text() aman dipakai untuk ambil isi tooltip (buang HTML <span> nya)
-        recommended_method: localStorage.getItem("recommended_methods"), //$("#insp_method").text().trim() || "",
+        recommended_method: localStorage.getItem("recommended_methods"),
       },
-
       cladding_data: {
         shell: {
           base_metal: parseFloat($("#clad_base_shell").text()) || 0,
@@ -2854,6 +3105,58 @@ $(function () {
         },
       },
     };
+
+    // Dinamika Equipment Type
+    if (eqType === "EQT3") {
+      payload.equipment.design_pressure_tube =
+        parseFloat($("input[name='design_press_tube']").val()) || 0;
+      payload.equipment.design_temp_tube =
+        parseFloat($("input[name='design_temp_tube']").val()) || 0;
+      payload.equipment.diameter =
+        parseFloat($("input[name='diameter_shell']").val()) || 0;
+      payload.equipment.diameter_tube =
+        parseFloat($("input[name='diameter_tube']").val()) || 0;
+      payload.equipment.diameter_type =
+        $("select[name='diameter_type_shell']").val() || "inside";
+      payload.equipment.diameter_tube_type =
+        $("select[name='diameter_type_tube']").val() || "inside";
+      payload.equipment.temp_design_tube_unit =
+        $("select[name='suhu_design_tube']").val() || "C";
+
+      payload.assessment.operating_pressure =
+        parseFloat($("input[name='operating_press_top']").val()) || 0;
+      payload.assessment.operating_temp =
+        parseFloat($("input[name='operating_temp_top']").val()) || 0;
+      payload.assessment.temp_op_unit =
+        $("select[name='suhu_opr_top']").val() || "C";
+
+      payload.assessment.operating_pressure_tube =
+        parseFloat($("input[name='operating_press_bottom']").val()) || 0;
+      payload.assessment.operating_temp_tube =
+        parseFloat($("input[name='operating_temp_bottom']").val()) || 0;
+      payload.assessment.temp_op_tube_unit =
+        $("select[name='suhu_opr_bottom']").val() || "C";
+    } else {
+      payload.equipment.design_pressure =
+        parseFloat($("input[name='design_press']").val()) || 0;
+      payload.equipment.design_temp =
+        parseFloat($("input[name='design_temp']").val()) || 0;
+      payload.equipment.diameter =
+        parseFloat($("input[name='diameter']").val()) || 0;
+      payload.equipment.diameter_type =
+        $("select[name='diameter_type']").val() || "inside";
+      payload.equipment.diameter_unit =
+        $("select[name='satuan_diameter']").val() || "inch";
+      payload.equipment.temp_design_unit =
+        $("select[name='suhu_design']").val() || "C";
+
+      payload.assessment.operating_pressure =
+        parseFloat($("input[name='operating_press']").val()) || 0;
+      payload.assessment.operating_temp =
+        parseFloat($("input[name='operating_temp']").val()) || 0;
+      payload.assessment.temp_op_unit =
+        $("select[name='suhu_opr']").val() || "C";
+    }
 
     return payload;
   }

@@ -15,8 +15,13 @@ type EquipmentPayload struct {
 	MasterEquipmentID int    `json:"master_equipment_id" binding:"required"`
 	TagNumber         string `json:"tag_number" binding:"required"`
 	YearBuilt         int    `json:"year_built" binding:"required"`
+	FirstUse          int    `json:"first_use" binding:"required"`
 	Location          string `json:"location"`
 	ShellMaterialID   int    `json:"shell_material_id"`
+	HeadMaterialID    int    `json:"head_material_id"`
+	TypeHead          int    `json:"type_head"`
+	NeckMaterialID    int    `json:"neck_material_id"`
+	NozzleMaterialID  int    `json:"nozzle_material_id"`
 
 	DesignPressure     float64 `json:"design_pressure"`
 	DesignPressureTube float64 `json:"design_pressure_tube"`
@@ -49,6 +54,46 @@ type EquipmentPayload struct {
 	SpecialService     string `json:"special_service"`
 	Protection         string `json:"protection"`
 	CathodicProtection string `json:"cathodic_protection"`
+
+	// --- NEW FIELDS STEP 1 ---
+	SerialNumber          string  `json:"serial_number"`
+	EquipLife             int     `json:"equip_life"`
+	PartType              string  `json:"part_type"`
+	ConstructionCode      string  `json:"construction_code"`
+	JointEfficiency       float64 `json:"joint_efficiency"`
+	JointEfficiencyHead   float64 `json:"joint_efficiency_head"`
+	JointType             string  `json:"joint_type"`
+	Radiographic          string  `json:"radiographic"`
+	ConstructionType      string  `json:"construction_type"`
+	Mawp                  float64 `json:"mawp"`
+	HydroTest             float64 `json:"hydro_test"`
+	CrownRadius           float64 `json:"crown_radius"`
+	KnuckleRadius         float64 `json:"knuckle_radius"`
+	InternalPartsMaterial string  `json:"internal_parts_material"`
+	ShellContaminant      string  `json:"shell_contaminant"`
+	MaxBrinell            string  `json:"max_brinell"`
+	AllowableStress       float64 `json:"allowable_stress"`
+
+	// Thickness Data Baseline (Step 1)
+	InspectionInterval  int     `json:"inspection_interval"`
+	PrevInspection      string  `json:"prev_inspection"`
+	ActInspection       string  `json:"act_inspection"`
+	CorrosionAllowance  float64 `json:"corrosion_allowance"`
+	ShellCladBaseMetal  float64 `json:"shell_clad_base_metal"`
+	HeadCladBaseMetal   float64 `json:"head_clad_base_metal"`
+	NozzleCladBaseMetal float64 `json:"nozzle_clad_base_metal"`
+	ShellWallThickness  float64 `json:"shell_wall_thickness"`
+	HeadWallThickness   float64 `json:"head_wall_thickness"`
+	NozzleWallThick     float64 `json:"nozzle_wall_thick"`
+	ShellThickCladded   float64 `json:"shell_thick_cladded"`
+	HeadThickCladded    float64 `json:"head_thick_cladded"`
+	NozzleThickCladded  float64 `json:"nozzle_thick_cladded"`
+	PrevThickShell      float64 `json:"prev_thick_shell"`
+	PrevThickHead       float64 `json:"prev_thick_head"`
+	NozzlePreviousThick float64 `json:"nozzle_previous_thick"`
+	ActThickShell       float64 `json:"act_thick_shell"`
+	ActThickHead        float64 `json:"act_thick_head"`
+	NozzleActualThick   float64 `json:"nozzle_actual_thick"`
 }
 
 type AssessmentGeneral struct {
@@ -82,6 +127,44 @@ type EnvironmentPayload struct {
 	CorrectiveDescription string  `json:"corrective_description"`
 	CorrectiveAction      string  `json:"corrective_action"`
 	CorrectiveDate        *string `json:"corrective_date"` // Pointer karena bisa null
+
+	// --- NEW FIELDS STEP 3 ---
+	ContaminantAmine     string `json:"contaminant_amine"`
+	FlowVelocity         string `json:"flow_velocity"`
+	PreventiveCorrosion  string `json:"preventive_corrosion"`
+	InhibitorEffectivity string `json:"inhibitor_effectivity"`
+	EnvExtCracking       string `json:"env_ext_cracking"`
+	Vibration            string `json:"vibration"`
+
+	// --- TAMBAHAN FULL STEP 3 ---
+	ImpactForProduction string  `json:"impact_for_production"`
+	CompNitrogen        float64 `json:"comp_nitrogen"`
+	CompMethane         float64 `json:"comp_methane"`
+	CompEthane          float64 `json:"comp_ethane"`
+	CompPropane         float64 `json:"comp_propane"`
+	CompButane          float64 `json:"comp_butane"`
+	CompSolvent         float64 `json:"comp_solvent"`
+	CompAir             float64 `json:"comp_air"`
+	H2SPpm              int     `json:"h2s_ppm"`
+
+	Fluida                  string `json:"fluida"`
+	Pollutant               string `json:"pollutant"`
+	CpCondition             string `json:"cp_condition"`
+	CorrosionMonitoring     string `json:"corrosion_monitoring"`
+	BiocideTreatment        string `json:"biocide_treatment"`
+	ReleaseFluidContainment string `json:"release_fluid_containment"`
+	CleanUpTime             string `json:"clean_up_time"`
+	HeatTraced              int    `json:"heat_traced"`
+	SteamOut                int    `json:"steam_out"`
+
+	PrevExtCorrosion    string `json:"prev_ext_corrosion"`
+	ConfExtCorrosion    string `json:"conf_ext_corrosion"`
+	PrevIntCracking     string `json:"prev_int_cracking"`
+	ConfIntCracking     string `json:"conf_int_cracking"`
+	PrevIntThinning     string `json:"prev_int_thinning"`
+	ConfIntThinning     string `json:"conf_int_thinning"`
+	PrevLocIntCorrosion string `json:"prev_loc_int_corrosion"`
+	ConfLocIntCorrosion string `json:"conf_loc_int_corrosion"`
 }
 
 type ThicknessDataPayload struct {

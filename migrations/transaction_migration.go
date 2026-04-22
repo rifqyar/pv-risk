@@ -91,6 +91,51 @@ func EquipmentsTable(db *sql.DB) {
 	checkAndAddColumn(db, "trx_equipments", "special_service", "TEXT DEFAULT '-'")
 	checkAndAddColumn(db, "trx_equipments", "protection", "TEXT DEFAULT '-'")
 	checkAndAddColumn(db, "trx_equipments", "cathodic_protection", "TEXT DEFAULT 'No'")
+	checkAndAddColumn(db, "trx_equipments", "head_material_id", "INTEGER DEFAULT null")
+	checkAndAddColumn(db, "trx_equipments", "type_head", "INTEGER DEFAULT null")
+	checkAndAddColumn(db, "trx_equipments", "neck_material_id", "INTEGER DEFAULT null")
+	checkAndAddColumn(db, "trx_equipments", "nozzle_material_id", "INTEGER DEFAULT null")
+	checkAndAddColumn(db, "trx_equipments", "first_use", "INTEGER DEFAULT null")
+
+	// --- NEW COLUMNS (STEP 1: Basic, Design, Material, Thickness) ---
+	checkAndAddColumn(db, "trx_equipments", "serial_number", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "trx_equipments", "equip_life", "INTEGER DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "part_type", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "trx_equipments", "construction_code", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "trx_equipments", "joint_efficiency", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "joint_efficiency_head", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "joint_type", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "trx_equipments", "radiographic", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "trx_equipments", "construction_type", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "trx_equipments", "mawp", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "hydro_test", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "crown_radius", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "knuckle_radius", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "internal_parts_material", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "trx_equipments", "shell_contaminant", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "trx_equipments", "max_brinell", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "trx_equipments", "allowable_stress", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "inspection_interval", "INTEGER DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "prev_inspection", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "trx_equipments", "act_inspection", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "trx_equipments", "corrosion_allowance", "REAL DEFAULT 0")
+
+	// Data Thickness Cladded & Wall
+	checkAndAddColumn(db, "trx_equipments", "shell_clad_base_metal", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "head_clad_base_metal", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "nozzle_clad_base_metal", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "shell_wall_thickness", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "head_wall_thickness", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "nozzle_wall_thick", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "shell_thick_cladded", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "head_thick_cladded", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "nozzle_thick_cladded", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "prev_thick_shell", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "prev_thick_head", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "nozzle_previous_thick", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "act_thick_shell", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "act_thick_head", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "trx_equipments", "nozzle_actual_thick", "REAL DEFAULT 0")
 }
 
 // ==========================================
@@ -122,8 +167,6 @@ func AssessmentsTable(db *sql.DB) {
 	// Add missing columns via Smart Migration
 	checkAndAddColumn(db, "assessments", "temp_op_unit", "TEXT DEFAULT 'c'")
 	checkAndAddColumn(db, "assessments", "temp_op_tube_unit", "TEXT DEFAULT 'c'")
-
-	// TAMBAHAN STEP 3:
 	checkAndAddColumn(db, "assessments", "impact_production", "TEXT DEFAULT ''")
 	checkAndAddColumn(db, "assessments", "insulation_condition", "TEXT DEFAULT ''")
 	checkAndAddColumn(db, "assessments", "insulation_damage_level", "TEXT DEFAULT ''")
@@ -132,6 +175,49 @@ func AssessmentsTable(db *sql.DB) {
 	checkAndAddColumn(db, "assessments", "corrective_description", "TEXT DEFAULT ''")
 	checkAndAddColumn(db, "assessments", "corrective_action", "TEXT DEFAULT ''")
 	checkAndAddColumn(db, "assessments", "corrective_date", "DATE")
+
+	// --- NEW COLUMNS (STEP 3: Environment & Mitigation) ---
+	checkAndAddColumn(db, "assessments", "contaminant_amine", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "flow_velocity", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "preventive_corrosion", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "inhibitor_effectivity", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "env_ext_cracking", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "vibration", "TEXT DEFAULT ''")
+
+	// --- NEW COLUMNS (STEP 3 LENGKAP SESUAI HTML) ---
+	// Header & Section A (Composition)
+	checkAndAddColumn(db, "assessments", "impact_for_production", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "comp_nitrogen", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "assessments", "comp_methane", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "assessments", "comp_ethane", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "assessments", "comp_propane", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "assessments", "comp_butane", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "assessments", "comp_solvent", "REAL DEFAULT 0")
+	checkAndAddColumn(db, "assessments", "comp_air", "REAL DEFAULT 0")
+
+	// Section B (Process Condition Tambahan)
+	checkAndAddColumn(db, "assessments", "fluida", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "pollutant", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "h2s_ppm", "INTEGER DEFAULT ''")
+
+	// Section C (Protection & Contaminants Tambahan)
+	checkAndAddColumn(db, "assessments", "cp_condition", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "corrosion_monitoring", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "biocide_treatment", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "release_fluid_containment", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "clean_up_time", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "heat_traced", "INTEGER DEFAULT 0")
+	checkAndAddColumn(db, "assessments", "steam_out", "INTEGER DEFAULT 0")
+
+	// Section D (Previous Equipment Condition Tambahan)
+	checkAndAddColumn(db, "assessments", "prev_ext_corrosion", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "conf_ext_corrosion", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "prev_int_cracking", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "conf_int_cracking", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "prev_int_thinning", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "conf_int_thinning", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "prev_loc_int_corrosion", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "conf_loc_int_corrosion", "TEXT DEFAULT ''")
 }
 
 // ==========================================
