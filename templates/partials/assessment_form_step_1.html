@@ -568,7 +568,7 @@
           <div class="row align-items-center mb-4">
             <div class="col-md-4 mb-3">
               <div class="form-floating form-floating-outline">
-                <select class="select2-tag form-select" name="shell_material" data-allow-clear="true">
+                <select class="select2-tag form-select" name="shell_material" id="shell_material_spec" data-allow-clear="true">
                   <option value="">Select Material</option>
                   {{ range .ShellType }}<option value="{{ .ID }}" data-external="{{ .External }}" data-internal="{{ .Internal }}" data-co2corr="{{ .CO2Corr }}" data-mic="{{ .MIC }}" data-amine-cracking="{{ .AmineCracking }}" data-sulfide-cracking="{{ .SulfideCracking }}">{{ .Name }}</option>{{ end }}
                 </select>
@@ -577,7 +577,7 @@
             </div>
             <div class="col-md-4 mb-3">
               <div class="form-floating form-floating-outline">
-                <select class="select2-tag form-select" name="head_material" data-allow-clear="true">
+                <select class="select2-tag form-select" name="head_material" id="head_material_spec" data-allow-clear="true">
                   <option value="">Select Material</option>
                   {{ range .ShellType }}<option value="{{ .ID }}" data-external="{{ .External }}" data-internal="{{ .Internal }}" data-co2corr="{{ .CO2Corr }}" data-mic="{{ .MIC }}" data-amine-cracking="{{ .AmineCracking }}" data-sulfide-cracking="{{ .SulfideCracking }}">{{ .Name }}</option>{{ end }}
                 </select>
@@ -614,7 +614,7 @@
 
             <div class="col-md-4 mb-3">
               <div class="form-floating form-floating-outline">
-                <select class="select2-tag form-select" name="neck_material" data-allow-clear="true">
+                <select class="select2-tag form-select" name="neck_material" id="neck_material_spec" data-allow-clear="true">
                   <option value="">Select Material</option>
                   {{ range .NeckMaterial }}<option value="{{ .ID }}">{{ .Name }}</option>{{ end }}
                 </select>
@@ -623,7 +623,7 @@
             </div>
             <div class="col-md-4 mb-3">
               <div class="form-floating form-floating-outline">
-                <select class="select2-tag form-select" name="nozzle_material" data-allow-clear="true">
+                <select class="select2-tag form-select" name="nozzle_material" id="nozzle_material_spec" data-allow-clear="true">
                   <option value="">Select Material</option>
                   {{ range .NozzleMaterial }}<option value="{{ .ID }}">{{ .Name }}</option>{{ end }}
                 </select>
@@ -643,7 +643,7 @@
               <div class="form-floating form-floating-outline">
                 <select class="select2 form-select" name="shell_contaminant" data-allow-clear="true">
                   <option value="Ultra Low">&lt; 0.002% S</option>
-                  <option value="Low Sulfur">0.002 - 0.001% S</option>
+                  <option value="Low Sulfur">0.002 - 0.01% S</option>
                   <option value="High Sulfur">&gt; 0.01% S</option>
                 </select>
                 <label>Shell Contaminant Contents</label>

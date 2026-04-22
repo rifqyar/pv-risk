@@ -66,6 +66,22 @@ $(function () {
   $(".btn-next").on("click", () => stepper.next());
   $(".btn-prev").on("click", () => stepper.previous());
 
+  $(document).on("click", ".btn-next, .btn-prev", function () {
+    runMasterCalculations();
+  });
+
+  $(document).on(
+    "click",
+    ".step-trigger, .nav-link, .bs-stepper-header .step",
+    function () {
+      runMasterCalculations();
+    },
+  );
+
+  document.addEventListener("show.bs-stepper", function (event) {
+    runMasterCalculations(); // Dijamin jalan tiap kali pindah step
+  });
+
   // Global Calculation Trigger
   $(document).on("input change", "input, select", function () {
     calculateAndStore();
@@ -464,6 +480,17 @@ $(function () {
     $("#ext_coating_condition").trigger("change");
   }
 
+  function runMasterCalculations() {
+    calculateAndStore();
+    generateEquipmentName();
+    runStep2Calculations();
+    calculateEnvironmentalSeverity();
+    syncOperatingConditions();
+    calculateDamageMechanisms();
+    calculateCriticalityMatrix();
+    calculateInspectionStrategy();
+  }
+
   function handleEquipmentTypeChange() {
     const eqType = elements.eqType.find("option:selected").data("type");
 
@@ -684,8 +711,12 @@ $(function () {
       0;
 
     if (eqType === "EQT3" && assessmentSide === "head") {
-      opTemp = parseFloat($("input[name='op_temp_tube']").val()) || 0;
-      opPress = parseFloat($("input[name='op_press_tube']").val()) || 0;
+      opTemp = parseFloat($("input[name='operating_temp_bottom']").val()) || 0;
+      opPress =
+        parseFloat($("input[name='operating_press_bottom']").val()) || 0;
+    } else if (eqType === "EQT3" && assessmentSide === "shell") {
+      opTemp = parseFloat($("input[name='operating_temp_top']").val()) || 0;
+      opPress = parseFloat($("input[name='operating_press_top']").val()) || 0;
     }
 
     const vibration = $("select[name='vibration']").val();
@@ -699,18 +730,17 @@ $(function () {
     const molH2S = parseFloat($("input[name='comp_h2s']").val()) || 0;
     const molCO2 = parseFloat($("input[name='comp_co2']").val()) || 0;
     const h2oContent = parseFloat($("input[name='comp_h2o']").val()) || 0;
+    const phContent = parseInt($("#select2_ph_contents").val());
 
-    const h2sContent = $("#select2_h2s_contents option:selected").text();
+    const h2sContent = parseInt($("#select2_h2s_contents").val());
     const chlorideLevel = parseInt($("#select2_chloride_contents").val()) || 0;
     const envExtCracking = $("select[name='env_ext_cracking']").val();
 
     // Input PWHT, Joint Type, Hardness untuk Cracking Logic Baru
-    let pwhtStatus = $("input[name='pwht']:checked").val() || "No";
-    let jointType = $("select[name='joint_type']").val() || "Welded"; // Welded, As-Welded, atau Seamless
-    let hardnessCategory = $("select[name='max_brinell']").val() || "A"; // Value nya langsung "A", "B", atau "C"
+    let pwhtStatus = $("input[name='pwht']:checked").val();
+    let jointType = $("select[name='joint_type']").val(); // Welded, As-Welded, atau Seamless
+    let hardnessCategory = $("select[name='max_brinell']").val(); // Value nya langsung "A", "B", atau "C"
 
-    const isAmineChecked =
-      $("input[name='contaminant_amine_cracking']:checked").length > 0;
     const steamOut = $("input[name='steam_out']:checked").val() === "1";
     const heatTraced = $("input[name='heat_traced']:checked").val() === "1";
 
@@ -754,71 +784,125 @@ $(function () {
     };
 
     // A. LOGIKA EXTERNAL DAMAGE (Tidak Berubah)
+    // =========================================================
+    // EXTERNAL DAMAGE (ATMOSPHERIC, CUI, EXT-CLSCC)
+    // =========================================================
+
+    // Default values
+    res.atmospheric = "None";
+    res.cui = "Not";
+    res.ext_cracking = "None";
+
+    // 1. Cek apakah part ini terekspos ke udara luar (Bukan Tube di dalam Shell)
     let isExposedToOutside = !(eqType === "EQT3" && assessmentSide === "head");
     if (isExposedToOutside) {
-      if (shellExternalRes === "NonRes") {
-        if (coatingCond === "Damaged") res.atmospheric = "High";
-        else if (coatingCond === "Good") res.atmospheric = "Low";
-        else res.atmospheric = "Medium";
+      // Ambil data dasar
+      let tempC_Ext = opTemp || 0;
+      let isCS = material.co2_corr !== "SS"; // Carbon Steel
+      let isSS = !isCS; // Stainless Steel
 
-        // ==========================================
-        // LOGIKA CUI (Corrosion Under Insulation)
-        // ==========================================
-        if (
-          insulationStatus === "No" ||
-          insulationStatus === "Not Required" ||
-          insulationCond === "Not Applicable"
-        ) {
-          res.cui = "Not"; // Mutlak Not karena alat telanjang
-        } else {
-          // Alat punya insulasi (Yes)
+      // --- A. ATMOSPHERIC CORROSION (Alat Tanpa Insulasi) ---
+      if (insulationStatus === "No" || insulationStatus === "Not Required") {
+        if (shellExternalRes === "NonRes") {
+          if (coatingCond === "Damaged") res.atmospheric = "High";
+          else if (coatingCond === "Good") res.atmospheric = "Low";
+          else res.atmospheric = "Medium";
+        }
+      }
+
+      // --- B. CUI (CORROSION UNDER INSULATION) ---
+      else {
+        // Hanya hitung CUI jika suhu masuk rentang bahaya API 581 (-12°C s/d 175°C)
+        if (tempC_Ext >= -12 && tempC_Ext <= 175) {
           if (insulationCond === "Damaged") {
-            // Cek seberapa parah rusaknya (Bisa lu sesuaikan sama Excel client kalau ada beda)
-            if (insulationLevel === "Small") {
-              res.cui = "Low";
-            } else if (insulationLevel === "Medium") {
-              res.cui = "Medium";
-            } else if (
-              insulationLevel === "Large" ||
-              insulationLevel === "Severe"
-            ) {
-              res.cui = "High";
-            } else {
-              res.cui = "High"; // Fallback aman
-            }
+            // Mapping insulationLevel lu ke standar API
+            if (insulationLevel === "Small") res.cui = "Low";
+            else if (insulationLevel === "Medium") res.cui = "Medium";
+            else res.cui = "High"; // Large atau Severe
           } else {
-            // Kondisi insulasi "Good"
+            // Kondisi insulasi Good tetap ada risiko Low karena ada di zona suhu CUI
             res.cui = "Low";
+          }
+
+          // Tambahan: Jika Carbon Steel di suhu 38-121°C (Zona Paling Korosif CUI)
+          if (
+            isCS &&
+            tempC_Ext >= 38 &&
+            tempC_Ext <= 121 &&
+            res.cui !== "High"
+          ) {
+            // Jika rusak medium tapi di suhu maut, naikkan ke High
+            if (insulationCond === "Damaged") res.cui = "High";
           }
         }
       }
-      let ext = (envExtCracking || "").toUpperCase();
-      if (ext === "HIGH") res.ext_cracking = "High";
-      else if (ext === "MEDIUM") res.ext_cracking = "Medium";
-      else if (ext === "LOW") res.ext_cracking = "Low";
 
+      // --- C. EXTERNAL CLSCC (EXTERNAL CRACKING) ---
+      // Biasanya menyerang Stainless Steel 300 Series di suhu 50-150°C
+      if (isSS) {
+        if (tempC_Ext >= 50 && tempC_Ext <= 150) {
+          let envExt = (envExtCracking || "").toUpperCase();
+
+          if (envExt === "HIGH" || coatingCond === "Damaged") {
+            res.ext_cracking = "High";
+          } else if (envExt === "MEDIUM") {
+            res.ext_cracking = "Medium";
+          } else {
+            res.ext_cracking = "Low";
+          }
+        }
+      }
+
+      // --- D. VIBRATION INDUCED FATIGUE (Tambahan Lu) ---
       if (vibration === "Observed") {
-        if (insulationCond === "Damaged" || coatingCond === "Damaged")
-          res.ext_cracking = "High";
-        else res.ext_cracking = "Medium";
+        // Getar + Coating Rusak = Resiko Fatigue/Retak Luar jadi High
+        if (coatingCond === "Damaged") res.ext_cracking = "High";
+        else {
+          // Kalau kodingan lu sebelumnya Medium, kita pertahankan
+          if (res.ext_cracking !== "High") res.ext_cracking = "Medium";
+        }
       }
     }
 
     // B. LOGIKA CRACKING (INTERNAL) MENGGUNAKAN ATURAN BARU
     // 1. Tentukan Severity Awal H2S
     let envSeveritySSC = "None";
+
     if (h2oContent > 0 && molH2S > 0) {
-      let pH2S = molH2S * opPress;
-      if (molH2S >= 0.098 && opPress >= 65) envSeveritySSC = "High";
-      else if (molH2S >= 0.098 || pH2S >= 0.05) envSeveritySSC = "Low"; // Anggap Low/Med sesuai kodingan lama lu yg diringkas
+      let fractionH2S = molH2S / 100;
+
+      let pH2S = fractionH2S * opPress;
+      if (pH2S >= 0.05) {
+        if (pH2S > 15 || (molH2S > 10 && opPress > 50)) {
+          envSeveritySSC = "High";
+        } else if (pH2S >= 0.5 && pH2S <= 15) {
+          envSeveritySSC = "Moderate";
+        } else {
+          envSeveritySSC = "Low";
+        }
+      }
     }
 
     // 2. Tentukan Severity Awal Amine
+    let isMEA = $("#mea").is(":checked");
+    let isDEA = $("#dea").is(":checked");
+    let isDIPA = $("#dipa").is(":checked");
+    let isLeanAmine = $("#lean_amine").is(":checked");
+
+    let isAmineChecked = isMEA || isDEA || isDIPA || isLeanAmine;
+
     let envSeverityAmine = "None";
+    console.log("Amine Check:", { MEA: isMEA, DEA: isDEA, DIPA: isDIPA });
     if (isAmineChecked) {
-      if (opTemp > 82 || steamOut || heatTraced) envSeverityAmine = "High";
-      else if (opTemp >= 60) envSeverityAmine = "Medium";
-      else envSeverityAmine = "Low";
+      if (isMEA) {
+        envSeverityAmine = "High";
+      } else if (isDEA || isDIPA || isLeanAmine) {
+        if (opTemp >= 60 || steamOut || heatTraced) {
+          envSeverityAmine = "Moderate";
+        } else {
+          envSeverityAmine = "Low";
+        }
+      }
     }
 
     // 3. Panggil Fungsi Pembantu (Sesuai Matriks Client)
@@ -836,58 +920,318 @@ $(function () {
     res.amine_scc = crackingResults.amine;
 
     // C. HIC / SOHIC (Hanya menyerang Carbon Steel)
-    if (mat.co2_corr === "SS" || mat.name.includes("Stainless")) {
+    let isStainless =
+      material.co2_corr === "SS" ||
+      (material.name && material.name.includes("Stainless"));
+
+    if (isStainless) {
       res.hic = "Not"; // Stainless Steel kebal
     } else {
-      if (h2oContent > 0 && h2sContent.includes("PPM")) {
-        if (h2sContent.includes("> 10000")) res.hic = "High";
-        else if (h2sContent.includes("1000 <")) res.hic = "Medium";
-        else res.hic = "Low";
+      // =========================================================
+      // 2. TENTUKAN ENVIRONMENTAL SEVERITY HIC (Pakai ID Database)
+      // =========================================================
+      let envSeverityHIC = "None";
+
+      // Tarik value ID dari select dropdown (1, 2, 3, 4, 5)
+      let h2s_val = h2sContent || 0;
+      let ph_val = phContent || 0;
+
+      // Tarik H2O mole (Jika > 0 berarti lingkungan basah/aqueous)
+      let h2oHIC = h2oContent;
+
+      // HIC hanya terjadi kalau ada Air dan H2S
+      if (h2oHIC > 0 && h2s_val > 0) {
+        if (ph_val === 1) {
+          // pH <= 5.5
+          // Kalau H2S <= 50 PPM (ID 1) -> Moderate, sisanya (ID 2,3,4) -> High
+          envSeverityHIC = h2s_val === 1 ? "Moderate" : "High";
+        } else if (ph_val === 2) {
+          // 5.5 < pH <= 7.5
+          if (h2s_val === 4) {
+            envSeverityHIC = "High"; // > 10000 PPM
+          } else if (h2s_val === 2 || h2s_val === 3) {
+            envSeverityHIC = "Moderate"; // 50 - 10000 PPM
+          } else {
+            envSeverityHIC = "Low"; // <= 50 PPM
+          }
+        } else if (ph_val >= 3) {
+          // pH > 7.5 (Mencakup ID 3, 4, 5)
+          // Standar API: basa tinggi + H2S bikin rentan retak hidrogen
+          envSeverityHIC = h2s_val === 1 ? "Moderate" : "High";
+        }
+      }
+
+      // =========================================================
+      // 3. TENTUKAN HASIL AKHIR SUSCEPTIBILITY HIC
+      // =========================================================
+      if (envSeverityHIC !== "None" && envSeverityHIC !== "") {
+        let pwhtStatusHIC = pwhtStatus.toLowerCase();
+        let isPWHT_HIC = pwhtStatusHIC === "yes";
+
+        // --- UPDATE LOGIKA SULFUR DARI SELECT OPTION ---
+        // Narik dari atribut name="shell_contaminant"
+        let sulfurVal = $("select[name='shell_contaminant']").val();
+        let sulfurCategory = "High"; // Fallback Worst-Case kalau kosong
+
+        if (sulfurVal === "Ultra Low") {
+          sulfurCategory = "Low"; // < 0.002% S (Paling Aman, Jalur Kanan)
+        } else if (sulfurVal === "Low Sulfur") {
+          sulfurCategory = "Medium"; // 0.002 - 0.01% S (Jalur Tengah)
+        } else if (sulfurVal === "High Sulfur") {
+          sulfurCategory = "High"; // > 0.01% S (Paling Bahaya, Jalur Kiri)
+        }
+
+        // Eksekusi Matriks API 581
+        if (sulfurCategory === "Low") {
+          res.hic = "Low";
+        } else if (sulfurCategory === "Medium") {
+          if (envSeverityHIC === "High")
+            res.hic = isPWHT_HIC ? "Moderate" : "High";
+          else if (envSeverityHIC === "Moderate")
+            res.hic = isPWHT_HIC ? "Low" : "Moderate";
+          else if (envSeverityHIC === "Low") res.hic = "Low";
+        } else if (sulfurCategory === "High") {
+          if (envSeverityHIC === "High") res.hic = "High";
+          else if (envSeverityHIC === "Moderate")
+            res.hic = isPWHT_HIC ? "Moderate" : "High";
+          else if (envSeverityHIC === "Low")
+            res.hic = isPWHT_HIC ? "Low" : "Moderate";
+        }
+      } else {
+        res.hic = "Not"; // Tidak ada Air / H2S
       }
     }
 
     // D. CISCC (Hanya menyerang Stainless Steel)
-    if (mat.co2_corr === "SS" || mat.name.includes("Stainless")) {
-      if (chlorideLevel > 1 && opTemp > 60) {
-        if (chlorideLevel >= 4) res.ciscc = "High";
-        else res.ciscc = "Medium";
-      } else if (chlorideLevel > 0) res.ciscc = "Low";
-    } else {
-      res.ciscc = "Not"; // Carbon Steel kebal CISCC
-    }
+    let isStainlessClSCC =
+      material.co2_corr === "SS" ||
+      (material.name && material.name.includes("Stainless"));
 
-    // E. CO2 CORROSION (Tergantung DNA Material)
-    if (mat.co2_corr === "SS") {
-      res.co2 = "Not"; // SS Kebal
+    if (!isStainlessClSCC) {
+      res.ciscc = "Not"; // Carbon Steel atau Low Alloy kebal dari ClSCC
     } else {
-      if (h2oContent > 0 && molCO2 > 0) {
-        let pCO2 = molCO2 * opPress;
-        if (pCO2 > 20) res.co2 = "High";
-        else if (pCO2 > 5) res.co2 = "Medium";
-        else res.co2 = "Low";
+      // 2. Ambil Parameter Suhu, Klorida (ppm), dan pH
+      let tempC = opTemp;
+      let cl_val = chlorideLevel;
+      let ph_val = phContent || 0;
 
-        // mitigation
-        let prevUpper = prevLevel.toUpperCase();
-        if (prevUpper === "HIGH") res.co2 = "Low";
-        else if (prevUpper === "MEDIUM") {
-          if (res.co2 === "High") res.co2 = "Medium";
-          else if (res.co2 === "Medium") res.co2 = "Low";
+      // 4. Filter pH Kritis (Standar API 581: pH > 10 menghentikan ClSCC)
+      let isHighlyAlkaline = ph_val === 5 ? true : false;
+
+      if (isHighlyAlkaline) {
+        resultCISCC = "Not";
+      } else if (cl_val > 0) {
+        if (tempC < 38) {
+          // Suhu < 38°C (100°F)
+          res.ciscc = "Low";
+        } else if (tempC >= 38 && tempC <= 65) {
+          // Range 38 - 65 °C
+          if (cl_val === 5)
+            res.ciscc = "High"; // > 1000 PPM
+          else if (cl_val === 4)
+            res.ciscc = "Medium"; // 100 - 1000 PPM
+          else res.ciscc = "Low"; // <= 100 PPM (ID 1, 2, 3)
+        } else if (tempC > 65 && tempC <= 93) {
+          // Range 65 - 93 °C
+          if (cl_val >= 4)
+            res.ciscc = "High"; // > 100 PPM (ID 4 & 5)
+          else if (cl_val === 3)
+            res.ciscc = "Medium"; // 10 - 100 PPM (ID 3)
+          else res.ciscc = "Low"; // <= 10 PPM (ID 1 & 2)
+        } else if (tempC > 93 && tempC <= 149) {
+          // Range 93 - 149 °C
+          if (cl_val >= 3)
+            res.ciscc = "High"; // > 10 PPM (ID 3, 4, 5)
+          else res.ciscc = "Medium"; // <= 10 PPM (ID 1 & 2)
+        } else if (tempC > 149) {
+          // Suhu > 149 °C
+          res.ciscc = "High"; // Konsentrasi berapapun = High
         }
+      } else {
+        res.ciscc = "Not"; // Klorida kosong / tidak ada
       }
     }
 
-    // F. MIC & GALVANIC (Sama seperti sebelumnya)
-    if (mat.mic === "MICNR") {
-      // Bisa tambahin logic kalau kebal
-    }
-    if (["Ph2", "Ph3", "Ph4"].includes(phaseValue)) {
-      if (velMic >= 35) res.mic = "High";
-      else if (velMic >= 30) res.mic = "Medium";
-      else res.mic = "Low";
+    let isStainlessCO2 =
+      material.co2_corr === "SS" ||
+      (material.name && material.name.includes("Stainless"));
+
+    if (isStainlessCO2) {
+      res.co2 = "Not"; // Stainless Steel kebal CO2 Corrosion
+    } else {
+      // H2O (Mole)
+      let h2oCO2 = h2oContent || 0;
+      let opPressCO2 = opPress || 0;
+      // 3. Syarat Utama: Harus ada Air Bebas (Aqueous) dan Gas CO2
+      if (h2oCO2 > 0 && molCO2 > 0) {
+        // Perbaikan Fatal: Konversi persentase mol ke fraksi desimal
+        let fractionCO2 = molCO2 / 100;
+        // Hitung Tekanan Parsial CO2 (pCO2) dalam satuan tekanan (psi)
+        let pCO2 = fractionCO2 * opPressCO2;
+
+        // 4. Tentukan Susceptibility Dasar (Berdasarkan Rule of Thumb Industri / NACE)
+        let baseSusceptibility = "Low";
+        if (pCO2 > 20) {
+          baseSusceptibility = "High";
+        } else if (pCO2 > 5) {
+          baseSusceptibility = "Medium";
+        } else {
+          baseSusceptibility = "Low";
+        }
+
+        // 5. Terapkan Faktor Mitigasi / Corrosion Inhibitor
+        let prevCorrVal = $("select[name='preventive_corrosion']").val();
+        let effVal = String(
+          $("select[name='inhibitor_effectivity']").val() || "",
+        ).trim();
+        let mitigationEffectiveness = "NONE";
+
+        // Kalau user milih 1 (Corrosion Inhibitor) atau 2 (PH Stabilization)
+        if (prevCorrVal === "1" || prevCorrVal === "2") {
+          if (effVal === "1 < MPY ; < 95%") {
+            mitigationEffectiveness = "HIGH"; // Sangat Efektif
+          } else if (effVal === "1.0 <= MPY < 4.9 ; 89-95%") {
+            mitigationEffectiveness = "MEDIUM"; // Lumayan Efektif
+          } else if (
+            effVal === "5.0 < MPY < 10 ; 50-88%" ||
+            effVal === "10 >= MPY ; <50%"
+          ) {
+            mitigationEffectiveness = "LOW"; // Jelek / Kurang Efektif
+          }
+        } else if (prevCorrVal === "3") {
+          mitigationEffectiveness = "NOT"; // No Mitigation
+        }
+
+        if (mitigationEffectiveness === "HIGH") {
+          res.co2 = "Low";
+        } else if (mitigationEffectiveness === "MEDIUM") {
+          if (baseSusceptibility === "High") res.co2 = "Medium";
+          else res.co2 = "Low";
+        } else {
+          res.co2 = baseSusceptibility;
+        }
+      } else {
+        res.co2 = "Not";
+      }
     }
 
-    if (h2oContent > 5) res.galvanic = "Medium";
-    else if (h2oContent > 0) res.galvanic = "Low";
+    let h2oMIC = h2oContent || 0;
+    let tempC_MIC = opTemp || 0; // Dari Step 3
+
+    let velValue = $("#select2_velocity").val();
+
+    // Syarat MIC: Harus ada air
+    if (h2oMIC > 0) {
+      if (tempC_MIC >= 10 && tempC_MIC <= 93) {
+        // Logika Kecepatan Aliran (Velocity) - STANDAR API 581
+        if (velValue === "Vel1") {
+          // < 5 ft/s (Air pelan/stagnan, mikroba subur = Bahaya!)
+          res.mic = "High";
+        } else if (velValue === "Vel2") {
+          // 5 - 10 ft/s (Kecepatan sedang)
+          res.mic = "Medium";
+        } else if (
+          velValue === "Vel3" ||
+          velValue === "Vel4" ||
+          velValue === "Vel5"
+        ) {
+          res.mic = "Low";
+        } else {
+          res.mic = "Not"; // Kalau dropdown belum dipilih
+        }
+      } else {
+        // Suhu terlalu ekstrem (Terlalu dingin atau kepanasan/steril)
+        res.mic = "Not";
+      }
+    } else {
+      res.mic = "Not"; // Tidak ada air (kering)
+    }
+
+    // =========================================================
+    // GALVANIC CORROSION
+    // =========================================================
+    let shellMat = $("#shell_material_spec option:selected").text().trim();
+    let headMat = $("#head_material_spec option:selected").text().trim();
+    let neckMat = $("#neck_material_spec option:selected").text().trim(); // Flange/Neck
+    let nozzleMat = $("#nozzle_material_spec option:selected").text().trim();
+
+    // Kumpulkan material yang diisi (Abaikan yang kosong / default text)
+    let partMaterials = [shellMat, headMat, neckMat, nozzleMat].filter(
+      (mat) =>
+        mat !== "" && mat !== "Select Option" && mat.indexOf("--") === -1,
+    );
+
+    // 2. Fungsi Klasifikasi "Kasta Logam" sesuai Data
+    function getMaterialFamily(matName) {
+      let name = matName.toUpperCase();
+
+      // Kasta 1: Cladded & Nickel Alloys (Karena fluida nyentuh cladding Alloy 825-nya)
+      // Meliputi: Alloy Gr 70N+Alloy 825 cladded, Nickel Alloy SS, A 105 N+Alloy 825 cladded, dll
+      if (name.includes("ALLOY 825") || name.includes("NICKEL")) {
+        return "NICKEL_ALLOY";
+      }
+
+      // Kasta 2: Copper / Tembaga
+      // Meliputi: Copper Alloyed Aluminum
+      if (name.includes("COPPER")) {
+        return "COPPER_ALLOY";
+      }
+
+      // Kasta 3: Duplex Stainless Steel
+      // Meliputi: Duplex SS
+      if (name.includes("DUPLEX")) {
+        return "DUPLEX_SS";
+      }
+
+      // Kasta 4: Stainless Steel (Austenitic / Martensitic)
+      // Meliputi: SS 304, Stainless 300 series, Stainless 400 series, A240 316
+      if (
+        name.includes("STAINLESS") ||
+        name.includes("SS 304") ||
+        name.includes("316") ||
+        name.includes("A240")
+      ) {
+        return "STAINLESS_STEEL";
+      }
+
+      // Kasta 5: Carbon Steel & Low Alloy (Default Fallback)
+      // Meliputi: Carbon Steel, Low Alloy Steel, SA-283, SA-36, SA-515, SA-516, SA-106, A 105, SA-53, SA-234
+      // Semua ini masih dalam satu "Keluarga" Baja Karbon, jadi aman disambung satu sama lain.
+      return "CARBON_STEEL";
+    }
+
+    // 3. Eksekusi Pengecekan Dissimilar Metal
+    let isDissimilarMetal = "NO";
+
+    // Hanya cek jika ada lebih dari 1 jenis part yang terisi (Multi Part)
+    if (partMaterials.length > 1) {
+      // Terjemahkan nama spec material menjadi nama "Keluarga/Kasta"
+      let families = partMaterials.map((mat) => getMaterialFamily(mat));
+
+      // Buang data keluarga yang duplikat (Kalau isinya Carbon Steel semua, sisa 1)
+      let uniqueFamilies = new Set(families);
+
+      // Kalau sisa lebih dari 1 keluarga (Misal: CARBON_STEEL ketemu NICKEL_ALLOY)
+      if (uniqueFamilies.size > 1) {
+        isDissimilarMetal = "YES"; // BAHAYA: Galvanic Connection Detected!
+      }
+    }
+
+    // =========================================================
+    // 4. HASIL AKHIR GALVANIC CORROSION (API 581)
+    // =========================================================
+    let resultGalvanic = "None";
+    let h2oGalv = h2oContent || 0; // Kebutuhan Air
+
+    if (h2oGalv > 0) {
+      if (isDissimilarMetal === "YES") {
+        resultGalvanic = "High"; // Beda kasta logam + Ada air = Korosi Galvanik Aktif
+      } else {
+        resultGalvanic = "Not"; // Kasta sama semua = Aman dari Galvanik
+      }
+    } else {
+      resultGalvanic = "Not"; // Kering (Tidak ada elektrolit) = Aman
+    }
 
     // ==========================================
     // SISA KODINGAN DF MAPPING & UPDATE UI (Tidak Berubah)
@@ -990,63 +1334,91 @@ $(function () {
 
     // --- LOGIKA SSC ---
     if (material.sulfide_cracking === "Res") {
-      resultSSC = "Not";
+      resultSSC = "Not"; // Resisten dari sananya
     } else {
       // Cek apakah ada tegangan sisa (Residual Stress)
       let isAsWelded = true;
 
-      // Kalau dia "Seamless" ATAU di-"PWHT", tegangan sisa dianggap hilang/aman
+      // Kalau dia "Seamless" ATAU sudah di-"PWHT", tegangan sisa dianggap hilang/aman
       if (jointType === "Seamless" || pwhtStatus === "Yes") {
         isAsWelded = false;
       }
 
       let category = "";
 
-      // Penentuan Kategori A-F langsung pake value dari dropdown lu ("A", "B", atau "C")
+      // Penentuan Kategori A-F langsung pake value dari dropdown ("A", "B", atau "C")
       if (hardnessCategory === "A") {
-        // < 200
+        // < 200 HB
         category = isAsWelded ? "A" : "D";
       } else if (hardnessCategory === "B") {
-        // 200 - 237
+        // 200 - 237 HB
         category = isAsWelded ? "B" : "E";
       } else if (hardnessCategory === "C") {
-        // > 237
+        // > 237 HB
         category = isAsWelded ? "C" : "F";
       } else {
         category = isAsWelded ? "A" : "D"; // Fallback aman
       }
 
+      console.log("=== DEBUG SSC ===");
+      console.log(
+        "PWHT:",
+        pwhtStatus,
+        "| Joint:",
+        jointType,
+        "| Hardness:",
+        hardnessCategory,
+      );
+      console.log(
+        "Apakah As-Welded? :",
+        isAsWelded,
+        "(Harusnya false kalau PWHT Yes)",
+      );
+      console.log("Category A-F      :", category, "(Harusnya D)");
+      console.log("Severity H2S      :", envSeveritySSC);
+
+      // Eksekusi Logika Matriks API 581
       if (envSeveritySSC !== "None" && envSeveritySSC !== "") {
         switch (category) {
-          case "D": // Seamless/PWHT + < 200
+          case "D": // Seamless/PWHT + < 200 HB (Paling Aman)
             resultSSC = "Not";
             break;
-          case "A": // As-Welded + < 200
-          case "E": // Seamless/PWHT + 200-237
+          case "A": // As-Welded + < 200 HB
+          case "E": // Seamless/PWHT + 200-237 HB
             if (envSeveritySSC === "High") resultSSC = "High";
             else if (envSeveritySSC === "Moderate") resultSSC = "Moderate";
             else resultSSC = "Low";
             break;
-          case "B": // As-Welded + 200-237
-          case "F": // Seamless/PWHT + > 237
+          case "B": // As-Welded + 200-237 HB
+          case "F": // Seamless/PWHT + > 237 HB
             if (envSeveritySSC === "High" || envSeveritySSC === "Moderate")
               resultSSC = "High";
             else resultSSC = "Moderate";
             break;
-          case "C": // As-Welded + > 237 (Paling parah)
+          case "C": // As-Welded + > 237 HB (Kondisi Paling Getas)
             resultSSC = "High";
             break;
         }
+      } else {
+        // Kalau envSeveritySSC = "None", berarti tekanannya terlalu kecil atau nggak ada H2O
+        resultSSC = "Not";
       }
     }
 
     // --- LOGIKA AMINE ---
+    let resultAmine = "None";
+
     if (material.amine_cracking === "Res") {
       resultAmine = "Not";
     } else {
-      if (pwhtStatus === "Yes") {
+      // Pastikan narik data PWHT-nya bersih anti-typo
+      let pwhtStatusAmine = pwhtStatus.toLowerCase();
+
+      if (pwhtStatusAmine === "yes") {
+        // PWHT menghilangkan tegangan sisa = Risiko Retak Hilang
         resultAmine = "Not";
       } else {
+        // Kondisi As-Welded (Belum PWHT)
         if (envSeverityAmine === "High") resultAmine = "High";
         else if (
           envSeverityAmine === "Medium" ||
@@ -1054,8 +1426,12 @@ $(function () {
         )
           resultAmine = "Moderate";
         else if (envSeverityAmine === "Low") resultAmine = "Low";
+        else resultAmine = "Not";
       }
     }
+
+    // (Opsional) Buat ngetes di console lu
+    // console.log("Amine Result:", resultAmine);
 
     return { ssc: resultSSC, amine: resultAmine };
   }
@@ -1069,7 +1445,7 @@ $(function () {
       );
 
     if (value === "HIGH" || value === "High") $el.addClass("bg-label-danger");
-    else if (value === "MODERATE" || value === "Medium" || value === "Med")
+    else if (value === "MODERATE" || value === "Moderate" || value === "Med")
       $el.addClass("bg-label-warning");
     else if (value === "LOW" || value === "Low")
       $el.addClass("bg-label-success");
@@ -2037,14 +2413,24 @@ $(function () {
 
     // 1. Ambil semua metode yang dipilih dari tabel di Step 5
     let allMethods = [];
-    
+
     // Daftar ID Damage Mechanism di tabel Step 5 lu
-    const dmKeys = ['ext_corr', 'ext_crack', 'int_thin', 'int_crack', 'loc_corr'];
+    const dmKeys = [
+      "ext_corr",
+      "ext_crack",
+      "int_thin",
+      "int_crack",
+      "loc_corr",
+    ];
 
     dmKeys.forEach((key) => {
       // Ambil TEKS yang tampil di layar (bukan value-nya)
-      let nonIntrusiveText = $(`#insp_${key}_nonintrusive option:selected`).text().trim();
-      let intrusiveText = $(`#insp_${key}_intrusive option:selected`).text().trim();
+      let nonIntrusiveText = $(`#insp_${key}_nonintrusive option:selected`)
+        .text()
+        .trim();
+      let intrusiveText = $(`#insp_${key}_intrusive option:selected`)
+        .text()
+        .trim();
 
       // Hanya masukkan jika bukan "None"
       if (nonIntrusiveText !== "None" && nonIntrusiveText !== "") {
@@ -2067,9 +2453,10 @@ $(function () {
     });
 
     // 4. Render ke UI Step 6
-    let finalMethodHtml = methodHtmlArray.length > 0
+    let finalMethodHtml =
+      methodHtmlArray.length > 0
         ? `<div class="bg-light p-3 rounded-3 border-start border-primary border-4">
-             ${methodHtmlArray.join('')}
+             ${methodHtmlArray.join("")}
            </div>`
         : '<span class="text-danger fw-bold">No Inspection Planned</span>';
 
@@ -2077,7 +2464,7 @@ $(function () {
 
     // 5. SIMPAN KE PAYLOAD (Teks Lengkap untuk Database & PDF)
     // Kita gabung pake tanda " + " biar di laporan PDF nanti bacanya enak
-    localStorage.setItem('recommended_methods', uniqueMethods.join(" + "));
+    localStorage.setItem("recommended_methods", uniqueMethods.join(" + "));
     // payload.results.recommended_method = uniqueMethods.join(" + ");
 
     // ==========================================
@@ -2437,7 +2824,7 @@ $(function () {
         next_inspection_year: parseInt($("#insp_next_year").text()) || 0,
 
         // .text() aman dipakai untuk ambil isi tooltip (buang HTML <span> nya)
-        recommended_method: localStorage.getItem('recommended_methods') //$("#insp_method").text().trim() || "",
+        recommended_method: localStorage.getItem("recommended_methods"), //$("#insp_method").text().trim() || "",
       },
 
       cladding_data: {
