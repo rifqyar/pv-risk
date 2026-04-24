@@ -97,6 +97,7 @@ type EquipmentPayload struct {
 }
 
 type AssessmentGeneral struct {
+	ID                 int    `json:"id"`
 	AssessmentDate     string `json:"assessment_date"`
 	PrevInspectionDate string `json:"prev_inspection_date"`
 	ActInspectionDate  string `json:"act_inspection_date"`
@@ -144,7 +145,7 @@ type EnvironmentPayload struct {
 	CompButane   float64 `json:"comp_butane"`
 	CompSolvent  float64 `json:"comp_solvent"`
 	CompAir      float64 `json:"comp_air"`
-	H2SPpm       int     `json:"h2s_ppm"`
+	H2SPpm       string  `json:"h2s_ppm"`
 
 	Fluida                  string `json:"fluida"`
 	Pollutant               string `json:"pollutant"`

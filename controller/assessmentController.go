@@ -14,6 +14,130 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Struct Autofill Data
+type AutofillData struct {
+	EquipmentID        int     `json:"equipment_id"`
+	AssessmentID       int     `json:"assessment_id"`
+	TagNumber          string  `json:"tag_number"`
+	Location           string  `json:"location"`
+	YearBuilt          int     `json:"year_built"`
+	ShellMaterialID    int     `json:"shell_material_id"`
+	HeadMaterialID     int     `json:"head_material_id"`
+	TypeHead           int     `json:"type_head"`
+	NeckMaterialID     int     `json:"neck_material_id"`
+	NozzleMaterialID   int     `json:"nozzle_material_id"`
+	DesignPressure     float64 `json:"design_pressure"`
+	DesignTemp         float64 `json:"design_temp"`
+	DesignPressureTube float64 `json:"design_pressure_tube"`
+	DesignTempTube     float64 `json:"design_temp_tube"`
+	Diameter           float64 `json:"diameter"`
+	DiameterTube       float64 `json:"diameter_tube"`
+	Volume             float64 `json:"volume"`
+	DiameterType       string  `json:"diameter_type"`
+	DiameterUnit       string  `json:"diameter_unit"`
+	DiameterTubeType   string  `json:"diameter_tube_type"`
+	DiameterTubeUnit   string  `json:"diameter_tube_unit"`
+	Length             float64 `json:"length"`
+	LengthUnit         string  `json:"length_unit"`
+	VolumeUnit         string  `json:"volume_unit"`
+	TempDesignUnit     string  `json:"temp_design_unit"`
+	TempDesignTubeUnit string  `json:"temp_design_tube_unit"`
+	Pwht               string  `json:"pwht"`
+	Certificate        string  `json:"certificate"`
+	DataReference      string  `json:"data_reference"`
+	Nozzle             float64 `json:"nozzle"`
+	NozzleUnit         string  `json:"nozzle_unit"`
+	PhaseType          string  `json:"phase_type"`
+	InternalLining     string  `json:"internal_lining"`
+	Insulation         string  `json:"insulation"`
+	SpecialService     string  `json:"special_service"`
+	Protection         string  `json:"protection"`
+	CathodicProtection string  `json:"cathodic_protection"`
+	FirstUse           int     `json:"first_use"`
+
+	SerialNumber          string  `json:"serial_number"`
+	EquipLife             int     `json:"equip_life"`
+	PartType              string  `json:"part_type"`
+	ConstructionCode      string  `json:"construction_code"`
+	JointEfficiency       float64 `json:"joint_efficiency"`
+	JointEfficiencyHead   float64 `json:"joint_efficiency_head"`
+	JointType             string  `json:"joint_type"`
+	Radiographic          string  `json:"radiographic"`
+	ConstructionType      string  `json:"construction_type"`
+	Mawp                  float64 `json:"mawp"`
+	HydroTest             float64 `json:"hydro_test"`
+	CrownRadius           float64 `json:"crown_radius"`
+	KnuckleRadius         float64 `json:"knuckle_radius"`
+	InternalPartsMaterial string  `json:"internal_parts_material"`
+	ShellContaminant      string  `json:"shell_contaminant"`
+	MaxBrinell            string  `json:"max_brinell"`
+	AllowableStress       float64 `json:"allowable_stress"`
+
+	InspectionInterval  int     `json:"inspection_interval"`
+	PrevInspection      string  `json:"prev_inspection"`
+	ActInspection       string  `json:"act_inspection"`
+	CorrosionAllowance  float64 `json:"corrosion_allowance"`
+	ShellCladBaseMetal  float64 `json:"shell_clad_base_metal"`
+	HeadCladBaseMetal   float64 `json:"head_clad_base_metal"`
+	NozzleCladBaseMetal float64 `json:"nozzle_clad_base_metal"`
+	ShellWallThickness  float64 `json:"shell_wall_thickness"`
+	HeadWallThickness   float64 `json:"head_wall_thickness"`
+	NozzleWallThick     float64 `json:"nozzle_wall_thick"`
+	ShellThickCladded   float64 `json:"shell_thick_cladded"`
+	HeadThickCladded    float64 `json:"head_thick_cladded"`
+	NozzleThickCladded  float64 `json:"nozzle_thick_cladded"`
+	PrevThickShell      float64 `json:"prev_thick_shell"`
+	PrevThickHead       float64 `json:"prev_thick_head"`
+	NozzlePreviousThick float64 `json:"nozzle_previous_thick"`
+	ActThickShell       float64 `json:"act_thick_shell"`
+	ActThickHead        float64 `json:"act_thick_head"`
+	NozzleActualThick   float64 `json:"nozzle_actual_thick"`
+
+	OperatingPressure float64 `json:"operating_pressure"`
+	OperatingTemp     float64 `json:"operating_temp"`
+	TempOpUnit        string  `json:"temp_op_unit"`
+	Phase             string  `json:"phase"`
+	H2sContent        float64 `json:"h2s_content"`
+	H2oContent        float64 `json:"h2o_content"`
+	Co2Content        float64 `json:"co2_content"`
+	ChlorideIndex     int     `json:"chloride_index"`
+	PhIndex           int     `json:"ph_index"`
+
+	// Environment Step 3
+	ContaminantAmine        string  `json:"contaminant_amine"`
+	FlowVelocity            string  `json:"flow_velocity"`
+	PreventiveCorrosion     string  `json:"preventive_corrosion"`
+	InhibitorEffectivity    string  `json:"inhibitor_effectivity"`
+	EnvExtCracking          string  `json:"env_ext_cracking"`
+	Vibration               string  `json:"vibration"`
+	ImpactProduction        string  `json:"impact_production"`
+	CompNitrogen            float64 `json:"comp_nitrogen"`
+	CompMethane             float64 `json:"comp_methane"`
+	CompEthane              float64 `json:"comp_ethane"`
+	CompPropane             float64 `json:"comp_propane"`
+	CompButane              float64 `json:"comp_butane"`
+	CompSolvent             float64 `json:"comp_solvent"`
+	CompAir                 float64 `json:"comp_air"`
+	H2SPpm                  string  `json:"h2s_ppm"`
+	Fluida                  string  `json:"fluida"`
+	Pollutant               string  `json:"pollutant"`
+	CpCondition             string  `json:"cp_condition"`
+	CorrosionMonitoring     string  `json:"corrosion_monitoring"`
+	BiocideTreatment        string  `json:"biocide_treatment"`
+	ReleaseFluidContainment string  `json:"release_fluid_containment"`
+	CleanUpTime             string  `json:"clean_up_time"`
+	HeatTraced              int     `json:"heat_traced"`
+	SteamOut                int     `json:"steam_out"`
+	PrevExtCorrosion        string  `json:"prev_ext_corrosion"`
+	ConfExtCorrosion        string  `json:"conf_ext_corrosion"`
+	PrevIntCracking         string  `json:"prev_int_cracking"`
+	ConfIntCracking         string  `json:"conf_int_cracking"`
+	PrevIntThinning         string  `json:"prev_int_thinning"`
+	ConfIntThinning         string  `json:"conf_int_thinning"`
+	PrevLocIntCorrosion     string  `json:"prev_loc_int_corrosion"`
+	ConfLocIntCorrosion     string  `json:"conf_loc_int_corrosion"`
+}
+
 func ShowForm(c *gin.Context) {
 	// Fetch equipment list from database
 	var db = config.DB
@@ -184,31 +308,73 @@ func SubmitAssessment(c *gin.Context) {
 		corrDate = *payload.Environment.CorrectiveDate
 	}
 
-	res, err := tx.Exec(`
-		INSERT INTO assessments (
-			equipment_id, assessment_date, prev_inspection_date, act_inspection_date, operating_pressure, operating_temp, operating_pressure_tube, operating_temp_tube, 
-			temp_op_unit, temp_op_tube_unit, phase, h2s_content, co2_content, h2o_content, chloride_index, ph_index, 
-			impact_production, insulation_condition, insulation_damage_level, coating_condition, coating_damage_level, corrective_description, corrective_action, corrective_date,
-			contaminant_amine, flow_velocity, preventive_corrosion, inhibitor_effectivity, env_ext_cracking, vibration,
-			comp_nitrogen, comp_methane, comp_ethane, comp_propane, comp_butane, comp_solvent, comp_air, h2s_ppm,
-			fluida, pollutant, cp_condition, corrosion_monitoring, biocide_treatment, release_fluid_containment, clean_up_time, heat_traced, steam_out,
-			prev_ext_corrosion, conf_ext_corrosion, prev_int_cracking, conf_int_cracking, prev_int_thinning, conf_int_thinning, prev_loc_int_corrosion, conf_loc_int_corrosion
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		trxEqID, payload.Assessment.AssessmentDate, prevInsp, actInsp, payload.Assessment.OperatingPressure, payload.Assessment.OperatingTemp, payload.Assessment.OperatingPressureTube, payload.Assessment.OperatingTempTube,
-		payload.Assessment.TempOpUnit, payload.Assessment.TempOpTubeUnit, payload.Environment.Phase, payload.Environment.H2SContent, payload.Environment.CO2Content, payload.Environment.H2OContent, payload.Environment.ChlorideIndex, payload.Environment.PHIndex,
-		payload.Environment.ImpactProduction, payload.Environment.InsulationCondition, payload.Environment.InsulationDamageLevel, payload.Environment.CoatingCondition, payload.Environment.CoatingDamageLevel, payload.Environment.CorrectiveDescription, payload.Environment.CorrectiveAction, corrDate,
-		payload.Environment.ContaminantAmine, payload.Environment.FlowVelocity, payload.Environment.PreventiveCorrosion, payload.Environment.InhibitorEffectivity, payload.Environment.EnvExtCracking, payload.Environment.Vibration,
-		payload.Environment.CompNitrogen, payload.Environment.CompMethane, payload.Environment.CompEthane, payload.Environment.CompPropane, payload.Environment.CompButane, payload.Environment.CompSolvent, payload.Environment.CompAir, payload.Environment.H2SPpm,
-		payload.Environment.Fluida, payload.Environment.Pollutant, payload.Environment.CpCondition, payload.Environment.CorrosionMonitoring, payload.Environment.BiocideTreatment, payload.Environment.ReleaseFluidContainment, payload.Environment.CleanUpTime, payload.Environment.HeatTraced, payload.Environment.SteamOut,
-		payload.Environment.PrevExtCorrosion, payload.Environment.ConfExtCorrosion, payload.Environment.PrevIntCracking, payload.Environment.ConfIntCracking, payload.Environment.PrevIntThinning, payload.Environment.ConfIntThinning, payload.Environment.PrevLocIntCorrosion, payload.Environment.ConfLocIntCorrosion,
-	)
+	var assessmentID int
 
-	if err != nil {
-		c.JSON(500, gin.H{"status": "error", "message": "Failed to insert assessment: " + err.Error()})
-		return
+	if payload.Assessment.ID > 0 {
+		// ==========================================
+		// MODE EDIT (UPDATE)
+		// ==========================================
+		assessmentID = payload.Assessment.ID
+		_, err = tx.Exec(`
+			UPDATE assessments SET
+				assessment_date=?, prev_inspection_date=?, act_inspection_date=?, operating_pressure=?, operating_temp=?, operating_pressure_tube=?, operating_temp_tube=?, 
+				temp_op_unit=?, temp_op_tube_unit=?, phase=?, h2s_content=?, co2_content=?, h2o_content=?, chloride_index=?, ph_index=?, 
+				impact_production=?, insulation_condition=?, insulation_damage_level=?, coating_condition=?, coating_damage_level=?, corrective_description=?, corrective_action=?, corrective_date=?,
+				contaminant_amine=?, flow_velocity=?, preventive_corrosion=?, inhibitor_effectivity=?, env_ext_cracking=?, vibration=?,
+				comp_nitrogen=?, comp_methane=?, comp_ethane=?, comp_propane=?, comp_butane=?, comp_solvent=?, comp_air=?,
+				fluida=?, pollutant=?, cp_condition=?, corrosion_monitoring=?, biocide_treatment=?, release_fluid_containment=?, clean_up_time=?, heat_traced=?, steam_out=?,
+				prev_ext_corrosion=?, conf_ext_corrosion=?, prev_int_cracking=?, conf_int_cracking=?, prev_int_thinning=?, conf_int_thinning=?, prev_loc_int_corrosion=?, conf_loc_int_corrosion=?, h2s_ppm=?
+			WHERE id=?`,
+			payload.Assessment.AssessmentDate, prevInsp, actInsp, payload.Assessment.OperatingPressure, payload.Assessment.OperatingTemp, payload.Assessment.OperatingPressureTube, payload.Assessment.OperatingTempTube,
+			payload.Assessment.TempOpUnit, payload.Assessment.TempOpTubeUnit, payload.Environment.Phase, payload.Environment.H2SContent, payload.Environment.CO2Content, payload.Environment.H2OContent, payload.Environment.ChlorideIndex, payload.Environment.PHIndex,
+			payload.Environment.ImpactProduction, payload.Environment.InsulationCondition, payload.Environment.InsulationDamageLevel, payload.Environment.CoatingCondition, payload.Environment.CoatingDamageLevel, payload.Environment.CorrectiveDescription, payload.Environment.CorrectiveAction, corrDate,
+			payload.Environment.ContaminantAmine, payload.Environment.FlowVelocity, payload.Environment.PreventiveCorrosion, payload.Environment.InhibitorEffectivity, payload.Environment.EnvExtCracking, payload.Environment.Vibration,
+			payload.Environment.CompNitrogen, payload.Environment.CompMethane, payload.Environment.CompEthane, payload.Environment.CompPropane, payload.Environment.CompButane, payload.Environment.CompSolvent, payload.Environment.CompAir,
+			payload.Environment.Fluida, payload.Environment.Pollutant, payload.Environment.CpCondition, payload.Environment.CorrosionMonitoring, payload.Environment.BiocideTreatment, payload.Environment.ReleaseFluidContainment, payload.Environment.CleanUpTime, payload.Environment.HeatTraced, payload.Environment.SteamOut,
+			payload.Environment.PrevExtCorrosion, payload.Environment.ConfExtCorrosion, payload.Environment.PrevIntCracking, payload.Environment.ConfIntCracking, payload.Environment.PrevIntThinning, payload.Environment.ConfIntThinning, payload.Environment.PrevLocIntCorrosion, payload.Environment.ConfLocIntCorrosion, payload.Environment.H2SPpm,
+			assessmentID,
+		)
+
+		if err != nil {
+			c.JSON(500, gin.H{"status": "error", "message": "Failed to update assessment: " + err.Error()})
+			return
+		}
+
+		// TRIK JENIUS: Hapus data sub-tabel lama, lalu biarkan kodingan bawah insert ulang yg baru (Lebih aman dari bug)
+		tx.Exec("DELETE FROM assessment_thicknesses WHERE assessment_id = ?", assessmentID)
+		tx.Exec("DELETE FROM assessment_damage_mechanisms WHERE assessment_id = ?", assessmentID)
+		tx.Exec("DELETE FROM assessment_results WHERE assessment_id = ?", assessmentID)
+
+	} else {
+		// ==========================================
+		// MODE CREATE BARU (INSERT)
+		// ==========================================
+		res, err := tx.Exec(`
+			INSERT INTO assessments (
+				equipment_id, assessment_date, prev_inspection_date, act_inspection_date, operating_pressure, operating_temp, operating_pressure_tube, operating_temp_tube, 
+				temp_op_unit, temp_op_tube_unit, phase, h2s_content, co2_content, h2o_content, chloride_index, ph_index, 
+				impact_production, insulation_condition, insulation_damage_level, coating_condition, coating_damage_level, corrective_description, corrective_action, corrective_date,
+				contaminant_amine, flow_velocity, preventive_corrosion, inhibitor_effectivity, env_ext_cracking, vibration,
+				comp_nitrogen, comp_methane, comp_ethane, comp_propane, comp_butane, comp_solvent, comp_air,
+				fluida, pollutant, cp_condition, corrosion_monitoring, biocide_treatment, release_fluid_containment, clean_up_time, heat_traced, steam_out,
+				prev_ext_corrosion, conf_ext_corrosion, prev_int_cracking, conf_int_cracking, prev_int_thinning, conf_int_thinning, prev_loc_int_corrosion, conf_loc_int_corrosion, h2s_ppm
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			trxEqID, payload.Assessment.AssessmentDate, prevInsp, actInsp, payload.Assessment.OperatingPressure, payload.Assessment.OperatingTemp, payload.Assessment.OperatingPressureTube, payload.Assessment.OperatingTempTube,
+			payload.Assessment.TempOpUnit, payload.Assessment.TempOpTubeUnit, payload.Environment.Phase, payload.Environment.H2SContent, payload.Environment.CO2Content, payload.Environment.H2OContent, payload.Environment.ChlorideIndex, payload.Environment.PHIndex,
+			payload.Environment.ImpactProduction, payload.Environment.InsulationCondition, payload.Environment.InsulationDamageLevel, payload.Environment.CoatingCondition, payload.Environment.CoatingDamageLevel, payload.Environment.CorrectiveDescription, payload.Environment.CorrectiveAction, corrDate,
+			payload.Environment.ContaminantAmine, payload.Environment.FlowVelocity, payload.Environment.PreventiveCorrosion, payload.Environment.InhibitorEffectivity, payload.Environment.EnvExtCracking, payload.Environment.Vibration,
+			payload.Environment.CompNitrogen, payload.Environment.CompMethane, payload.Environment.CompEthane, payload.Environment.CompPropane, payload.Environment.CompButane, payload.Environment.CompSolvent, payload.Environment.CompAir,
+			payload.Environment.Fluida, payload.Environment.Pollutant, payload.Environment.CpCondition, payload.Environment.CorrosionMonitoring, payload.Environment.BiocideTreatment, payload.Environment.ReleaseFluidContainment, payload.Environment.CleanUpTime, payload.Environment.HeatTraced, payload.Environment.SteamOut,
+			payload.Environment.PrevExtCorrosion, payload.Environment.ConfExtCorrosion, payload.Environment.PrevIntCracking, payload.Environment.ConfIntCracking, payload.Environment.PrevIntThinning, payload.Environment.ConfIntThinning, payload.Environment.PrevLocIntCorrosion, payload.Environment.ConfLocIntCorrosion, payload.Environment.H2SPpm,
+		)
+
+		if err != nil {
+			c.JSON(500, gin.H{"status": "error", "message": "Failed to insert assessment: " + err.Error()})
+			return
+		}
+		lastAssID, _ := res.LastInsertId()
+		assessmentID = int(lastAssID)
 	}
-	lastAssID, _ := res.LastInsertId()
-	assessmentID := int(lastAssID)
 
 	components := []struct {
 		name string
@@ -238,126 +404,119 @@ func SubmitAssessment(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Assessment successfully saved!"})
 }
 
-// Struct Autofill Data
-type AutofillData struct {
-	TagNumber          string  `json:"tag_number"`
-	Location           string  `json:"location"`
-	YearBuilt          int     `json:"year_built"`
-	ShellMaterialID    int     `json:"shell_material_id"`
-	HeadMaterialID     int     `json:"head_material_id"`
-	TypeHead           int     `json:"type_head"`
-	NeckMaterialID     int     `json:"neck_material_id"`
-	NozzleMaterialID   int     `json:"nozzle_material_id"`
-	DesignPressure     float64 `json:"design_pressure"`
-	DesignTemp         float64 `json:"design_temp"`
-	DesignPressureTube float64 `json:"design_pressure_tube"`
-	DesignTempTube     float64 `json:"design_temp_tube"`
-	Diameter           float64 `json:"diameter"`
-	DiameterTube       float64 `json:"diameter_tube"`
-	Volume             float64 `json:"volume"`
-	DiameterType       string  `json:"diameter_type"`
-	DiameterUnit       string  `json:"diameter_unit"`
-	DiameterTubeType   string  `json:"diameter_tube_type"`
-	DiameterTubeUnit   string  `json:"diameter_tube_unit"`
-	Length             float64 `json:"length"`
-	LengthUnit         string  `json:"length_unit"`
-	VolumeUnit         string  `json:"volume_unit"`
-	TempDesignUnit     string  `json:"temp_design_unit"`
-	TempDesignTubeUnit string  `json:"temp_design_tube_unit"`
-	Pwht               string  `json:"pwht"`
-	Certificate        string  `json:"certificate"`
-	DataReference      string  `json:"data_reference"`
-	Nozzle             float64 `json:"nozzle"`
-	NozzleUnit         string  `json:"nozzle_unit"`
-	PhaseType          string  `json:"phase_type"`
-	InternalLining     string  `json:"internal_lining"`
-	Insulation         string  `json:"insulation"`
-	SpecialService     string  `json:"special_service"`
-	Protection         string  `json:"protection"`
-	CathodicProtection string  `json:"cathodic_protection"`
-	FirstUse           int     `json:"first_use"`
+func EditAssessment(c *gin.Context) {
+	var db = config.DB
+	eqID := c.Param("id") // Ambil ID equipment/assessment dari URL lu
 
-	SerialNumber          string  `json:"serial_number"`
-	EquipLife             int     `json:"equip_life"`
-	PartType              string  `json:"part_type"`
-	ConstructionCode      string  `json:"construction_code"`
-	JointEfficiency       float64 `json:"joint_efficiency"`
-	JointEfficiencyHead   float64 `json:"joint_efficiency_head"`
-	JointType             string  `json:"joint_type"`
-	Radiographic          string  `json:"radiographic"`
-	ConstructionType      string  `json:"construction_type"`
-	Mawp                  float64 `json:"mawp"`
-	HydroTest             float64 `json:"hydro_test"`
-	CrownRadius           float64 `json:"crown_radius"`
-	KnuckleRadius         float64 `json:"knuckle_radius"`
-	InternalPartsMaterial string  `json:"internal_parts_material"`
-	ShellContaminant      string  `json:"shell_contaminant"`
-	MaxBrinell            string  `json:"max_brinell"`
-	AllowableStress       float64 `json:"allowable_stress"`
+	equipments, err := models.GetEquipments(db)
+	headType, err := models.GetHeadTypes(db)
+	ShellType, err := models.GetShellMaterial(db)
+	NeckMaterial, err := models.GetNeckMaterial(db)
+	NozzleMaterial, err := models.GetNozzleMaterial(db)
+	DamageMechanical, err := models.GetDamageMechanical(db)
+	FluidaData, err := models.GetFluida(db)
+	PhaseData, err := models.GetPhases(db)
+	PollutionData, err := models.GetPollutions(db)
+	VelocityData, err := models.GetVelocities(db)
+	PHCategoryData, err := models.GetPHCategories(db)
+	H2SContentData, err := models.GetH2SContents(db)
+	CISCCMatrixData, err := models.GetCISCCMatrix(db)
+	CISCCJson, _ := json.Marshal(CISCCMatrixData)
+	CO2CorrosionData, err := models.GetCO2CorrosionPreventives(db)
+	InhibitorInjectionData, err := models.GetInhibitorInjectionReliability(db)
+	ReleaseProductData, err := models.GetReleaseProducts(db)
+	CleanupTimeData, err := models.GetCleanupTimes(db)
+	ChlorideContentData, err := models.GetChlorideContents(db)
 
-	InspectionInterval  int     `json:"inspection_interval"`
-	PrevInspection      string  `json:"prev_inspection"`
-	ActInspection       string  `json:"act_inspection"`
-	CorrosionAllowance  float64 `json:"corrosion_allowance"`
-	ShellCladBaseMetal  float64 `json:"shell_clad_base_metal"`
-	HeadCladBaseMetal   float64 `json:"head_clad_base_metal"`
-	NozzleCladBaseMetal float64 `json:"nozzle_clad_base_metal"`
-	ShellWallThickness  float64 `json:"shell_wall_thickness"`
-	HeadWallThickness   float64 `json:"head_wall_thickness"`
-	NozzleWallThick     float64 `json:"nozzle_wall_thick"`
-	ShellThickCladded   float64 `json:"shell_thick_cladded"`
-	HeadThickCladded    float64 `json:"head_thick_cladded"`
-	NozzleThickCladded  float64 `json:"nozzle_thick_cladded"`
-	PrevThickShell      float64 `json:"prev_thick_shell"`
-	PrevThickHead       float64 `json:"prev_thick_head"`
-	NozzlePreviousThick float64 `json:"nozzle_previous_thick"`
-	ActThickShell       float64 `json:"act_thick_shell"`
-	ActThickHead        float64 `json:"act_thick_head"`
-	NozzleActualThick   float64 `json:"nozzle_actual_thick"`
+	currentYear := time.Now().Year()
+	totalYears := 70
 
-	OperatingPressure float64 `json:"operating_pressure"`
-	OperatingTemp     float64 `json:"operating_temp"`
-	TempOpUnit        string  `json:"temp_op_unit"`
-	Phase             string  `json:"phase"`
-	H2sContent        float64 `json:"h2s_content"`
-	H2oContent        float64 `json:"h2o_content"`
-	Co2Content        float64 `json:"co2_content"`
-	ChlorideIndex     int     `json:"chloride_index"`
-	PhIndex           int     `json:"ph_index"`
+	var years []int
 
-	// Environment Step 3
-	ContaminantAmine        string  `json:"contaminant_amine"`
-	FlowVelocity            string  `json:"flow_velocity"`
-	PreventiveCorrosion     string  `json:"preventive_corrosion"`
-	InhibitorEffectivity    string  `json:"inhibitor_effectivity"`
-	EnvExtCracking          string  `json:"env_ext_cracking"`
-	Vibration               string  `json:"vibration"`
-	ImpactProduction        string  `json:"impact_production"`
-	CompNitrogen            float64 `json:"comp_nitrogen"`
-	CompMethane             float64 `json:"comp_methane"`
-	CompEthane              float64 `json:"comp_ethane"`
-	CompPropane             float64 `json:"comp_propane"`
-	CompButane              float64 `json:"comp_butane"`
-	CompSolvent             float64 `json:"comp_solvent"`
-	CompAir                 float64 `json:"comp_air"`
-	H2SPpm                  int     `json:"h2s_ppm"`
-	Fluida                  string  `json:"fluida"`
-	Pollutant               string  `json:"pollutant"`
-	CpCondition             string  `json:"cp_condition"`
-	CorrosionMonitoring     string  `json:"corrosion_monitoring"`
-	BiocideTreatment        string  `json:"biocide_treatment"`
-	ReleaseFluidContainment string  `json:"release_fluid_containment"`
-	CleanUpTime             string  `json:"clean_up_time"`
-	HeatTraced              int     `json:"heat_traced"`
-	SteamOut                int     `json:"steam_out"`
-	PrevExtCorrosion        string  `json:"prev_ext_corrosion"`
-	ConfExtCorrosion        string  `json:"conf_ext_corrosion"`
-	PrevIntCracking         string  `json:"prev_int_cracking"`
-	ConfIntCracking         string  `json:"conf_int_cracking"`
-	PrevIntThinning         string  `json:"prev_int_thinning"`
-	ConfIntThinning         string  `json:"conf_int_thinning"`
-	PrevLocIntCorrosion     string  `json:"prev_loc_int_corrosion"`
-	ConfLocIntCorrosion     string  `json:"conf_loc_int_corrosion"`
+	for i := 0; i < totalYears; i++ {
+		years = append(years, currentYear-i)
+	}
+
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error fetching equipments: %v", err)
+		return
+	}
+
+	c.HTML(http.StatusOK, "assessment_edit_form.html", gin.H{
+		"Equipments":             equipments,
+		"HeadTypes":              headType,
+		"Years":                  years,
+		"ShellType":              ShellType,
+		"NeckMaterial":           NeckMaterial,
+		"NozzleMaterial":         NozzleMaterial,
+		"DamageMechanical":       DamageMechanical,
+		"FluidaData":             FluidaData,
+		"PhaseData":              PhaseData,
+		"PollutionData":          PollutionData,
+		"VelocityData":           VelocityData,
+		"PHCategoryData":         PHCategoryData,
+		"H2SContentData":         H2SContentData,
+		"CISCCMasterJSON":        template.JS(CISCCJson),
+		"CO2CorrosionData":       CO2CorrosionData,
+		"InhibitorInjectionData": InhibitorInjectionData,
+		"ReleaseProductData":     ReleaseProductData,
+		"CleanupTimeData":        CleanupTimeData,
+		"ChlorideContentData":    ChlorideContentData,
+		"EqID":                   eqID,
+		"ActiveMenu":             "edit-assessment", // <--- INI KUNCINYA
+	})
+}
+
+func GetAssessmentByID(c *gin.Context) {
+	assID := c.Param("id") // Ini sekarang nangkep Assessment ID
+	db := config.DB
+	var d AutofillData
+
+	query := `
+		SELECT 
+			COALESCE(t.tag_number, ''), COALESCE(t.location, ''), COALESCE(t.year_built, 0), COALESCE(t.shell_material_id, 0), COALESCE(t.head_material_id, 0), COALESCE(t.type_head, 0), COALESCE(t.neck_material_id, 0), COALESCE(t.nozzle_material_id, 0),
+			COALESCE(t.design_pressure, 0), COALESCE(t.design_temp, 0), COALESCE(t.design_pressure_tube, 0), COALESCE(t.design_temp_tube, 0), COALESCE(t.diameter, 0), COALESCE(t.diameter_tube, 0), COALESCE(t.volume, 0),
+			COALESCE(t.diameter_type, 'inside'), COALESCE(t.diameter_unit, 'inch'), COALESCE(t.diameter_tube_type, 'inside'), COALESCE(t.diameter_tube_unit, 'inch'), COALESCE(CAST(NULLIF(t.length, '-') AS REAL), 0), COALESCE(t.length_unit, 'ft'), COALESCE(t.volume_unit, 'm3'), COALESCE(t.temp_design_unit, 'C'), COALESCE(t.temp_design_tube_unit, 'C'),
+			COALESCE(t.pwht, 'No'), COALESCE(t.certificate, '-'), COALESCE(t.data_reference, '-'), COALESCE(CAST(NULLIF(t.nozzle, '-') AS REAL), 0), COALESCE(t.nozzle_unit, 'inch'), COALESCE(t.phase_type, 'multi phase'), COALESCE(t.internal_lining, 'None'), COALESCE(t.insulation, 'No'), COALESCE(t.special_service, '-'), COALESCE(t.protection, '-'), COALESCE(t.cathodic_protection, 'No'), COALESCE(t.first_use, 0),
+			COALESCE(t.serial_number, ''), COALESCE(t.equip_life, 0), COALESCE(t.part_type, ''), COALESCE(t.construction_code, ''), COALESCE(t.joint_efficiency, 0), COALESCE(t.joint_efficiency_head, 0), COALESCE(t.joint_type, ''), COALESCE(t.radiographic, ''), COALESCE(t.construction_type, ''), COALESCE(t.mawp, 0), COALESCE(t.hydro_test, 0), COALESCE(t.crown_radius, 0), COALESCE(t.knuckle_radius, 0), COALESCE(t.internal_parts_material, ''),
+			COALESCE(t.shell_contaminant, ''), COALESCE(t.max_brinell, ''), COALESCE(t.allowable_stress, 0), COALESCE(t.inspection_interval, 0), COALESCE(t.prev_inspection, ''), COALESCE(t.act_inspection, ''), COALESCE(t.corrosion_allowance, 0), COALESCE(t.shell_clad_base_metal, 0), COALESCE(t.head_clad_base_metal, 0), COALESCE(t.nozzle_clad_base_metal, 0), COALESCE(t.shell_wall_thickness, 0),
+			COALESCE(t.head_wall_thickness, 0), COALESCE(t.nozzle_wall_thick, 0), COALESCE(t.shell_thick_cladded, 0), COALESCE(t.head_thick_cladded, 0), COALESCE(t.nozzle_thick_cladded, 0), COALESCE(t.prev_thick_shell, 0), COALESCE(t.prev_thick_head, 0), COALESCE(t.nozzle_previous_thick, 0), COALESCE(t.act_thick_shell, 0), COALESCE(t.act_thick_head, 0), COALESCE(t.nozzle_actual_thick, 0),
+			
+			COALESCE(e.id, 0) as equipment_id, COALESCE(a.id, 0), COALESCE(a.operating_pressure, 0), COALESCE(a.operating_temp, 0), COALESCE(a.temp_op_unit, 'C'), COALESCE(a.phase, ''), COALESCE(a.h2s_content, 0), COALESCE(a.h2o_content, 0), COALESCE(a.co2_content, 0), COALESCE(a.chloride_index, 0), COALESCE(a.ph_index, 0),
+			COALESCE(a.contaminant_amine, ''), COALESCE(a.flow_velocity, ''), COALESCE(a.preventive_corrosion, ''), COALESCE(a.inhibitor_effectivity, ''), COALESCE(a.env_ext_cracking, ''), COALESCE(a.vibration, ''),
+			COALESCE(a.impact_production, ''), COALESCE(a.comp_nitrogen, 0), COALESCE(a.comp_methane, 0), COALESCE(a.comp_ethane, 0), COALESCE(a.comp_propane, 0), COALESCE(a.comp_butane, 0), COALESCE(a.comp_solvent, 0), COALESCE(a.comp_air, 0),
+			COALESCE(a.fluida, ''), COALESCE(a.pollutant, ''), COALESCE(a.cp_condition, ''), COALESCE(a.corrosion_monitoring, ''), COALESCE(a.biocide_treatment, ''), COALESCE(a.release_fluid_containment, ''), COALESCE(a.clean_up_time, ''), COALESCE(a.heat_traced, 0), COALESCE(a.steam_out, 0),
+			COALESCE(a.prev_ext_corrosion, ''), COALESCE(a.conf_ext_corrosion, ''), COALESCE(a.prev_int_cracking, ''), COALESCE(a.conf_int_cracking, ''), COALESCE(a.prev_int_thinning, ''), COALESCE(a.conf_int_thinning, ''), COALESCE(a.prev_loc_int_corrosion, ''), COALESCE(a.conf_loc_int_corrosion, ''), COALESCE(a.h2s_ppm, '')
+		FROM assessments a
+		LEFT JOIN trx_equipments t ON a.equipment_id = t.id
+		LEFT JOIN equipments e ON t.equipment_id = e.id
+		WHERE a.id = ?
+	`
+
+	err := db.QueryRow(query, assID).Scan(
+		&d.TagNumber, &d.Location, &d.YearBuilt, &d.ShellMaterialID, &d.HeadMaterialID, &d.TypeHead, &d.NeckMaterialID, &d.NozzleMaterialID,
+		&d.DesignPressure, &d.DesignTemp, &d.DesignPressureTube, &d.DesignTempTube, &d.Diameter, &d.DiameterTube, &d.Volume,
+		&d.DiameterType, &d.DiameterUnit, &d.DiameterTubeType, &d.DiameterTubeUnit, &d.Length, &d.LengthUnit, &d.VolumeUnit, &d.TempDesignUnit, &d.TempDesignTubeUnit,
+		&d.Pwht, &d.Certificate, &d.DataReference, &d.Nozzle, &d.NozzleUnit, &d.PhaseType, &d.InternalLining, &d.Insulation, &d.SpecialService, &d.Protection, &d.CathodicProtection, &d.FirstUse,
+		&d.SerialNumber, &d.EquipLife, &d.PartType, &d.ConstructionCode, &d.JointEfficiency, &d.JointEfficiencyHead, &d.JointType, &d.Radiographic, &d.ConstructionType, &d.Mawp, &d.HydroTest, &d.CrownRadius, &d.KnuckleRadius, &d.InternalPartsMaterial,
+		&d.ShellContaminant, &d.MaxBrinell, &d.AllowableStress, &d.InspectionInterval, &d.PrevInspection, &d.ActInspection, &d.CorrosionAllowance, &d.ShellCladBaseMetal, &d.HeadCladBaseMetal, &d.NozzleCladBaseMetal, &d.ShellWallThickness,
+		&d.HeadWallThickness, &d.NozzleWallThick, &d.ShellThickCladded, &d.HeadThickCladded, &d.NozzleThickCladded, &d.PrevThickShell, &d.PrevThickHead, &d.NozzlePreviousThick, &d.ActThickShell, &d.ActThickHead, &d.NozzleActualThick,
+
+		&d.EquipmentID, &d.AssessmentID, &d.OperatingPressure, &d.OperatingTemp, &d.TempOpUnit, &d.Phase, &d.H2sContent, &d.H2oContent, &d.Co2Content, &d.ChlorideIndex, &d.PhIndex,
+		&d.ContaminantAmine, &d.FlowVelocity, &d.PreventiveCorrosion, &d.InhibitorEffectivity, &d.EnvExtCracking, &d.Vibration,
+		&d.ImpactProduction, &d.CompNitrogen, &d.CompMethane, &d.CompEthane, &d.CompPropane, &d.CompButane, &d.CompSolvent, &d.CompAir,
+		&d.Fluida, &d.Pollutant, &d.CpCondition, &d.CorrosionMonitoring, &d.BiocideTreatment, &d.ReleaseFluidContainment, &d.CleanUpTime, &d.HeatTraced, &d.SteamOut,
+		&d.PrevExtCorrosion, &d.ConfExtCorrosion, &d.PrevIntCracking, &d.ConfIntCracking, &d.PrevIntThinning, &d.ConfIntThinning, &d.PrevLocIntCorrosion, &d.ConfLocIntCorrosion, &d.H2SPpm,
+	)
+
+	if err != nil {
+		log.Printf("\n=== [DEBUG 2] ERROR SQL: %+v ===\n", err)
+		c.JSON(http.StatusOK, gin.H{"status": "empty", "message": "Data Assessment tidak ditemukan"})
+		return
+	}
+
+	log.Printf("\n=== [DEBUG 3] DATA BERHASIL DITARIK: %+v ===\n", d)
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": d})
 }
 
 func GetEquipmentAutofill(c *gin.Context) {
@@ -375,7 +534,7 @@ func GetEquipmentAutofill(c *gin.Context) {
 			COALESCE(t.shell_contaminant, ''), COALESCE(t.max_brinell, ''), COALESCE(t.allowable_stress, 0), COALESCE(t.inspection_interval, 0), COALESCE(t.prev_inspection, ''), COALESCE(t.act_inspection, ''), COALESCE(t.corrosion_allowance, 0), COALESCE(t.shell_clad_base_metal, 0), COALESCE(t.head_clad_base_metal, 0), COALESCE(t.nozzle_clad_base_metal, 0), COALESCE(t.shell_wall_thickness, 0),
 			COALESCE(t.head_wall_thickness, 0), COALESCE(t.nozzle_wall_thick, 0), COALESCE(t.shell_thick_cladded, 0), COALESCE(t.head_thick_cladded, 0), COALESCE(t.nozzle_thick_cladded, 0), COALESCE(t.prev_thick_shell, 0), COALESCE(t.prev_thick_head, 0), COALESCE(t.nozzle_previous_thick, 0), COALESCE(t.act_thick_shell, 0), COALESCE(t.act_thick_head, 0), COALESCE(t.nozzle_actual_thick, 0),
 			
-			COALESCE(a.operating_pressure, 0), COALESCE(a.operating_temp, 0), COALESCE(a.temp_op_unit, 'C'), COALESCE(a.phase, ''), COALESCE(a.h2s_content, 0), COALESCE(a.h2o_content, 0), COALESCE(a.co2_content, 0), COALESCE(a.chloride_index, 0), COALESCE(a.ph_index, 0),
+			COALESCE(a.id, 0), COALESCE(a.operating_pressure, 0), COALESCE(a.operating_temp, 0), COALESCE(a.temp_op_unit, 'C'), COALESCE(a.phase, ''), COALESCE(a.h2s_content, 0), COALESCE(a.h2o_content, 0), COALESCE(a.co2_content, 0), COALESCE(a.chloride_index, 0), COALESCE(a.ph_index, 0),
 			COALESCE(a.contaminant_amine, ''), COALESCE(a.flow_velocity, ''), COALESCE(a.preventive_corrosion, ''), COALESCE(a.inhibitor_effectivity, ''), COALESCE(a.env_ext_cracking, ''), COALESCE(a.vibration, ''),
 			COALESCE(a.impact_production, ''), COALESCE(a.comp_nitrogen, 0), COALESCE(a.comp_methane, 0), COALESCE(a.comp_ethane, 0), COALESCE(a.comp_propane, 0), COALESCE(a.comp_butane, 0), COALESCE(a.comp_solvent, 0), COALESCE(a.comp_air, 0),
 			COALESCE(a.fluida, ''), COALESCE(a.pollutant, ''), COALESCE(a.cp_condition, ''), COALESCE(a.corrosion_monitoring, ''), COALESCE(a.biocide_treatment, ''), COALESCE(a.release_fluid_containment, ''), COALESCE(a.clean_up_time, ''), COALESCE(a.heat_traced, 0), COALESCE(a.steam_out, 0),
@@ -396,7 +555,7 @@ func GetEquipmentAutofill(c *gin.Context) {
 		&d.ShellContaminant, &d.MaxBrinell, &d.AllowableStress, &d.InspectionInterval, &d.PrevInspection, &d.ActInspection, &d.CorrosionAllowance, &d.ShellCladBaseMetal, &d.HeadCladBaseMetal, &d.NozzleCladBaseMetal, &d.ShellWallThickness,
 		&d.HeadWallThickness, &d.NozzleWallThick, &d.ShellThickCladded, &d.HeadThickCladded, &d.NozzleThickCladded, &d.PrevThickShell, &d.PrevThickHead, &d.NozzlePreviousThick, &d.ActThickShell, &d.ActThickHead, &d.NozzleActualThick,
 
-		&d.OperatingPressure, &d.OperatingTemp, &d.TempOpUnit, &d.Phase, &d.H2sContent, &d.H2oContent, &d.Co2Content, &d.ChlorideIndex, &d.PhIndex,
+		&d.AssessmentID, &d.OperatingPressure, &d.OperatingTemp, &d.TempOpUnit, &d.Phase, &d.H2sContent, &d.H2oContent, &d.Co2Content, &d.ChlorideIndex, &d.PhIndex,
 		&d.ContaminantAmine, &d.FlowVelocity, &d.PreventiveCorrosion, &d.InhibitorEffectivity, &d.EnvExtCracking, &d.Vibration,
 		&d.ImpactProduction, &d.CompNitrogen, &d.CompMethane, &d.CompEthane, &d.CompPropane, &d.CompButane, &d.CompSolvent, &d.CompAir,
 		&d.Fluida, &d.Pollutant, &d.CpCondition, &d.CorrosionMonitoring, &d.BiocideTreatment, &d.ReleaseFluidContainment, &d.CleanUpTime, &d.HeatTraced, &d.SteamOut,
@@ -409,4 +568,17 @@ func GetEquipmentAutofill(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": d})
+}
+
+func DeleteAssessment(c *gin.Context) {
+	id := c.Param("id")
+	db := config.DB
+
+	_, err := db.Exec("DELETE FROM assessments WHERE id = ?", id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Gagal menghapus data"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Data Assessment berhasil dihapus!"})
 }

@@ -167,6 +167,8 @@
                 {{ template "list_content" . }}
               {{ else if eq .ActiveMenu "detail-assessment" }} 
                 {{ template "detail_content" . }}
+              {{ else if eq .ActiveMenu "edit-assessment" }} 
+                {{ template "form_edit_content" . }}
               {{ else }}
                   <div class="p-5 text-center">Page Not Found / Blank Content</div>
               {{ end }}
@@ -231,6 +233,8 @@
     {{ if eq .ActiveMenu "dashboard" }}
         {{ template "dashboard_scripts" . }}
     {{ else if eq .ActiveMenu "assessment" }}
+        {{ template "form_scripts" . }}
+    {{ else if eq .ActiveMenu "edit-assessment" }}
         {{ template "form_scripts" . }}
     {{ else if eq .ActiveMenu "list-assessment" }}
     {{ else if eq .ActiveMenu "detail-assessment" }}

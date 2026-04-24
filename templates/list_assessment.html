@@ -1,19 +1,21 @@
 {{ define "list_content" }}
 <div class="content-wrapper">
   <div class="container-xxl flex-grow-1 container-p-y">
-    
     <h4 class="py-3 mb-4">
-      <span class="text-muted fw-light">Risk-Based Inspection /</span> Assessment Records
+      <span class="text-muted fw-light">Risk-Based Inspection /</span>
+      Assessment Records
     </h4>
 
     <div class="card shadow-sm">
-      <div class="card-header d-flex justify-content-between align-items-center">
+      <div
+        class="card-header d-flex justify-content-between align-items-center"
+      >
         <h5 class="mb-0">All Equipment Assessments</h5>
         <a href="/assessment/form" class="btn btn-primary">
           <i class="mdi mdi-plus me-1"></i> New Assessment
         </a>
       </div>
-      
+
       <div class="table-responsive text-nowrap">
         <table class="table table-hover table-borderless border-top">
           <thead class="bg-light">
@@ -32,37 +34,73 @@
               <td>
                 <div class="d-flex align-items-center">
                   <div class="avatar avatar-sm me-3">
-                    <span class="avatar-initial rounded bg-label-primary"><i class="mdi mdi-file-document-outline"></i></span>
+                    <span class="avatar-initial rounded bg-label-primary"
+                      ><i class="mdi mdi-file-document-outline"></i
+                    ></span>
                   </div>
                   <span class="text-heading fw-semibold">{{ .TagNumber }}</span>
                 </div>
               </td>
               <td><span class="text-muted">{{ .Description }}</span></td>
-              <td><i class="mdi mdi-calendar-blank-outline text-muted me-1"></i> {{ .AssessmentDate }}</td>
-              
+              <td>
+                <i class="mdi mdi-calendar-blank-outline text-muted me-1"></i>
+                {{ .AssessmentDate }}
+              </td>
+
               <td>
                 {{ if eq .RiskLevel "EXTREME RISK" }}
-                  <span class="badge rounded-pill bg-label-dark">{{ .RiskLevel }}</span>
+                <span class="badge rounded-pill bg-label-dark"
+                  >{{ .RiskLevel }}</span
+                >
                 {{ else if eq .RiskLevel "HIGH RISK" }}
-                  <span class="badge rounded-pill bg-label-danger">{{ .RiskLevel }}</span>
+                <span class="badge rounded-pill bg-label-danger"
+                  >{{ .RiskLevel }}</span
+                >
                 {{ else if eq .RiskLevel "MEDIUM RISK" }}
-                  <span class="badge rounded-pill bg-label-warning">{{ .RiskLevel }}</span>
+                <span class="badge rounded-pill bg-label-warning"
+                  >{{ .RiskLevel }}</span
+                >
                 {{ else }}
-                  <span class="badge rounded-pill bg-label-success">{{ .RiskLevel }}</span>
+                <span class="badge rounded-pill bg-label-success"
+                  >{{ .RiskLevel }}</span
+                >
                 {{ end }}
               </td>
 
-              <td><span class="text-heading fw-medium">{{ .NextInspectionYear }}</span></td>
-              
+              <td>
+                <span class="text-heading fw-medium"
+                  >{{ .NextInspectionYear }}</span
+                >
+              </td>
+
               <td class="text-center">
                 <div class="dropdown">
-                  <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                  <button
+                    type="button"
+                    class="btn p-0 dropdown-toggle hide-arrow"
+                    data-bs-toggle="dropdown"
+                  >
                     <i class="mdi mdi-dots-vertical"></i>
                   </button>
                   <div class="dropdown-menu">
-                    <a class="dropdown-item" href="/assessment/view/{{ .AssessmentID }}"><i class="mdi mdi-eye-outline me-1 text-info"></i> View Detail</a>
-                    <a class="dropdown-item" href="javascript:void(0);"><i class="mdi mdi-pencil-outline me-1 text-warning"></i> Edit</a>
-                    <a class="dropdown-item text-danger" href="javascript:void(0);"><i class="mdi mdi-trash-can-outline me-1"></i> Delete</a>
+                    <a
+                      class="dropdown-item"
+                      href="/assessment/view/{{ .AssessmentID }}"
+                      ><i class="mdi mdi-eye-outline me-1 text-info"></i> View
+                      Detail</a
+                    >
+                    <a
+                      class="dropdown-item"
+                      href="/assessment/edit/{{ .AssessmentID }}"
+                      ><i class="mdi mdi-pencil-outline me-1 text-warning"></i>
+                      Edit</a
+                    >
+                    <a
+                      class="dropdown-item text-danger"
+                      href="javascript:void(0);"
+                      onclick="deleteAssessment(`{{ .AssessmentID }}`)"
+                      ><i class="mdi mdi-trash-can-outline me-1"></i> Delete</a
+                    >
                   </div>
                 </div>
               </td>
@@ -70,7 +108,7 @@
             {{ else }}
             <tr>
               <td colspan="6" class="text-center py-5 text-muted">
-                <i class="mdi mdi-folder-open-outline mdi-48px mb-2"></i><br>
+                <i class="mdi mdi-folder-open-outline mdi-48px mb-2"></i><br />
                 No assessment records found.
               </td>
             </tr>
@@ -79,10 +117,64 @@
         </table>
       </div>
     </div>
-
   </div>
   <div class="content-backdrop fade"></div>
 </div>
 {{ end }}
+<script>
+  function deleteAssessment(id) {
+    Swal.fire({
+      title: "Yakin mau hapus data ini?",
+      text: "Data assessment beserta hasil kalkulasinya akan hilang permanen!",
+      icon: "warning",
+      showCancelButton: true,
+      showDenyButton: false,
+      confirmButtonColor: "#d33", // Warna merah buat tombol hapus
+      cancelButtonColor: "#6c757d", // Warna abu-abu buat batal
+      confirmButtonText: "Ya, Hapus!",
+      cancelButtonText: "Batal",
+    }).then((result) => {
+      // Kalau user klik "Ya, Hapus!"
+      if (result.isConfirmed) {
+        // Munculin loading bentar
+        Swal.fire({
+          title: "Menghapus Data...",
+          allowOutsideClick: false,
+          customClass: {},
+          buttonsStyling: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+        });
+
+        // Tembak API Delete pakai method DELETE
+        fetch(`/assessment/delete/${id}`, {
+          method: "DELETE",
+        })
+          .then((response) => response.json())
+          .then((res) => {
+            if (res.status === "success") {
+              Swal.fire({
+                icon: "success",
+                title: "Terhapus!",
+                text: res.message,
+                showConfirmButton: true,
+              }).then(() => {
+                // Refresh halaman biar tabelnya update
+                window.location.reload();
+              });
+            } else {
+              Swal.fire("Gagal!", res.message, "error");
+            }
+          })
+          .catch((err) => {
+            console.error("Delete Error:", err);
+            Swal.fire("Error!", "Gagal terhubung ke server.", "error");
+          });
+      }
+    });
+  }
+</script>
 
 {{ template "layouts/master" . }}

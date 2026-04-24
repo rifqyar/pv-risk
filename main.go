@@ -82,10 +82,14 @@ func main() {
 	r.GET("/", controller.ShowDashboard)
 	r.GET("/dashboard", controller.ShowDashboard)
 	r.GET("/assessment/form", controller.ShowForm)
+	r.POST("/submit", controller.SubmitAssessment)
 	r.GET("/assessment/list", controller.ShowListAssessment)
 	r.GET("/assessment/view/:id", controller.ViewAssessmentDetail)
-	r.POST("/submit", controller.SubmitAssessment)
+	r.GET("/assessment/edit/:id", controller.EditAssessment)
+	r.DELETE("/assessment/delete/:id", controller.DeleteAssessment)
+
 	r.GET("/api/equipment-autofill/:id", controller.GetEquipmentAutofill)
+	r.GET("/api/assessment-detail/:id", controller.GetAssessmentByID)
 
 	// === DEV ===
 	r.Run(":8080")

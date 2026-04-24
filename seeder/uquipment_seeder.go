@@ -32,8 +32,12 @@ func SeedEquipment(db *sql.DB) error {
 		{Name: "Flare K O Drum", Type: "EQT1", Group: "Pressure Vessel"},
 		{Name: "Fuel Gas Filter", Type: "EQT1", Group: "Filtration System"},
 		{Name: "Fuel gas spot", Type: "EQT1", Group: "Package & Utility Unit"},
-		{Name: "Gas Filter", Type: "EQT2", Group: "Filtration System"},
-		{Name: "Gas Pig Launcher", Type: "EQT2", Group: "Pipeline Equipment"},
+
+		// --- UPDATED KE EQT1 ---
+		{Name: "Gas Filter", Type: "EQT1", Group: "Filtration System"},
+		{Name: "Gas Pig Launcher", Type: "EQT1", Group: "Pipeline Equipment"},
+		// -----------------------
+
 		{Name: "gas/gas exchanger", Type: "EQT3", Group: "Heat Exchanger & Heater"},
 		{Name: "Gas/glycol Heat Exchanger", Type: "EQT3", Group: "Heat Exchanger & Heater"},
 		{Name: "Glycol Carbon Filter", Type: "EQT1", Group: "Filtration System"},
@@ -41,10 +45,18 @@ func SeedEquipment(db *sql.DB) error {
 		{Name: "Glycol Flash Separator", Type: "EQT1", Group: "Pressure Vessel"},
 		{Name: "Glycol Reflux condenser", Type: "EQT1", Group: "Heat Exchanger & Heater"},
 		{Name: "Glycol sock filter", Type: "EQT1", Group: "Filtration System"},
-		{Name: "Glycol Still Colomn", Type: "EQT2", Group: "Column / Tower"},
+
+		// --- UPDATED KE EQT1 ---
+		{Name: "Glycol Still Colomn", Type: "EQT1", Group: "Column / Tower"},
+		// -----------------------
+
 		{Name: "Glycol Sump Filter", Type: "EQT1", Group: "Filtration System"},
 		{Name: "Glycol Surge Tank", Type: "EQT1", Group: "Pressure Vessel"},
-		{Name: "H2S Scavenger", Type: "EQT2", Group: "Adsorber / Reactor"},
+
+		// --- UPDATED KE EQT1 ---
+		{Name: "H2S Scavenger", Type: "EQT1", Group: "Adsorber / Reactor"},
+		// -----------------------
+
 		{Name: "Hot Glycol/Heat Exchanger", Type: "EQT3", Group: "Heat Exchanger & Heater"},
 		{Name: "Hot Oil Circulation Filter", Type: "EQT1", Group: "Filtration System"},
 		{Name: "Hot Oil Expansion Vessel", Type: "EQT1", Group: "Pressure Vessel"},
@@ -55,14 +67,22 @@ func SeedEquipment(db *sql.DB) error {
 		{Name: "Instrument Air receiver", Type: "EQT1", Group: "Pressure Vessel"},
 		{Name: "Lean Amine Cooler", Type: "EQT2", Group: "Heat Exchanger & Heater"},
 		{Name: "LP Fuel Gas Scrubber", Type: "EQT1", Group: "Pressure Vessel"},
-		{Name: "Produced WTR H2S stripper", Type: "EQT2", Group: "Column / Tower"},
+
+		// --- UPDATED KE EQT1 ---
+		{Name: "Produced WTR H2S stripper", Type: "EQT1", Group: "Column / Tower"},
+		// -----------------------
+
 		{Name: "Production Separator", Type: "EQT1", Group: "Pressure Vessel"},
 		{Name: "Sand Filter", Type: "EQT1", Group: "Filtration System"},
 		{Name: "Second Stage Particle Filter", Type: "EQT1", Group: "Filtration System"},
 		{Name: "Second Stage Electric Heater", Type: "EQT1", Group: "Heat Exchanger & Heater"},
 		{Name: "Second Stage Filter Coalesser", Type: "EQT1", Group: "Filtration System"},
 		{Name: "Second Stage Guard Bed", Type: "EQT1", Group: "Adsorber / Reactor"},
-		{Name: "Solvent amine lean/rich amine", Type: "EQT2", Group: "Package & Utility Unit"},
+
+		// --- UPDATED KE EQT1 ---
+		{Name: "Solvent amine lean/rich amine", Type: "EQT1", Group: "Package & Utility Unit"},
+		// -----------------------
+
 		{Name: "Solvent Recovery Drum", Type: "EQT1", Group: "Pressure Vessel"},
 		{Name: "Sweet Gas Cooler", Type: "EQT1", Group: "Heat Exchanger & Heater"},
 		{Name: "Sweet Gas KO Drum", Type: "EQT1", Group: "Pressure Vessel"},
@@ -75,20 +95,29 @@ func SeedEquipment(db *sql.DB) error {
 		return err
 	}
 
-	stmt, err := tx.Prepare(`
-		INSERT OR IGNORE INTO equipments (name, type, group_name)
-		VALUES (?, ?, ?)
-	`)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
+	// Loop dan eksekusi Update, lalu Insert jika belum ada
 	for _, eq := range equipments {
-		_, err := stmt.Exec(eq.Name, eq.Type, eq.Group)
+		// 1. Coba lakukan UPDATE terlebih dahulu
+		res, err := tx.Exec(`UPDATE equipments SET type = ?, group_name = ? WHERE name = ?`, eq.Type, eq.Group, eq.Name)
 		if err != nil {
 			tx.Rollback()
 			return err
+		}
+
+		// 2. Cek apakah ada baris yang berhasil diupdate
+		affected, err := res.RowsAffected()
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// 3. Jika affected == 0, berarti equipment belum ada di database, maka INSERT
+		if affected == 0 {
+			_, err = tx.Exec(`INSERT INTO equipments (name, type, group_name) VALUES (?, ?, ?)`, eq.Name, eq.Type, eq.Group)
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
 		}
 	}
 

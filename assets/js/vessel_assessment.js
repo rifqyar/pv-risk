@@ -32,7 +32,6 @@ $(function () {
   // ==========================================
   // 1. INITIALIZATION & CONFIG
   // ==========================================
-
   $("input[name='cathodic_protection']:checked").trigger("change");
 
   // Parse master data from Golang template (injected in main HTML)
@@ -57,6 +56,337 @@ $(function () {
 
   // Initialize default states
   initDefaultStates();
+
+  let editEqId = $("#edit_equipment_id").val();
+  console.log(editEqId);
+  if (editEqId) {
+    Swal.fire({
+      title: "Loading Data...",
+      allowOutsideClick: false,
+      customClass: {},
+      buttonsStyling: false,
+      showConfirmButton: false,
+      allowOutsideClick: false,
+    });
+    Swal.showLoading();
+
+    fetch(`/api/assessment-detail/${editEqId}`)
+      .then((response) => response.json())
+      .then((res) => {
+        Swal.close();
+        if (res.status === "success" && res.data.tag_number != "") {
+          const d = res.data;
+          window.currentAssessmentId = d.assessment_id;
+
+          // --- A. PENGISIAN DATA TEKNIS (STEP 1) ---
+          $("#select2_equipment").val(d.equipment_id).trigger("change");
+          $("input[name='tag_number']").val(d.tag_number);
+          $("select[name='year_build']").val(d.year_built).trigger("change");
+          $("select[name='first_use']").val(d.first_use).trigger("change");
+          $("#shell_material_spec").val(d.shell_material_id).trigger("change");
+          $("#head_material_spec").val(d.shell_material_id).trigger("change");
+          $("select[name='type_head']").val(d.type_head).trigger("change");
+          $("select[name='neck_material']")
+            .val(d.neck_material_id)
+            .trigger("change");
+          $("select[name='nozzle_material']")
+            .val(d.nozzle_material_id)
+            .trigger("change");
+          $("input[name='location']").val(d.location);
+
+          // NEW FIELD: Basic & Design
+          $("input[name='serial_number']").val(d.serial_number);
+          $("input[name='equip_life']").val(d.equip_life);
+          $("select[name='part_type']").val(d.part_type).trigger("change");
+          $("select[name='construction_code']")
+            .val(d.construction_code)
+            .trigger("change");
+          $("input[name='joint_efficiency']").val(d.joint_efficiency);
+          $("input[name='joint_efficiency_head']").val(d.joint_efficiency_head);
+          $("select[name='joint_type']").val(d.joint_type).trigger("change");
+          $("select[name='radiographic']")
+            .val(d.radiographic)
+            .trigger("change");
+          $("select[name='construction_type']")
+            .val(d.construction_type)
+            .trigger("change");
+          $("input[name='mawp']").val(d.mawp);
+          $("input[name='hydro_test']").val(d.hydro_test);
+
+          // Design Data
+          $("input[name='design_press']").val(d.design_pressure);
+          $("input[name='design_temp']").val(d.design_temp);
+          $("select[name='suhu_design']")
+            .val(d.temp_design_unit)
+            .trigger("change");
+
+          if (eqType === "EQT3") {
+            $("input[name='design_press_tube']").val(d.design_pressure_tube);
+            $("input[name='design_temp_tube']").val(d.design_temp_tube);
+            $("select[name='suhu_design_tube']")
+              .val(d.temp_design_tube_unit)
+              .trigger("change");
+            $("input[name='diameter_shell']").val(d.diameter);
+            $("input[name='diameter_tube']").val(d.diameter_tube);
+            $(`input[name='diameter_type_shell'][value="${d.diameter_type}"]`)
+              .prop("checked", true)
+              .trigger("change");
+            $(
+              `input[name='diameter_type_tube'][value="${d.diameter_tube_type}"]`,
+            )
+              .prop("checked", true)
+              .trigger("change");
+          } else {
+            $("input[name='diameter']").val(d.diameter);
+            $(`input[name='diameter_type'][value="${d.diameter_type}"]`)
+              .prop("checked", true)
+              .trigger("change");
+            $("select[name='satuan_diameter']")
+              .val(d.diameter_unit)
+              .trigger("change");
+          }
+
+          // Geometry & Units
+          $("input[name='length']").val(d.length);
+          $("select[name='satuan_pjg']").val(d.length_unit).trigger("change");
+          $("input[name='total_volume']").val(d.volume);
+          $("select[name='volume_type']").val(d.volume_unit).trigger("change");
+          $("input[name='nozzle']").val(d.nozzle);
+          $("select[name='satuan_nozzle']")
+            .val(d.nozzle_unit)
+            .trigger("change");
+
+          // NEW FIELD: Material Properties & Specs
+          $("input[name='crown_radius']").val(d.crown_radius);
+          $("input[name='knuckle_radius']").val(d.knuckle_radius);
+          $("input[name='internal_parts_material']").val(
+            d.internal_parts_material,
+          );
+          $("select[name='shell_contaminant']")
+            .val(d.shell_contaminant)
+            .trigger("change"); // Untuk HIC
+          $("select[name='max_brinell']").val(d.max_brinell).trigger("change");
+          $("input[name='allowable_stress']").val(d.allowable_stress);
+
+          // Specs & Services (Lama)
+          $(`input[name='pwht'][value="${d.pwht}"]`)
+            .prop("checked", true)
+            .trigger("change");
+          $("select[name='phase_type']").val(d.phase_type).trigger("change");
+          $("select[name='internal_lining']")
+            .val(d.internal_lining)
+            .trigger("change");
+          $("select[name='insulation']").val(d.insulation).trigger("change");
+          $(
+            `input[name='cathodic_protection'][value="${d.cathodic_protection}"]`,
+          )
+            .prop("checked", true)
+            .trigger("change");
+
+          // NEW FIELD: Thickness Baseline
+          $("input[name='inspection_interval']").val(d.inspection_interval);
+          $("input[name='prev_inspection']").val(d.prev_inspection);
+          $("input[name='act_inspection']").val(d.act_inspection);
+          $("input[name='corrosion_allowance']").val(d.corrosion_allowance);
+
+          $("input[name='shell_clad_base_metal']").val(d.shell_clad_base_metal);
+          $("input[name='head_clad_base_metal']").val(d.head_clad_base_metal);
+          $("input[name='nozzle_clad_base_metal']").val(
+            d.nozzle_clad_base_metal,
+          );
+
+          $("input[name='shell_wall_thickness']").val(d.shell_wall_thickness);
+          $("input[name='head_wall_thickness']").val(d.head_wall_thickness);
+          $("input[name='nozzle_wall_thick']").val(d.nozzle_wall_thick);
+
+          $("input[name='shell_thick_cladded']").val(d.shell_thick_cladded);
+          $("input[name='head_thick_cladded']").val(d.head_thick_cladded);
+          $("input[name='nozzle_thick_cladded']").val(d.nozzle_thick_cladded);
+
+          $("input[name='prev_thick_shell']").val(d.prev_thick_shell);
+          $("input[name='prev_thick_head']").val(d.prev_thick_head);
+          $("input[name='nozzle_previous_thick']").val(d.nozzle_previous_thick);
+
+          $("input[name='act_thick_shell']").val(d.act_thick_shell);
+          $("input[name='act_thick_head']").val(d.act_thick_head);
+          $("input[name='nozzle_actual_thick']").val(d.nozzle_actual_thick);
+
+          // --- B. PENGISIAN CHECKBOX ARRAYS ---
+          const setCheckboxes = (className, valueString) => {
+            $(`.${className}`).prop("checked", false); // Reset dulu
+            if (valueString && valueString !== "-") {
+              const vals = valueString.split(",").map((v) => v.trim());
+              vals.forEach((v) => {
+                $(`.${className}[value="${v}"]`).prop("checked", true);
+              });
+            }
+          };
+
+          setCheckboxes("cert-checkbox", d.certificate);
+          setCheckboxes("ref-checkbox", d.data_reference);
+          setCheckboxes("special-checkbox", d.special_service);
+          setCheckboxes("prot-checkbox", d.protection);
+          setCheckboxes("amine-checkbox", d.contaminant_amine); // NEW: Amine Contaminants
+
+          // --- C. DATA OPERATING (STEP 3) ---
+          if (eqType === "EQT1") {
+            $("#step3_op_pressure").val(d.operating_pressure);
+            $("#step3_op_temperature").val(d.operating_temp);
+            $("select[name='suhu_opr']").val(d.temp_op_unit).trigger("change");
+            $("input[name='operating_press']").val(d.operating_pressure);
+            $("input[name='operating_temp']").val(d.operating_temp);
+          } else {
+            $("input[name='operating_press_top']").val(d.operating_pressure);
+            $("input[name='operating_temp_top']").val(d.operating_temp);
+            $("select[name='suhu_opr_top']")
+              .val(d.temp_op_unit)
+              .trigger("change");
+            $("input[name='operating_press_bottom']").val(
+              d.operating_pressure_tube,
+            );
+            $("input[name='operating_temp_bottom']").val(d.operating_temp_tube);
+            $("select[name='suhu_opr_bottom']")
+              .val(d.temp_op_tube_unit)
+              .trigger("change");
+          }
+
+          // Fluid Comp
+          $("select[name='phase']").val(d.phase).trigger("change");
+          $("input[name='comp_h2s']").val(d.h2s_content);
+          $("input[name='comp_co2']").val(d.co2_content);
+          $("input[name='comp_h2o']").val(d.h2o_content);
+          $("#select2_chloride_contents")
+            .val(d.chloride_index)
+            .trigger("change");
+          $("#select2_ph_contents").val(d.ph_index).trigger("change");
+
+          // NEW FIELD: Environment & Mitigation Step 3
+          $("select[name='velocity']").val(d.flow_velocity).trigger("change"); // MIC
+          $("select[name='preventive_corrosion']")
+            .val(d.preventive_corrosion)
+            .trigger("change"); // CO2 Mit
+          $("select[name='inhibitor_effectivity']")
+            .val(d.inhibitor_effectivity)
+            .trigger("change");
+          $("select[name='env_ext_cracking']")
+            .val(d.env_ext_cracking)
+            .trigger("change"); // Ext Cracking
+          $("select[name='vibration']").val(d.vibration).trigger("change"); // Ext Cracking
+          $("select[name='impact_for_production']")
+            .val(d.impact_production)
+            .trigger("change");
+          $("input[name='comp_nitrogen']").val(d.comp_nitrogen);
+          $("input[name='comp_methane']").val(d.comp_methane);
+          $("input[name='comp_ethane']").val(d.comp_ethane);
+          $("input[name='comp_propane']").val(d.comp_propane);
+          $("input[name='comp_butane']").val(d.comp_butane);
+          $("input[name='comp_solvent']").val(d.comp_solvent);
+          $("input[name='comp_air']").val(d.comp_air);
+          $("select[name='h2s_contents']").val(d.h2s_ppm).trigger("change");
+
+          $("select[name='fluida']").val(d.fluida).trigger("change");
+          $("select[name='pollutant']").val(d.pollutant).trigger("change");
+          $("select[name='cp_condition']")
+            .val(d.cp_condition)
+            .trigger("change");
+          $("select[name='corrosion_monitoring']")
+            .val(d.corrosion_monitoring)
+            .trigger("change");
+          $("select[name='biocide_treatment']")
+            .val(d.biocide_treatment)
+            .trigger("change");
+          $("select[name='release_fluid_containment']")
+            .val(d.release_fluid_containment)
+            .trigger("change");
+          $("select[name='clean_up_time']")
+            .val(d.clean_up_time)
+            .trigger("change");
+
+          $(`input[name='heat_traced'][value='${d.heat_traced}']`).prop(
+            "checked",
+            true,
+          );
+          $(`input[name='steam_out'][value='${d.steam_out}']`).prop(
+            "checked",
+            true,
+          );
+
+          $("select[name='prev_ext_corrosion']")
+            .val(d.prev_ext_corrosion)
+            .trigger("change");
+          $("select[name='conf_ext_corrosion']")
+            .val(d.conf_ext_corrosion)
+            .trigger("change");
+          $("select[name='prev_int_cracking']")
+            .val(d.prev_int_cracking)
+            .trigger("change");
+          $("select[name='conf_int_cracking']")
+            .val(d.conf_int_cracking)
+            .trigger("change");
+          $("select[name='prev_int_thinning']")
+            .val(d.prev_int_thinning)
+            .trigger("change");
+          $("select[name='conf_int_thinning']")
+            .val(d.conf_int_thinning)
+            .trigger("change");
+          $("select[name='prev_loc_int_corrosion']")
+            .val(d.prev_loc_int_corrosion)
+            .trigger("change");
+          $("select[name='conf_loc_int_corrosion']")
+            .val(d.conf_loc_int_corrosion)
+            .trigger("change");
+
+          // Notifikasi Toast
+          const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+          });
+          Toast.fire({
+            icon: "success",
+            title: "Riwayat data ditemukan & otomatis terisi!",
+          });
+
+          initDefaultStates();
+
+          // Wajib jalankan Master Calc biar skor Damage Mechanism lgsg update!
+          if (typeof runMasterCalculations === "function") {
+            runMasterCalculations();
+          } else {
+            runStep2Calculations();
+          }
+        } else {
+          const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+          });
+          Toast.fire({
+            icon: "info",
+            title: "No previous data found. Form cleared.",
+          });
+
+          // Clear all form
+          $("#vesselAssessmentForm")
+            .find(
+              'input[type="text"], input[type="number"], input[type="radio"] input[type="checkbox"], select',
+            )
+            .val("")
+            .trigger("change");
+          $("#vesselAssessmentForm")
+            .find('input[type="checkbox"], input[type="radio"]')
+            .prop("checked", false)
+            .trigger("change");
+          console.log("No previous assessment for this equipment.");
+        }
+      })
+      .catch((err) => {
+        Swal.close();
+        console.error("Gagal load data edit:", err);
+      });
+  }
 
   // ==========================================
   // 2. EVENT BINDINGS
@@ -292,7 +622,7 @@ $(function () {
             confirmButton: "btn btn-success waves-effect waves-light",
           },
         }).then(() => {
-          window.location.href = "/dashboard"; // Redirect ke halaman list
+          window.location.href = "/assessment/list"; // Redirect ke halaman list
         });
       },
       error: function (xhr, status, error) {
@@ -337,6 +667,10 @@ $(function () {
       title: "Fetching History...",
       text: "Mengambil data teknis terakhir dari database",
       allowOutsideClick: false,
+      customClass: {},
+      buttonsStyling: false,
+      showConfirmButton: false,
+      allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
       },
@@ -353,6 +687,7 @@ $(function () {
 
         if (res.status === "success" && res.data.tag_number != "") {
           const d = res.data;
+          window.currentAssessmentId = d.assessment_id;
 
           // --- A. PENGISIAN DATA TEKNIS (STEP 1) ---
           $("input[name='tag_number']").val(d.tag_number);
@@ -1445,17 +1780,17 @@ $(function () {
     function mapToDF(level, mech) {
       const table = {
         // Thinning Mechanisms (Skalanya moderat, tergantung laju korosi)
-        co2:          { Low: 2,  Medium: 10, High: 50,  Not: 1 },
-        mic:          { Low: 3,  Medium: 15, High: 50,  Not: 1 },
-        galvanic:     { Low: 2,  Medium: 10, High: 30,  Not: 1 },
-        atmospheric:  { Low: 2,  Medium: 10, High: 30,  Not: 1 },
-        cui:          { Low: 5,  Medium: 20, High: 50,  Not: 1 },
-        
+        co2: { Low: 2, Medium: 10, High: 50, Not: 1 },
+        mic: { Low: 3, Medium: 15, High: 50, Not: 1 },
+        galvanic: { Low: 2, Medium: 10, High: 30, Not: 1 },
+        atmospheric: { Low: 2, Medium: 10, High: 30, Not: 1 },
+        cui: { Low: 5, Medium: 20, High: 50, Not: 1 },
+
         // Cracking Mechanisms (Skala API 581 lebih agresif untuk retak)
-        ssc:          { Low: 10, Medium: 50, High: 500, Not: 1 },
-        amine_scc:    { Low: 10, Medium: 50, High: 500, Not: 1 },
-        hic:          { Low: 10, Medium: 50, High: 100, Not: 1 },
-        ciscc:        { Low: 10, Medium: 50, High: 500, Not: 1 },
+        ssc: { Low: 10, Medium: 50, High: 500, Not: 1 },
+        amine_scc: { Low: 10, Medium: 50, High: 500, Not: 1 },
+        hic: { Low: 10, Medium: 50, High: 100, Not: 1 },
+        ciscc: { Low: 10, Medium: 50, High: 500, Not: 1 },
         ext_cracking: { Low: 10, Medium: 50, High: 500, Not: 1 },
       };
       return table[mech]?.[level] || 1;
@@ -1471,19 +1806,20 @@ $(function () {
     // 2. Eksekusi Pencarian Base DF dan Inspection Factor
     Object.keys(res).forEach((key) => {
       let base_df = mapToDF(res[key], key);
-      
+
       // Asumsi lu udah ada fungsi getInspectionFactor di atasnya
       let df_adj = base_df * 1; // Ubah angka 1 jadi fungsi inspection_factor lu
-      
+
       if (thinning_mechs.includes(key)) {
-          df_thinning_list.push(df_adj);
+        df_thinning_list.push(df_adj);
       } else if (cracking_mechs.includes(key)) {
-          df_cracking_list.push(df_adj);
+        df_cracking_list.push(df_adj);
       }
     });
 
     // 3. Logika Sisa Umur (Remaining Life) Khusus untuk Grup Thinning
-    let minRL = assessmentSide === "shell"
+    let minRL =
+      assessmentSide === "shell"
         ? parseFloat($("#sum_rlst_shell").text()) || 20
         : parseFloat($("#sum_rlst_head").text()) || 20;
 
@@ -1499,9 +1835,12 @@ $(function () {
     // 4. ATURAN PENGGABUNGAN DF (API 581 SECTION 3.4)
     // DF_Thinning = Nilai MAX dari semua jenis thinning * Faktor Umur
     let DF_thinning_final = Math.max(...df_thinning_list, 1) * rl_multiplier;
-    
+
     // DF_Cracking = JUMLAH TOTAL dari semua jenis retak (Karena retak bisa terjadi simultan)
-    let DF_cracking_final = df_cracking_list.reduce((acc, curr) => acc + (curr > 1 ? curr : 0), 0);
+    let DF_cracking_final = df_cracking_list.reduce(
+      (acc, curr) => acc + (curr > 1 ? curr : 0),
+      0,
+    );
     // Jika tidak ada retak, nilainya 0 (hanya base 1 di akhir)
 
     // Total DF Keseluruhan
@@ -1510,7 +1849,7 @@ $(function () {
 
     // 5. PERHITUNGAN PROBABILITY OF FAILURE (PoF)
     const gff = 3.06e-5;
-    const FMS = 1.0; 
+    const FMS = 1.0;
     const PoF = gff * FMS * DF_final;
 
     // 6. MAPPING LIKELIHOOD OF FAILURE (LoF)
@@ -2365,9 +2704,11 @@ $(function () {
   function updateRiskMatrix(lof, cof) {
     // 1. Redupkan semua sel matriks (Reset)
     $("#risk_matrix_table td")
-      .removeClass("border border-3 border-dark fw-bolder fs-5 shadow-lg active-risk-ui")
+      .removeClass(
+        "border border-3 border-dark fw-bolder fs-5 shadow-lg active-risk-ui",
+      )
       .css("opacity", "0.2");
-    $("#risk_matrix_table td.bg-label-dark").css("opacity", "1"); 
+    $("#risk_matrix_table td.bg-label-dark").css("opacity", "1");
 
     // 2. Cari target sel (Sesuai HTML lu: 1A, 2C, dst)
     let targetCellId = `#cell-${lof}-${cof}`;
@@ -2375,26 +2716,58 @@ $(function () {
 
     // 3. Nyalakan sel target!
     $targetCell
-      .addClass("border border-3 border-dark fw-bolder fs-5 shadow-lg active-risk-ui")
+      .addClass(
+        "border border-3 border-dark fw-bolder fs-5 shadow-lg active-risk-ui",
+      )
       .css("opacity", "1");
 
     // =======================================================
     // 4. API 581 DIAGONAL RISK MATRIX LOGIC (PENTING!)
     // =======================================================
     const riskMatrixValues = {
-        1: { "A": 1, "B": 3, "C": 6, "D": 10, "E": 15 },
-        2: { "A": 2, "B": 5, "C": 9, "D": 14, "E": 19 },
-        3: { "A": 4, "B": 8, "C": 13, "D": 18, "E": 22 },
-        4: { "A": 7, "B": 12, "C": 17, "D": 21, "E": 24 },
-        5: { "A": 11, "B": 16, "C": 20, "D": 23, "E": 25 }
+      1: { A: 1, B: 3, C: 6, D: 10, E: 15 },
+      2: { A: 2, B: 5, C: 9, D: 14, E: 19 },
+      3: { A: 4, B: 8, C: 13, D: 18, E: 22 },
+      4: { A: 7, B: 12, C: 17, D: 21, E: 24 },
+      5: { A: 11, B: 16, C: 20, D: 23, E: 25 },
     };
 
     const riskMatrixLevels = {
-        1: { "A": "LOW RISK", "B": "LOW RISK", "C": "LOW RISK", "D": "MEDIUM RISK", "E": "MEDIUM RISK" },
-        2: { "A": "LOW RISK", "B": "LOW RISK", "C": "MEDIUM RISK", "D": "MEDIUM RISK", "E": "HIGH RISK" },
-        3: { "A": "LOW RISK", "B": "MEDIUM RISK", "C": "HIGH RISK", "D": "HIGH RISK", "E": "HIGH RISK" },
-        4: { "A": "LOW RISK", "B": "MEDIUM RISK", "C": "HIGH RISK", "D": "HIGH RISK", "E": "EXTREME RISK" },
-        5: { "A": "MEDIUM RISK", "B": "HIGH RISK", "C": "HIGH RISK", "D": "EXTREME RISK", "E": "EXTREME RISK" }
+      1: {
+        A: "LOW RISK",
+        B: "LOW RISK",
+        C: "LOW RISK",
+        D: "MEDIUM RISK",
+        E: "MEDIUM RISK",
+      },
+      2: {
+        A: "LOW RISK",
+        B: "LOW RISK",
+        C: "MEDIUM RISK",
+        D: "MEDIUM RISK",
+        E: "HIGH RISK",
+      },
+      3: {
+        A: "LOW RISK",
+        B: "MEDIUM RISK",
+        C: "HIGH RISK",
+        D: "HIGH RISK",
+        E: "HIGH RISK",
+      },
+      4: {
+        A: "LOW RISK",
+        B: "MEDIUM RISK",
+        C: "HIGH RISK",
+        D: "HIGH RISK",
+        E: "EXTREME RISK",
+      },
+      5: {
+        A: "MEDIUM RISK",
+        B: "HIGH RISK",
+        C: "HIGH RISK",
+        D: "EXTREME RISK",
+        E: "EXTREME RISK",
+      },
     };
 
     let riskIndex = riskMatrixValues[lof]?.[cof] || 1;
@@ -2407,7 +2780,7 @@ $(function () {
 
     // 5. Update UI Badge Final & Hidden Inputs
     $("#final_risk_label").html(
-      `<span class="badge ${badgeClass} rounded-pill px-5 py-3 fs-5 shadow-sm">${riskLevel}</span>`
+      `<span class="badge ${badgeClass} rounded-pill px-5 py-3 fs-5 shadow-sm">${riskLevel}</span>`,
     );
     $("#risk_level").val(riskLevel);
     $("#risk_index").val(riskIndex);
@@ -2439,7 +2812,9 @@ $(function () {
 
     // 2. AMBIL REMAINING LIFE (RL) DARI STEP 2
     function parseRL(selector) {
-      let text = $(selector).text().replace(/[^0-9.-]/g, "");
+      let text = $(selector)
+        .text()
+        .replace(/[^0-9.-]/g, "");
       let val = parseFloat(text);
       return isNaN(val) ? 999 : val;
     }
@@ -2451,19 +2826,22 @@ $(function () {
 
     // 3. KALKULASI DAMAGE FACTOR (DF)
     function getEffDiscount(mechCode) {
-      let effInt = $(`#insp_${mechCode}_intrusive option:selected`).data("eff") || "None";
-      let effNon = $(`#insp_${mechCode}_nonintrusive option:selected`).data("eff") || "None";
+      let effInt =
+        $(`#insp_${mechCode}_intrusive option:selected`).data("eff") || "None";
+      let effNon =
+        $(`#insp_${mechCode}_nonintrusive option:selected`).data("eff") ||
+        "None";
       let levels = [effInt, effNon];
-      
-      if (levels.includes("High")) return 0.2; 
-      if (levels.includes("Medium")) return 0.5; 
-      if (levels.includes("Low")) return 0.8; 
-      return 1.0; 
+
+      if (levels.includes("High")) return 0.2;
+      if (levels.includes("Medium")) return 0.5;
+      if (levels.includes("Low")) return 0.8;
+      return 1.0;
     }
 
     // a. Thinning DF (Base)
     let df_thinning = 1.0;
-    if (min_rl <= 0) df_thinning = 2000.0; 
+    if (min_rl <= 0) df_thinning = 2000.0;
     else if (min_rl <= 2) df_thinning = 500.0;
     else if (min_rl <= 5) df_thinning = 100.0;
     else if (min_rl <= 10) df_thinning = 20.0;
@@ -2476,38 +2854,43 @@ $(function () {
       if (severity === "HIGH") return 500.0; // API 581 Cracking High itu bahaya bgt
       if (severity === "MEDIUM") return 50.0;
       if (severity === "LOW") return 10.0;
-      return 1.0; 
+      return 1.0;
     }
 
-    let df_ext_crack = getCrackingDF(dms.ext_cracking) * getEffDiscount("ext_crack");
-    
-    let df_int_crack = Math.max(
+    let df_ext_crack =
+      getCrackingDF(dms.ext_cracking) * getEffDiscount("ext_crack");
+
+    let df_int_crack =
+      Math.max(
         getCrackingDF(dms.amine_scc),
         getCrackingDF(dms.hic),
         getCrackingDF(dms.ciscc),
-        getCrackingDF(dms.ssc)
+        getCrackingDF(dms.ssc),
       ) * getEffDiscount("int_crack");
 
     // Local Corrosion disamakan skalanya dengan Thinning
     function getLocalCorrDF(severity) {
-        if (severity === "HIGH") return 100.0;
-        if (severity === "MEDIUM") return 20.0;
-        if (severity === "LOW") return 5.0;
-        return 1.0;
+      if (severity === "HIGH") return 100.0;
+      if (severity === "MEDIUM") return 20.0;
+      if (severity === "LOW") return 5.0;
+      return 1.0;
     }
 
-    let df_ext_corr = getLocalCorrDF(dms.atmospheric) * getEffDiscount("ext_corr");
-    let df_loc_corr = Math.max(getLocalCorrDF(dms.co2), getLocalCorrDF(dms.mic)) * getEffDiscount("loc_corr");
+    let df_ext_corr =
+      getLocalCorrDF(dms.atmospheric) * getEffDiscount("ext_corr");
+    let df_loc_corr =
+      Math.max(getLocalCorrDF(dms.co2), getLocalCorrDF(dms.mic)) *
+      getEffDiscount("loc_corr");
 
     // ==========================================
     // 4. ATURAN PENGGABUNGAN DF (API 581)
     // ==========================================
     // DF Thinning dan Corrosion (Lokal/Eksternal) diambil MAX
     let df_thinning_total = Math.max(df_thinning, df_loc_corr, df_ext_corr);
-    
+
     // DF Cracking (Retak) DIJUMLAHKAN dengan Thinning
     let total_df = df_thinning_total + df_int_crack + df_ext_crack;
-    
+
     if (total_df < 1) total_df = 1.0;
 
     // 5. KALKULASI PROBABILITY OF FAILURE (PoF)
@@ -2529,11 +2912,13 @@ $(function () {
 
     // Taruh nilai DF di hidden text supaya kebaca waktu create payload
     if ($("#calc_tdf").length === 0) {
-        $("body").append(`<span id="calc_tdf" class="d-none">${total_df}</span>`);
-        $("body").append(`<span id="calc_lof_score" class="d-none">${displayPoF}</span>`);
+      $("body").append(`<span id="calc_tdf" class="d-none">${total_df}</span>`);
+      $("body").append(
+        `<span id="calc_lof_score" class="d-none">${displayPoF}</span>`,
+      );
     } else {
-        $("#calc_tdf").text(total_df);
-        $("#calc_lof_score").text(displayPoF);
+      $("#calc_tdf").text(total_df);
+      $("#calc_lof_score").text(displayPoF);
     }
 
     if ($("#lof_category").val() !== autoLofCat) {
@@ -2804,7 +3189,8 @@ $(function () {
     if (!headMaterial) errors.push("Step 1: Head Material must be selected.");
     if (!type_head) errors.push("Step 1: Type Head must be selected.");
     if (!neck_material) errors.push("Step 1: Neck Material must be selected.");
-    if (!nozzle_material) errors.push("Step 1: Nozzle Material must be selected.");
+    if (!nozzle_material)
+      errors.push("Step 1: Nozzle Material must be selected.");
 
     // Validasi Wajib (Mandatory)
     if (!tagNumber) {
@@ -2952,6 +3338,7 @@ $(function () {
           $("input[name='cathodic_protection']").val() || "No",
       },
       assessment: {
+        id: window.currentAssessmentId || 0, // 👇 INI YG BIKIN DIA BISA NGEDIT!
         assessment_date:
           $("input[name='assessment_date']").val() ||
           new Date().toISOString().split("T")[0],
@@ -2976,7 +3363,8 @@ $(function () {
         env_ext_cracking: $("select[name='env_ext_cracking']").val() || "",
         vibration: $("select[name='vibration']").val() || "",
 
-        impact_production: $("select[name='impact_for_production']").val() || "",
+        impact_production:
+          $("select[name='impact_for_production']").val() || "",
         insulation_condition:
           $("select[name='insulation_condition']").val() || "",
         insulation_damage_level:
@@ -2996,7 +3384,7 @@ $(function () {
         comp_butane: parseFloat($("input[name='comp_butane']").val()) || 0,
         comp_solvent: parseFloat($("input[name='comp_solvent']").val()) || 0,
         comp_air: parseFloat($("input[name='comp_air']").val()) || 0,
-        h2s_ppm: parseInt($("select[name='h2s_contents']").val()) || 0,
+        h2s_ppm: $("select[name='h2s_contents']").val(),
 
         fluida: $("select[name='fluida']").val() || "",
         pollutant: $("select[name='pollutant']").val() || "",
