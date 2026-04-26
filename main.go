@@ -90,7 +90,7 @@ func main() {
 	r.POST("/assessment/update-validate/:id", controller.UpdateValidate)
 
 	r.GET("/api/equipment-autofill/:id", controller.GetEquipmentAutofill)
-	r.GET("/api/assessment-detail", controller.GetAssessmentByID)
+	r.GET("/api/assessment-detail/:id", controller.GetAssessmentByID)
 
 	// === DEV ===
 	r.Run(":8080")
