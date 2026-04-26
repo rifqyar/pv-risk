@@ -23,6 +23,7 @@
               <th class="fw-bold">TAG NUMBER</th>
               <th class="fw-bold">DESCRIPTION</th>
               <th class="fw-bold">ASSESSMENT DATE</th>
+              <th class="fw-bold">ASSESSMENT BY</th>
               <th class="fw-bold">RISK LEVEL</th>
               <th class="fw-bold">NEXT INSP.</th>
               <th class="fw-bold text-center">ACTIONS</th>
@@ -45,6 +46,10 @@
               <td>
                 <i class="mdi mdi-calendar-blank-outline text-muted me-1"></i>
                 {{ .AssessmentDate }}
+              </td>
+              <td>
+                <i class="mdi mdi-account text-muted me-1"></i>
+                {{ .AssessmentBy }}
               </td>
 
               <td>

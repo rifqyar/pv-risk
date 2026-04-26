@@ -323,7 +323,8 @@ func SubmitAssessment(c *gin.Context) {
 				contaminant_amine=?, flow_velocity=?, preventive_corrosion=?, inhibitor_effectivity=?, env_ext_cracking=?, vibration=?,
 				comp_nitrogen=?, comp_methane=?, comp_ethane=?, comp_propane=?, comp_butane=?, comp_solvent=?, comp_air=?,
 				fluida=?, pollutant=?, cp_condition=?, corrosion_monitoring=?, biocide_treatment=?, release_fluid_containment=?, clean_up_time=?, heat_traced=?, steam_out=?,
-				prev_ext_corrosion=?, conf_ext_corrosion=?, prev_int_cracking=?, conf_int_cracking=?, prev_int_thinning=?, conf_int_thinning=?, prev_loc_int_corrosion=?, conf_loc_int_corrosion=?, h2s_ppm=?
+				prev_ext_corrosion=?, conf_ext_corrosion=?, prev_int_cracking=?, conf_int_cracking=?, prev_int_thinning=?, conf_int_thinning=?, prev_loc_int_corrosion=?, conf_loc_int_corrosion=?, h2s_ppm=?, 
+				assessment_by=?
 			WHERE id=?`,
 			payload.Assessment.AssessmentDate, prevInsp, actInsp, payload.Assessment.OperatingPressure, payload.Assessment.OperatingTemp, payload.Assessment.OperatingPressureTube, payload.Assessment.OperatingTempTube,
 			payload.Assessment.TempOpUnit, payload.Assessment.TempOpTubeUnit, payload.Environment.Phase, payload.Environment.H2SContent, payload.Environment.CO2Content, payload.Environment.H2OContent, payload.Environment.ChlorideIndex, payload.Environment.PHIndex,
@@ -332,6 +333,7 @@ func SubmitAssessment(c *gin.Context) {
 			payload.Environment.CompNitrogen, payload.Environment.CompMethane, payload.Environment.CompEthane, payload.Environment.CompPropane, payload.Environment.CompButane, payload.Environment.CompSolvent, payload.Environment.CompAir,
 			payload.Environment.Fluida, payload.Environment.Pollutant, payload.Environment.CpCondition, payload.Environment.CorrosionMonitoring, payload.Environment.BiocideTreatment, payload.Environment.ReleaseFluidContainment, payload.Environment.CleanUpTime, payload.Environment.HeatTraced, payload.Environment.SteamOut,
 			payload.Environment.PrevExtCorrosion, payload.Environment.ConfExtCorrosion, payload.Environment.PrevIntCracking, payload.Environment.ConfIntCracking, payload.Environment.PrevIntThinning, payload.Environment.ConfIntThinning, payload.Environment.PrevLocIntCorrosion, payload.Environment.ConfLocIntCorrosion, payload.Environment.H2SPpm,
+			payload.Assessment.AssessmentBy,
 			assessmentID,
 		)
 
@@ -357,15 +359,16 @@ func SubmitAssessment(c *gin.Context) {
 				contaminant_amine, flow_velocity, preventive_corrosion, inhibitor_effectivity, env_ext_cracking, vibration,
 				comp_nitrogen, comp_methane, comp_ethane, comp_propane, comp_butane, comp_solvent, comp_air,
 				fluida, pollutant, cp_condition, corrosion_monitoring, biocide_treatment, release_fluid_containment, clean_up_time, heat_traced, steam_out,
-				prev_ext_corrosion, conf_ext_corrosion, prev_int_cracking, conf_int_cracking, prev_int_thinning, conf_int_thinning, prev_loc_int_corrosion, conf_loc_int_corrosion, h2s_ppm
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				prev_ext_corrosion, conf_ext_corrosion, prev_int_cracking, conf_int_cracking, prev_int_thinning, conf_int_thinning, prev_loc_int_corrosion, conf_loc_int_corrosion, h2s_ppm, assessment_by
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			trxEqID, payload.Assessment.AssessmentDate, prevInsp, actInsp, payload.Assessment.OperatingPressure, payload.Assessment.OperatingTemp, payload.Assessment.OperatingPressureTube, payload.Assessment.OperatingTempTube,
 			payload.Assessment.TempOpUnit, payload.Assessment.TempOpTubeUnit, payload.Environment.Phase, payload.Environment.H2SContent, payload.Environment.CO2Content, payload.Environment.H2OContent, payload.Environment.ChlorideIndex, payload.Environment.PHIndex,
 			payload.Environment.ImpactProduction, payload.Environment.InsulationCondition, payload.Environment.InsulationDamageLevel, payload.Environment.CoatingCondition, payload.Environment.CoatingDamageLevel, payload.Environment.CorrectiveDescription, payload.Environment.CorrectiveAction, corrDate,
 			payload.Environment.ContaminantAmine, payload.Environment.FlowVelocity, payload.Environment.PreventiveCorrosion, payload.Environment.InhibitorEffectivity, payload.Environment.EnvExtCracking, payload.Environment.Vibration,
 			payload.Environment.CompNitrogen, payload.Environment.CompMethane, payload.Environment.CompEthane, payload.Environment.CompPropane, payload.Environment.CompButane, payload.Environment.CompSolvent, payload.Environment.CompAir,
 			payload.Environment.Fluida, payload.Environment.Pollutant, payload.Environment.CpCondition, payload.Environment.CorrosionMonitoring, payload.Environment.BiocideTreatment, payload.Environment.ReleaseFluidContainment, payload.Environment.CleanUpTime, payload.Environment.HeatTraced, payload.Environment.SteamOut,
-			payload.Environment.PrevExtCorrosion, payload.Environment.ConfExtCorrosion, payload.Environment.PrevIntCracking, payload.Environment.ConfIntCracking, payload.Environment.PrevIntThinning, payload.Environment.ConfIntThinning, payload.Environment.PrevLocIntCorrosion, payload.Environment.ConfLocIntCorrosion, payload.Environment.H2SPpm,
+			payload.Environment.PrevExtCorrosion, payload.Environment.ConfExtCorrosion, payload.Environment.PrevIntCracking, payload.Environment.ConfIntCracking, payload.Environment.PrevIntThinning, payload.Environment.ConfIntThinning,
+			payload.Environment.PrevLocIntCorrosion, payload.Environment.ConfLocIntCorrosion, payload.Environment.H2SPpm, payload.Assessment.AssessmentBy,
 		)
 
 		if err != nil {
@@ -581,4 +584,26 @@ func DeleteAssessment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Data Assessment berhasil dihapus!"})
+}
+
+func UpdateValidate(c *gin.Context) {
+	id := c.Param("id")
+	db := config.DB
+	type ValidatePayload struct {
+		ValidateBy string `json:"validate_by"`
+	}
+
+	var payload ValidatePayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid request payload"})
+		return
+	}
+
+	_, err := db.Exec("UPDATE assessments SET validate_by = ? WHERE id = ?", payload.ValidateBy, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to update validation status"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Validation status updated successfully"})
 }

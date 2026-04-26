@@ -17,6 +17,7 @@ type AssessmentListItem struct {
 	AssessmentDate     string
 	RiskLevel          string
 	NextInspectionYear int
+	AssessmentBy       string
 }
 
 func ShowListAssessment(c *gin.Context) {
@@ -32,7 +33,8 @@ func ShowListAssessment(c *gin.Context) {
 			COALESCE(e.name, '-') as description,
 			COALESCE(a.assessment_date, '-') as assessment_date,
 			COALESCE(r.risk_level, 'Pending') as risk_level,
-			COALESCE(r.next_inspection_year, 0) as next_inspection_year
+			COALESCE(r.next_inspection_year, 0) as next_inspection_year,
+			COALESCE(a.assessment_by, 'Unknown') as assessment_by
 		FROM assessments a
 		JOIN trx_equipments t ON a.equipment_id = t.id
 		JOIN equipments e ON t.equipment_id = e.id
@@ -56,6 +58,7 @@ func ShowListAssessment(c *gin.Context) {
 			&item.AssessmentDate,
 			&item.RiskLevel,
 			&item.NextInspectionYear,
+			&item.AssessmentBy,
 		)
 		if err == nil {
 			listData = append(listData, item)
@@ -75,6 +78,7 @@ type AssessmentFullDetail struct {
 	TagNumber         string
 	Description       string
 	AssessmentDate    string
+	AssessmentBy      string
 	YearBuilt         int
 	Location          string
 	DesignPressure    float64
@@ -108,8 +112,8 @@ type AssessmentFullDetail struct {
 	// --- FLUIDA ---
 	H2sContent    float64
 	Co2Content    float64
-	ChlorideIndex int
-	PhIndex       int
+	ChlorideIndex string
+	PhIndex       string
 
 	// --- DAMAGE MECHANISM ---
 	Atmospheric string
@@ -121,6 +125,8 @@ type AssessmentFullDetail struct {
 	Ciscc       string
 	Galvanic    string
 	LofScore    string
+	Mic         string
+	AmineScc    string
 
 	// --- RESULTS & STRATEGY ---
 	LofCategory        int
@@ -162,9 +168,9 @@ func ViewAssessmentDetail(c *gin.Context) {
 
 	query := `
 		SELECT 
-			a.id, COALESCE(t.tag_number, '-'), COALESCE(e.name, '-') as description, COALESCE(a.assessment_date, '-'), COALESCE(t.year_built, 0), COALESCE(t.location, '-'),
+			a.id, COALESCE(t.tag_number, '-'), COALESCE(e.name, '-') as description, COALESCE(a.assessment_date, '-'), COALESCE(a.assessment_by, '-'), COALESCE(t.year_built, 0), COALESCE(t.location, '-'),
 			COALESCE(t.design_pressure, 0), COALESCE(t.design_temp, 0), COALESCE(a.operating_pressure, 0), COALESCE(a.operating_temp, 0),
-			COALESCE(t.diameter, 0), COALESCE(t.volume, 0), COALESCE(a.phase, '-'),
+			COALESCE(t.diameter, 0), COALESCE(t.volume, 0), COALESCE(p.name, '-') as phase,
 			
 			COALESCE(t.diameter_type, 'Inside'), COALESCE(t.diameter_unit, 'inch'), 
 			COALESCE(CAST(NULLIF(t.length, '-') AS REAL), 0), COALESCE(t.length_unit, 'ft'),
@@ -175,10 +181,11 @@ func ViewAssessmentDetail(c *gin.Context) {
 			COALESCE(t.phase_type, 'multi phase'), COALESCE(t.internal_lining, 'None'), COALESCE(t.insulation, 'No'), 
 			COALESCE(t.special_service, '-'), COALESCE(t.protection, '-'), COALESCE(t.cathodic_protection, 'No'),
 
-			COALESCE(a.h2s_content, 0), COALESCE(a.co2_content, 0), COALESCE(a.chloride_index, 0), COALESCE(a.ph_index, 0),
+			COALESCE(a.h2s_content, 0), COALESCE(a.co2_content, 0), COALESCE(cc.description, 0) as chloride_index, COALESCE(pc.ph_range, 0) as ph_index,
 			
 			COALESCE(dm.atmospheric, 'Not'), COALESCE(dm.cui, 'Not'), COALESCE(dm.ext_cracking, 'Not'), COALESCE(dm.ssc, 'Not'), 
 			COALESCE(dm.hic, 'Not'), COALESCE(dm.co2, 'Not'), COALESCE(dm.ciscc, 'Not'), COALESCE(dm.galvanic, 'Not'), COALESCE(dm.lof_score, '-'),
+			COALESCE(dm.mic, 'Not'), COALESCE(dm.amine_scc, 'Not'),
 			
 			COALESCE(r.lof_category, 0), COALESCE(r.cof_category, '-'), COALESCE(r.risk_level, 'Pending'), COALESCE(r.risk_index, 0),
 			COALESCE(r.governing_component, '-'), COALESCE(r.max_interval_years, 0), COALESCE(r.next_inspection_year, 0), COALESCE(r.recommended_method, '-'),
@@ -197,6 +204,9 @@ func ViewAssessmentDetail(c *gin.Context) {
 		JOIN equipments e ON t.equipment_id = e.id
 		LEFT JOIN assessment_damage_mechanisms dm ON dm.assessment_id = a.id
 		LEFT JOIN assessment_results r ON r.assessment_id = a.id
+		LEFT JOIN phase p ON a.phase = p.code
+		LEFT JOIN chloride_content cc ON a.chloride_index = cc.level
+		LEFT JOIN ph_category pc ON a.ph_index = pc.ph_index
 		LEFT JOIN (
 			SELECT assessment_id, 
 				MAX(corrosion_rate) as cr, MIN(remaining_life) as rl,
@@ -219,7 +229,7 @@ func ViewAssessmentDetail(c *gin.Context) {
 	`
 
 	err := db.QueryRow(query, id).Scan(
-		&d.AssessmentID, &d.TagNumber, &d.Description, &d.AssessmentDate, &d.YearBuilt, &d.Location,
+		&d.AssessmentID, &d.TagNumber, &d.Description, &d.AssessmentDate, &d.AssessmentBy, &d.YearBuilt, &d.Location,
 		&d.DesignPressure, &d.DesignTemp, &d.OperatingPressure, &d.OperatingTemp,
 		&d.Diameter, &d.Volume, &d.Phase,
 		&d.DiameterType, &d.DiameterUnit, &d.Length, &d.LengthUnit,
@@ -229,6 +239,7 @@ func ViewAssessmentDetail(c *gin.Context) {
 		&d.SpecialService, &d.Protection, &d.CathodicProtection,
 		&d.H2sContent, &d.Co2Content, &d.ChlorideIndex, &d.PhIndex,
 		&d.Atmospheric, &d.Cui, &d.ExtCracking, &d.Ssc, &d.Hic, &d.Co2, &d.Ciscc, &d.Galvanic, &d.LofScore,
+		&d.Mic, &d.AmineScc,
 		&d.LofCategory, &d.CofCategory, &d.RiskLevel, &d.RiskIndex,
 		&d.GoverningComponent, &d.MaxIntervalYears, &d.NextInspectionYear, &d.RecommendedMethod,
 		&d.CorrosionRate, &d.RemainingLife,

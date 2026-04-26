@@ -109,6 +109,8 @@ type AssessmentGeneral struct {
 
 	TempOpUnit     string  `json:"temp_op_unit"`
 	TempOpTubeUnit *string `json:"temp_op_tube_unit"`
+
+	AssessmentBy string `json:"assessment_by"`
 }
 
 type EnvironmentPayload struct {

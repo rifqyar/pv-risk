@@ -87,9 +87,10 @@ func main() {
 	r.GET("/assessment/view/:id", controller.ViewAssessmentDetail)
 	r.GET("/assessment/edit/:id", controller.EditAssessment)
 	r.DELETE("/assessment/delete/:id", controller.DeleteAssessment)
+	r.POST("/assessment/update-validate/:id", controller.UpdateValidate)
 
 	r.GET("/api/equipment-autofill/:id", controller.GetEquipmentAutofill)
-	r.GET("/api/assessment-detail/:id", controller.GetAssessmentByID)
+	r.GET("/api/assessment-detail", controller.GetAssessmentByID)
 
 	// === DEV ===
 	r.Run(":8080")

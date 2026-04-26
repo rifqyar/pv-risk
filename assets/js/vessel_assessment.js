@@ -594,61 +594,102 @@ $(function () {
   // Trigger untuk Step 6 (Save Assessment)
   $("#btn_save_assessment").on("click", function (e) {
     e.preventDefault();
+
+    // 1. Kalkulasi dan Kumpulkan Payload Utama Dulu
     calculateInspectionStrategy();
     let payload = validateAndCollectPayload();
 
+    // Kalau form utama belum lengkap, stop di sini
     if (!payload) return;
 
     let $btn = $(this);
     let originalText = $btn.html();
-    $btn.html(
-      '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Saving...',
-    );
-    $btn.prop("disabled", true);
 
-    console.log("SENDING PAYLOAD:", JSON.stringify(payload, null, 2));
-
-    $.ajax({
-      url: "/submit",
-      type: "POST",
-      contentType: "application/json",
-      data: JSON.stringify(payload),
-      success: function (response) {
-        Swal.fire({
-          title: "Success",
-          text: "Assessment saved successfully!",
-          icon: "success",
-          customClass: {
-            confirmButton: "btn btn-success waves-effect waves-light",
-          },
-        }).then(() => {
-          window.location.href = "/assessment/list"; // Redirect ke halaman list
-        });
+    // 2. Munculin SweetAlert Popup Form "Assessed By"
+    Swal.fire({
+      title: "Finalisasi Assessment",
+      html: `
+            <div class="mb-3 mt-3 text-start">
+                <label for="swal-input-assessed-by" class="form-label fw-bold">Assessed By (Inspector Name) <span class="text-danger">*</span></label>
+                <input type="text" id="swal-input-assessed-by" class="form-control" placeholder="Masukkan nama inspector..." autocomplete="off">
+            </div>
+        `,
+      icon: "info",
+      showCancelButton: true,
+      confirmButtonText: '<i class="mdi mdi-content-save"></i> Save Assessment',
+      cancelButtonText: "Batal",
+      customClass: {
+        confirmButton: "btn btn-primary me-2 waves-effect waves-light",
+        cancelButton: "btn btn-outline-secondary waves-effect waves-light",
       },
-      error: function (xhr, status, error) {
-        console.error("Error saving data:", xhr.responseText);
-
-        let errorMessage =
-          "Terjadi kesalahan saat menyimpan data. Silakan hubungi tim IT.";
-        if (xhr.responseJSON && xhr.responseJSON.message) {
-          errorMessage = xhr.responseJSON.message;
+      buttonsStyling: false,
+      // Fungsi ini akan nahan alert tertutup kalau inputannya masih kosong
+      preConfirm: () => {
+        const assessedBy = document
+          .getElementById("swal-input-assessed-by")
+          .value.trim();
+        if (!assessedBy) {
+          Swal.showValidationMessage("Nama Inspector tidak boleh kosong!");
+          return false;
         }
+        return assessedBy;
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        payload.assessment.assessment_by = result.value;
 
-        Swal.fire({
-          title: "Gagal Menyimpan Assessment",
-          text: errorMessage,
-          icon: "error",
-          showDenyButton: false,
-          showCancelButton: false,
-          customClass: {
-            confirmButton: "btn btn-danger waves-effect waves-light",
+        $btn.html(
+          '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Saving...',
+        );
+        $btn.prop("disabled", true);
+
+        console.log("SENDING PAYLOAD:", JSON.stringify(payload, null, 2));
+
+        // 5. Tembak AJAX Request
+        $.ajax({
+          url: "/submit",
+          type: "POST",
+          contentType: "application/json",
+          data: JSON.stringify(payload),
+          success: function (response) {
+            Swal.fire({
+              title: "Success",
+              text: "Assessment saved successfully!",
+              icon: "success",
+              customClass: {
+                confirmButton: "btn btn-success waves-effect waves-light",
+              },
+            }).then(() => {
+              window.location.href = "/assessment/list";
+            });
+          },
+          error: function (xhr, status, error) {
+            console.error("Error saving data:", xhr.responseText);
+
+            let errorMessage =
+              "Terjadi kesalahan saat menyimpan data. Silakan hubungi tim IT.";
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+              errorMessage = xhr.responseJSON.message;
+            }
+
+            Swal.fire({
+              title: "Gagal Menyimpan Assessment",
+              text: errorMessage,
+              icon: "error",
+              showDenyButton: false,
+              showCancelButton: false,
+              customClass: {
+                confirmButton: "btn btn-danger waves-effect waves-light",
+              },
+            });
+          },
+          complete: function () {
+            // Kembalikan tombol ke kondisi semula jika error
+            $btn.html(originalText);
+            $btn.prop("disabled", false);
           },
         });
-      },
-      complete: function () {
-        $btn.html(originalText);
-        $btn.prop("disabled", false);
-      },
+      }
     });
   });
 
@@ -1325,9 +1366,9 @@ $(function () {
     // =========================================================
 
     // Default values
-    res.atmospheric = "None";
+    res.atmospheric = "Not";
     res.cui = "Not";
-    res.ext_cracking = "None";
+    res.ext_cracking = "Not";
 
     // 1. Cek apakah part ini terekspos ke udara luar (Bukan Tube di dalam Shell)
     let isExposedToOutside = !(eqType === "EQT3" && assessmentSide === "head");
@@ -1340,9 +1381,14 @@ $(function () {
       // --- A. ATMOSPHERIC CORROSION (Alat Tanpa Insulasi) ---
       if (insulationStatus === "No" || insulationStatus === "Not Required") {
         if (shellExternalRes === "NonRes") {
-          if (coatingCond === "Damaged") res.atmospheric = "High";
-          else if (coatingCond === "Good") res.atmospheric = "Low";
-          else res.atmospheric = "Medium";
+          if (coatingCond === "Good") {
+            res.atmospheric = "Not";
+          } else {
+            res.atmospheric = "Further Assesment is Required";
+          }
+          // if (coatingCond === "Damaged") res.atmospheric = "High";
+          // else if (coatingCond === "Good") res.atmospheric = "Not";
+          // else res.atmospheric = "Medium";
         }
       }
 
@@ -1430,15 +1476,43 @@ $(function () {
     let envSeverityAmine = "None";
     console.log("Amine Check:", { MEA: isMEA, DEA: isDEA, DIPA: isDIPA });
     if (isAmineChecked) {
-      if (isMEA) {
-        envSeverityAmine = "High";
-      } else if (isDEA || isDIPA || isLeanAmine) {
-        if (opTemp >= 60 || steamOut || heatTraced) {
+      if (isDEA && !isMEA && !isDIPA) {
+        if (opTemp < 60 && isDEA) {
+          if (!steamOut && !heatTraced) {
+            envSeverityAmine = "Not";
+          } else if (heatTraced || steamOut) {
+            envSeverityAmine = "Low";
+          }
+        } else if (opTemp >= 60 && opTemp <= 82 && isDEA) {
+          envSeverityAmine = "Low";
+        } else if (opTemp > 82) {
           envSeverityAmine = "Moderate";
-        } else {
+        }
+      } else if (!isDEA && !isMEA && !isDIPA) {
+        if (opTemp < 82) {
+          if (!steamOut && !heatTraced) {
+            envSeverityAmine = "Not";
+          } else if (heatTraced || steamOut) {
+            envSeverityAmine = "Low";
+          }
+        } else if (opTemp > 82) {
           envSeverityAmine = "Low";
         }
+      } else if (isMEA || isDIPA) {
+        if (opTemp > 82) {
+          envSeverityAmine = "High";
+        } else if (opTemp >= 37 && opTemp <= 82) {
+          envSeverityAmine = "Moderate";
+        } else {
+          if (!steamOut && !heatTraced) {
+            envSeverityAmine = "Low";
+          } else if (heatTraced || steamOut) {
+            envSeverityAmine = "Moderate";
+          }
+        }
       }
+    } else {
+      envSeverityAmine = "Not";
     }
 
     // 3. Panggil Fungsi Pembantu (Sesuai Matriks Client)
@@ -1954,19 +2028,31 @@ $(function () {
             resultSSC = "Not";
             break;
           case "A": // As-Welded + < 200 HB
+            resultSSC = "Low";
+            break;
           case "E": // Seamless/PWHT + 200-237 HB
-            if (envSeveritySSC === "High") resultSSC = "High";
-            else if (envSeveritySSC === "Moderate") resultSSC = "Moderate";
-            else resultSSC = "Low";
+            if (envSeveritySSC === "High") resultSSC = "Low";
+            else if (envSeveritySSC === "Moderate") resultSSC = "Not";
+            else resultSSC = "Not";
             break;
           case "B": // As-Welded + 200-237 HB
+            if (envSeveritySSC === "High" || envSeveritySSC === "Moderate")
+              resultSSC = "Moderate";
+            if (envSeveritySSC === "Low") resultSSC = "Low";
+            break;
           case "F": // Seamless/PWHT + > 237 HB
+            if (envSeveritySSC === "High") resultSSC = "Moderate";
+            if (envSeveritySSC === "Moderate") resultSSC = "Low";
+            if (envSeveritySSC === "Low") resultSSC = "Not";
+            break;
+          // if (envSeveritySSC === "High" || envSeveritySSC === "Moderate")
+          //   resultSSC = "High";
+          // else resultSSC = "Moderate";
+          // break;
+          case "C": // As-Welded + > 237 HB (Kondisi Paling Getas)
+            resultSSC = "Moderate";
             if (envSeveritySSC === "High" || envSeveritySSC === "Moderate")
               resultSSC = "High";
-            else resultSSC = "Moderate";
-            break;
-          case "C": // As-Welded + > 237 HB (Kondisi Paling Getas)
-            resultSSC = "High";
             break;
         }
       } else {
@@ -2013,7 +2099,12 @@ $(function () {
       );
 
     if (value === "HIGH" || value === "High") $el.addClass("bg-label-danger");
-    else if (value === "MODERATE" || value === "Moderate" || value === "Med")
+    else if (
+      value === "MODERATE" ||
+      value === "Moderate" ||
+      value === "Med" ||
+      value.includes("Required")
+    )
       $el.addClass("bg-label-warning");
     else if (value === "LOW" || value === "Low")
       $el.addClass("bg-label-success");

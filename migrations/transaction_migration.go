@@ -217,6 +217,10 @@ func AssessmentsTable(db *sql.DB) {
 	checkAndAddColumn(db, "assessments", "conf_int_thinning", "TEXT DEFAULT ''")
 	checkAndAddColumn(db, "assessments", "prev_loc_int_corrosion", "TEXT DEFAULT ''")
 	checkAndAddColumn(db, "assessments", "conf_loc_int_corrosion", "TEXT DEFAULT ''")
+
+	// Assessment BY and Validate by
+	checkAndAddColumn(db, "assessments", "assessment_by", "TEXT DEFAULT ''")
+	checkAndAddColumn(db, "assessments", "validate_by", "TEXT DEFAULT ''")
 }
 
 // ==========================================

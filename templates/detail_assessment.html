@@ -169,8 +169,8 @@
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Phase / Type</span> <span class="fw-bold text-end text-capitalize">{{ .Detail.Phase }} / {{ .Detail.PhaseType }}</span></li>
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Operating Temp</span> <span class="fw-bold text-end">{{ .Detail.OperatingTemp }} {{ .Detail.TempOpUnit }}</span></li>
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Operating Press</span> <span class="fw-bold text-end">{{ .Detail.OperatingPressure }} psig</span></li>
-              <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">H2S Content</span> <span class="fw-bold text-end">{{ .Detail.H2sContent }} %</span></li>
-              <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">CO2 Content</span> <span class="fw-bold text-end">{{ .Detail.Co2Content }} %</span></li>
+              <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">H2S Content</span> <span class="fw-bold text-end" id="view_H2sContent">{{ .Detail.H2sContent }} PPM</span></li>
+              <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">CO2 Content</span> <span class="fw-bold text-end" id="view_Co2Content">{{ .Detail.Co2Content }} PPM</span></li>
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Chloride / pH</span> <span class="fw-bold text-end">{{ .Detail.ChlorideIndex }} / {{ .Detail.PhIndex }}</span></li>
             </ul>
           </div>
@@ -207,9 +207,12 @@
                 <span class="badge bg-label-secondary text-dark px-3 py-2 border">CUI: <b>{{ .Detail.Cui }}</b></span>
                 <span class="badge bg-label-secondary text-dark px-3 py-2 border">Ext. Cracking: <b>{{ .Detail.ExtCracking }}</b></span>
                 <span class="badge bg-label-secondary text-dark px-3 py-2 border">CO2: <b>{{ .Detail.Co2 }}</b></span>
+                <span class="badge bg-label-secondary text-dark px-3 py-2 border">MIC: <b>{{ .Detail.Mic }}</b></span>
+                <span class="badge bg-label-secondary text-dark px-3 py-2 border">SSC: <b>{{ .Detail.Ssc }}</b></span>
+                <span class="badge bg-label-secondary text-dark px-3 py-2 border">Amine SSC: <b>{{ .Detail.AmineScc }}</b></span>
                 <span class="badge bg-label-secondary text-dark px-3 py-2 border">HIC: <b>{{ .Detail.Hic }}</b></span>
                 <span class="badge bg-label-secondary text-dark px-3 py-2 border">CISCC: <b>{{ .Detail.Ciscc }}</b></span>
-                <span class="badge bg-label-primary text-primary px-3 py-2 border border-primary">Galvanic: <b>{{ .Detail.Galvanic }}</b></span>
+                <!-- <span class="badge bg-label-primary text-primary px-3 py-2 border border-primary">Galvanic: <b>{{ .Detail.Galvanic }}</b></span> -->
               </div>
             </div>
           </div>
@@ -514,6 +517,30 @@
           {{ end }}
         </table>
 
+        <div style="margin-top: 60px;">
+          <table style="width: 100%; border-collapse: collapse; border: none; text-align: center; font-size: 10pt;">
+            <tr>
+              <td style="width: 50%; border: none; padding-bottom: 70px; vertical-align: bottom;">
+                <span style="font-weight: bold; color: #003366;">Assessed By,</span>
+              </td>
+              <td style="width: 50%; border: none; padding-bottom: 70px; vertical-align: bottom;">
+                <span style="font-weight: bold; color: #003366;">Validated By,</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="border: none; line-height: 1.8;">
+                <div style="width: 70%; margin: 0 auto; border-bottom: 1px solid #333; text-align: left;"></div>
+                <b>{{ .Detail.AssessmentBy }}</b> <br>
+                {{ .Detail.AssessmentDate }}
+              </td>
+              <td style="border: none; line-height: 1.8;">
+                <div style="width: 70%; margin: 0 auto; border-bottom: 1px solid #333;"></div>
+                <span id="pdf_validated_by">_____________________</span><br>
+                _____________________
+              </td>
+            </tr>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -532,38 +559,112 @@
         cell.innerHTML += '<br><i class="mdi mdi-crosshairs-gps fs-5 mt-1"></i>';
       }
     }
-  });
 
-  function generatePDF() {
-    // FIX POIN 20: Kalkulasi % ke PPM khusus sebelum masuk PDF
     const h2sContent = parseFloat("{{ .Detail.H2sContent }}") || 0;
     const co2Content = parseFloat("{{ .Detail.Co2Content }}") || 0;
-    
-    // Asumsi nilai DB adalah % (1% = 10,000 ppm)
     const h2sPPM = (h2sContent * 10000).toLocaleString('en-US');
     const co2PPM = (co2Content * 10000).toLocaleString('en-US');
     
-    document.getElementById('pdf_h2s_val').innerText = h2sPPM + " ppm";
-    document.getElementById('pdf_co2_val').innerText = co2PPM + " ppm";
+    document.getElementById('view_H2sContent').innerText = h2sPPM + " PPM";
+    document.getElementById('view_Co2Content').innerText = co2PPM + " PPM";
+  });
 
-    // Panggil Elemen PDF
-    const element = document.getElementById('pdf-view-container');
-    
-    // Tampilkan paksa sesaat agar html2pdf bisa baca stylenya
-    element.style.display = 'block';
+  function generatePDF() {
+    // 1. Munculin SweetAlert Minta Nama Validator
+    Swal.fire({
+      title: 'Generate Official Report',
+      html: `
+        <div class="mb-3 mt-3 text-start">
+            <label for="swal-input-validated-by" class="form-label fw-bold">Validated By (Manager / RBI Specialist) <span class="text-danger">*</span></label>
+            <input type="text" id="swal-input-validated-by" class="form-control" placeholder="Masukkan nama validator..." autocomplete="off">
+        </div>
+      `,
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonText: '<i class="mdi mdi-file-pdf-box"></i> Generate PDF',
+      cancelButtonText: 'Batal',
+      customClass: {
+          confirmButton: 'btn btn-danger me-2 waves-effect waves-light', // Warna merah ala PDF
+          cancelButton: 'btn btn-outline-secondary waves-effect waves-light'
+      },
+      buttonsStyling: false,
+      preConfirm: () => {
+          const validatedBy = document.getElementById('swal-input-validated-by').value.trim();
+          if (!validatedBy) {
+              Swal.showValidationMessage('Nama Validator wajib diisi untuk report resmi!');
+              return false;
+          }
+          return validatedBy;
+      }
+    }).then((result) => {
+      // 2. Kalau User Klik Generate & Namanya Valid
+      if (result.isConfirmed) {
+        $('#pdf_validated_by').html('<b>' + result.value + '</b>');
+        $.ajax({
+          url: "/assessment/update-validate/{{ .Detail.AssessmentID }}",
+          type: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({
+            validate_by: result.value
+          }),
+          success: function (response) {
+            const h2sContent = parseFloat("{{ .Detail.H2sContent }}") || 0;
+            const co2Content = parseFloat("{{ .Detail.Co2Content }}") || 0;
+            
+            // Asumsi nilai DB adalah % (1% = 10,000 ppm)
+            const h2sPPM = (h2sContent * 10000).toLocaleString('en-US');
+            const co2PPM = (co2Content * 10000).toLocaleString('en-US');
+            
+            document.getElementById('pdf_h2s_val').innerText = h2sPPM + " ppm";
+            document.getElementById('pdf_co2_val').innerText = co2PPM + " ppm";
 
-    const opt = {
-      margin:       0,
-      filename:     `RBI_Summary_{{ .Detail.TagNumber }}.pdf`,
-      image:        { type: 'jpeg', quality: 1.0 },
-      html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-    };
+            // Panggil Elemen PDF
+            const element = document.getElementById('pdf-view-container');
+            
+            // Tampilkan paksa sesaat agar html2pdf bisa baca stylenya
+            element.style.display = 'block';
 
-    // Generate dan sembunyikan lagi
-    html2pdf().set(opt).from(element).save().then(() => {
-      element.style.display = 'none';
+            const opt = {
+              margin:       0,
+              filename:     `RBI_Summary_{{ .Detail.TagNumber }}.pdf`,
+              image:        { type: 'jpeg', quality: 1.0 },
+              html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+              jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+              pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            // Generate dan sembunyikan lagi
+            html2pdf().set(opt).from(element).save().then(() => {
+              element.style.display = 'none';
+            });
+          },
+          error: function (xhr, status, error) {
+            console.error("Error saving data:", xhr.responseText);
+
+            let errorMessage =
+              "Terjadi kesalahan saat menyimpan data.";
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+              errorMessage = xhr.responseJSON.message;
+            }
+
+            Swal.fire({
+              title: "Gagal Simpan Data Validator",
+              text: errorMessage,
+              icon: "error",
+              showDenyButton: false,
+              showCancelButton: false,
+              customClass: {
+                confirmButton: "btn btn-danger waves-effect waves-light",
+              },
+            });
+          },
+          complete: function () {
+            // Kembalikan tombol ke kondisi semula jika error
+            $btn.html(originalText);
+            $btn.prop("disabled", false);
+          },
+        });
+      }
     });
   }
 </script>
