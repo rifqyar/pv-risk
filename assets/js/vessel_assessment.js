@@ -1022,10 +1022,12 @@ $(function () {
           // Clear all form
           $("#vesselAssessmentForm")
             .find(
-              'input[type="text"], input[type="number"], input[type="radio"] input[type="checkbox"], select',
+              'input[type="text"], input[type="number"], select',
             )
+            .not('#select2_equipment', 'input[name="diameter_type"]')
             .val("")
             .trigger("change");
+
           $("#vesselAssessmentForm")
             .find('input[type="checkbox"], input[type="radio"]')
             .prop("checked", false)
@@ -1729,9 +1731,10 @@ $(function () {
     let tempC_MIC = opTemp || 0; // Dari Step 3
 
     let velValue = $("#select2_velocity").val();
+    let biocide_treatment = $('select[name="biocide_treatment"]').val()
 
     // Syarat MIC: Harus ada air
-    if (h2oMIC > 0) {
+    if (h2oMIC > 0 || biocide_treatment == 'Yes') {
       if (tempC_MIC >= 10 && tempC_MIC <= 93) {
         // Logika Kecepatan Aliran (Velocity) - STANDAR API 581
         if (velValue === "Vel1") {
@@ -2537,7 +2540,7 @@ $(function () {
     if (min_rl && min_rl !== Infinity) {
       $("#summary_rem_life").html(
         (min_rl > 20 ? "> 20" : min_rl.toFixed(1)) +
-          ' <small class="fs-6 fw-normal text-muted">year(s)</small>',
+        ' <small class="fs-6 fw-normal text-muted">year(s)</small>',
       );
       $("#summary_rem_life_source").text("Component: " + governing_comp);
       let next_insp_interval = Math.min(min_rl / 2, 10);
@@ -2751,9 +2754,9 @@ $(function () {
         // Base API: RL / 3 (Lebih cepet karena ga buka alat)
         let calcNonInt = rl_months / 3;
 
-        if (effNonInt === "High") calcNonInt = rl_months / 2.5; // High confidence
-        if (effNonInt === "Medium") calcNonInt = rl_months / 3;
-        if (effNonInt === "Low") calcNonInt = rl_months / 4;
+        if (effNonInt === "High") calcNonInt = calcNonInt / 2.5; // High confidence
+        if (effNonInt === "Medium") calcNonInt = calcNonInt / 3;
+        if (effNonInt === "Low") calcNonInt = calcNonInt / 4;
 
         // Jika Optimized dicentang, extend waktunya 25%
         if (isOptimized) {
