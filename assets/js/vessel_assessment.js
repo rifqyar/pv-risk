@@ -3429,7 +3429,7 @@ $(function () {
         special_service: getCheckedValues("special-checkbox"),
         protection: getCheckedValues("prot-checkbox"),
         cathodic_protection:
-          $("input[name='cathodic_protection']").val() || "No",
+          $("input[name='cathodic_protection']:checked").val() || "No",
       },
       assessment: {
         id: window.currentAssessmentId || 0, // 👇 INI YG BIKIN DIA BISA NGEDIT!
