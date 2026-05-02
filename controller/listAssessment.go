@@ -174,7 +174,7 @@ func ViewAssessmentDetail(c *gin.Context) {
 			
 			COALESCE(t.diameter_type, 'Inside'), COALESCE(t.diameter_unit, 'inch'), 
 			COALESCE(CAST(NULLIF(t.length, '-') AS REAL), 0), COALESCE(t.length_unit, 'ft'),
-			COALESCE(t.volume_unit, 'm3'), COALESCE(t.temp_design_unit, 'C'), COALESCE(a.temp_op_unit, 'C'), 
+			COALESCE(t.volume_unit, 'm3'), COALESCE(UPPER(t.temp_design_unit), 'C'), COALESCE(UPPER(a.temp_op_unit), 'C'), 
 			COALESCE(t.pwht, 'No'), COALESCE(t.certificate, '-'), COALESCE(t.data_reference, '-'), 
 			COALESCE(CAST(NULLIF(t.nozzle, '-') AS REAL), 0), COALESCE(t.nozzle_unit, 'inch'),
 			

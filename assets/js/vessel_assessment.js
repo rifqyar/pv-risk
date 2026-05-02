@@ -610,8 +610,8 @@ $(function () {
       title: "Finalisasi Assessment",
       html: `
             <div class="mb-3 mt-3 text-start">
-                <label for="swal-input-assessed-by" class="form-label fw-bold">Assessed By (Inspector Name) <span class="text-danger">*</span></label>
-                <input type="text" id="swal-input-assessed-by" class="form-control" placeholder="Masukkan nama inspector..." autocomplete="off">
+                <label for="swal-input-assessed-by" class="form-label fw-bold">Assessed By <span class="text-danger">*</span></label>
+                <input type="text" id="swal-input-assessed-by" class="form-control" placeholder="Masukkan nama..." autocomplete="off">
             </div>
         `,
       icon: "info",
@@ -629,7 +629,7 @@ $(function () {
           .getElementById("swal-input-assessed-by")
           .value.trim();
         if (!assessedBy) {
-          Swal.showValidationMessage("Nama Inspector tidak boleh kosong!");
+          Swal.showValidationMessage("Nama Assessed By tidak boleh kosong!");
           return false;
         }
         return assessedBy;
@@ -1375,7 +1375,7 @@ $(function () {
     if (isExposedToOutside) {
       // Ambil data dasar
       let tempC_Ext = opTemp || 0;
-      let isCS = material.co2_corr !== "SS"; // Carbon Steel
+      let isCS = mat.co2_corr !== "SS"; // Carbon Steel
       let isSS = !isCS; // Stainless Steel
 
       // --- A. ATMOSPHERIC CORROSION (Alat Tanpa Insulasi) ---
@@ -1531,8 +1531,8 @@ $(function () {
 
     // C. HIC / SOHIC (Hanya menyerang Carbon Steel)
     let isStainless =
-      material.co2_corr === "SS" ||
-      (material.name && material.name.includes("Stainless"));
+      mat.co2_corr === "SS" ||
+      (mat.name && mat.name.includes("Stainless"));
 
     if (isStainless) {
       res.hic = "Not"; // Stainless Steel kebal
@@ -1614,8 +1614,8 @@ $(function () {
 
     // D. CISCC (Hanya menyerang Stainless Steel)
     let isStainlessClSCC =
-      material.co2_corr === "SS" ||
-      (material.name && material.name.includes("Stainless"));
+      mat.co2_corr === "SS" ||
+      (mat.name && mat.name.includes("Stainless"));
 
     if (!isStainlessClSCC) {
       res.ciscc = "Not"; // Carbon Steel atau Low Alloy kebal dari ClSCC
@@ -1663,8 +1663,8 @@ $(function () {
     }
 
     let isStainlessCO2 =
-      material.co2_corr === "SS" ||
-      (material.name && material.name.includes("Stainless"));
+      mat.co2_corr === "SS" ||
+      (mat.name && mat.name.includes("Stainless"));
 
     if (isStainlessCO2) {
       res.co2 = "Not"; // Stainless Steel kebal CO2 Corrosion
@@ -3417,7 +3417,7 @@ $(function () {
         nozzle: parseFloat($("input[name='nozzle']").val()) || 0,
         nozzle_unit: $("select[name='satuan_nozzle']").val() || "inch",
 
-        pwht: $("select[name='pwht']").val() || "No",
+        pwht: $("input[name='pwht']:checked").val() || "No",
         certificate: getCheckedValues("cert-checkbox"),
         data_reference: getCheckedValues("ref-checkbox"),
         phase_type: $("select[name='phase_type']").val() || "multi phase",

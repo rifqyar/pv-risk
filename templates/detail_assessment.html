@@ -155,7 +155,7 @@
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Diameter</span> <span class="fw-bold text-end">{{ .Detail.Diameter }} {{ .Detail.DiameterUnit }} <span class="badge bg-label-secondary ms-1">{{ .Detail.DiameterType }}</span></span></li>
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Length</span> <span class="fw-bold text-end">{{ .Detail.Length }} {{ .Detail.LengthUnit }}</span></li>
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Volume</span> <span class="fw-bold text-end">{{ .Detail.Volume }} {{ .Detail.VolumeUnit }}</span></li>
-              <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Design Temp/Press</span> <span class="fw-bold text-end">{{ .Detail.DesignTemp }} {{ .Detail.TempDesignUnit }} / {{ .Detail.DesignPressure }} psig</span></li>
+              <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Design Temp/Press</span> <span class="fw-bold text-end">{{ .Detail.DesignTemp }} &deg;{{ .Detail.TempDesignUnit }} / {{ .Detail.DesignPressure }} psig</span></li>
             </ul>
           </div>
         </div>
@@ -167,10 +167,10 @@
             </div>
             <ul class="list-group list-group-flush small">
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Phase / Type</span> <span class="fw-bold text-end text-capitalize">{{ .Detail.Phase }} / {{ .Detail.PhaseType }}</span></li>
-              <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Operating Temp</span> <span class="fw-bold text-end">{{ .Detail.OperatingTemp }} {{ .Detail.TempOpUnit }}</span></li>
+              <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Operating Temp</span> <span class="fw-bold text-end">{{ .Detail.OperatingTemp }} &deg;{{ .Detail.TempOpUnit }}</span></li>
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Operating Press</span> <span class="fw-bold text-end">{{ .Detail.OperatingPressure }} psig</span></li>
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">H2S Content</span> <span class="fw-bold text-end" id="view_H2sContent">{{ .Detail.H2sContent }} PPM</span></li>
-              <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">CO2 Content</span> <span class="fw-bold text-end" id="view_Co2Content">{{ .Detail.Co2Content }} PPM</span></li>
+              <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">CO2 Content</span> <span class="fw-bold text-end" id="view_Co2Content">{{ .Detail.Co2Content }} Mol %</span></li>
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Chloride / pH</span> <span class="fw-bold text-end">{{ .Detail.ChlorideIndex }} / {{ .Detail.PhIndex }}</span></li>
             </ul>
           </div>
@@ -339,7 +339,7 @@
             <th>Length / Volume</th><td>{{ .Detail.Length }} {{ .Detail.LengthUnit }} / {{ .Detail.Volume }} {{ .Detail.VolumeUnit }}</td>
           </tr>
           <tr>
-            <th>Design Temp/Press</th><td>{{ .Detail.DesignTemp }} {{ .Detail.TempDesignUnit }} / {{ .Detail.DesignPressure }} psig</td>
+            <th>Design Temp/Press</th><td>{{ .Detail.DesignTemp }} &deg;{{ .Detail.TempDesignUnit }} / {{ .Detail.DesignPressure }} psig</td>
             <th>Nozzle Count</th><td>{{ .Detail.Nozzle }} {{ .Detail.NozzleUnit }}</td>
           </tr>
           <tr>
@@ -352,7 +352,7 @@
         <table class="report-table">
           <tr>
             <th width="20%">Phase / Type</th><td width="30%">{{ .Detail.Phase }} / {{ .Detail.PhaseType }}</td>
-            <th width="20%">Operating Temp</th><td width="30%">{{ .Detail.OperatingTemp }} {{ .Detail.TempOpUnit }}</td>
+            <th width="20%">Operating Temp</th><td width="30%">{{ .Detail.OperatingTemp }} &deg;{{ .Detail.TempOpUnit }}</td>
           </tr>
           <tr>
             <th>Operating Press</th><td>{{ .Detail.OperatingPressure }} psig</td>
@@ -360,7 +360,7 @@
           </tr>
           <tr>
             <th>H2S Content</th><td id="pdf_h2s_val">0</td>
-            <th>CO2 Content</th><td id="pdf_co2_val">0</td>
+            <th>CO2 Content</th><td id="pdf_co2_val">{{ .Detail.Co2Content }} Mol %</td>
           </tr>
           <tr>
             <th>PWHT</th><td>{{ .Detail.Pwht }}</td>
@@ -460,21 +460,25 @@
             <th style="text-align: center;">CUI</th>
             <th style="text-align: center;">Ext Cracking</th>
             <th style="text-align: center;">CO2</th>
+            <th style="text-align: center;">MIC</th>
+            <th style="text-align: center;">SSC</th>
+            <th style="text-align: center;">Amine SSC</th>
             <th style="text-align: center;">HIC / SOHIC</th>
             <th style="text-align: center;">CISCC</th>
-            <th style="text-align: center;">Galvanic</th>
           </tr>
           <tr>
             <td>{{ .Detail.Atmospheric }}</td>
             <td>{{ .Detail.Cui }}</td>
             <td>{{ .Detail.ExtCracking }}</td>
             <td>{{ .Detail.Co2 }}</td>
+            <td>{{ .Detail.Mic }}</td>
+            <td>{{ .Detail.Ssc }}</td>
+            <td>{{ .Detail.AmineScc }}</td>
             <td>{{ .Detail.Hic }}</td>
             <td>{{ .Detail.Ciscc }}</td>
-            <td>{{ .Detail.Galvanic }}</td>
           </tr>
           <tr>
-            <td colspan="7" style="text-align: left; background-color: #f9f9f9;">
+            <td colspan="9" style="text-align: left; background-color: #f9f9f9;">
               <strong>Calculated LoF Score:</strong> <span style="font-size: 11pt; font-weight: bold; color: #003366;">{{ .Detail.LofScore }}</span>
             </td>
           </tr>
@@ -566,7 +570,7 @@
     const co2PPM = (co2Content * 10000).toLocaleString('en-US');
     
     document.getElementById('view_H2sContent').innerText = h2sPPM + " PPM";
-    document.getElementById('view_Co2Content').innerText = co2PPM + " PPM";
+    // document.getElementById('view_Co2Content').innerText = co2PPM + " PPM";
   });
 
   function generatePDF() {
@@ -575,7 +579,7 @@
       title: 'Generate Official Report',
       html: `
         <div class="mb-3 mt-3 text-start">
-            <label for="swal-input-validated-by" class="form-label fw-bold">Validated By (Manager / RBI Specialist) <span class="text-danger">*</span></label>
+            <label for="swal-input-validated-by" class="form-label fw-bold">Validated By <span class="text-danger">*</span></label>
             <input type="text" id="swal-input-validated-by" class="form-control" placeholder="Masukkan nama validator..." autocomplete="off">
         </div>
       `,
@@ -616,7 +620,7 @@
             const co2PPM = (co2Content * 10000).toLocaleString('en-US');
             
             document.getElementById('pdf_h2s_val').innerText = h2sPPM + " ppm";
-            document.getElementById('pdf_co2_val').innerText = co2PPM + " ppm";
+            // document.getElementById('pdf_co2_val').innerText = co2PPM + " ppm";
 
             // Panggil Elemen PDF
             const element = document.getElementById('pdf-view-container');
