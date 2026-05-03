@@ -1733,8 +1733,8 @@ $(function () {
     let velValue = $("#select2_velocity").val();
     let biocide_treatment = $('select[name="biocide_treatment"]').val()
 
-    // Syarat MIC: Harus ada air
-    if (h2oMIC > 0 || biocide_treatment == 'Yes') {
+    // Syarat MIC: Harus ada air & tidak ada biocide treatment
+    if (h2oMIC > 0 && biocide_treatment == 'Yes') {
       if (tempC_MIC >= 10 && tempC_MIC <= 93) {
         // Logika Kecepatan Aliran (Velocity) - STANDAR API 581
         if (velValue === "Vel1") {

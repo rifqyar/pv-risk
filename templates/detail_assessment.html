@@ -154,7 +154,7 @@
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Year Built</span> <span class="fw-bold text-end">{{ .Detail.YearBuilt }}</span></li>
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Diameter</span> <span class="fw-bold text-end">{{ .Detail.Diameter }} {{ .Detail.DiameterUnit }} <span class="badge bg-label-secondary ms-1">{{ .Detail.DiameterType }}</span></span></li>
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Length</span> <span class="fw-bold text-end">{{ .Detail.Length }} {{ .Detail.LengthUnit }}</span></li>
-              <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Volume</span> <span class="fw-bold text-end">{{ .Detail.Volume }} {{ .Detail.VolumeUnit }}</span></li>
+              <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Volume</span> <span class="fw-bold text-end">{{ .Detail.Volume }} {{ .Detail.VolumeUnit }}<sup>3</sup></span></li>
               <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Design Temp/Press</span> <span class="fw-bold text-end">{{ .Detail.DesignTemp }} &deg;{{ .Detail.TempDesignUnit }} / {{ .Detail.DesignPressure }} psig</span></li>
             </ul>
           </div>
@@ -336,7 +336,7 @@
           </tr>
           <tr>
             <th>Diameter</th><td>{{ .Detail.Diameter }} {{ .Detail.DiameterUnit }} ({{ .Detail.DiameterType }})</td>
-            <th>Length / Volume</th><td>{{ .Detail.Length }} {{ .Detail.LengthUnit }} / {{ .Detail.Volume }} {{ .Detail.VolumeUnit }}</td>
+            <th>Length / Volume</th><td>{{ .Detail.Length }} {{ .Detail.LengthUnit }} / {{ .Detail.Volume }} {{ .Detail.VolumeUnit }}<sup>3</sup></td>
           </tr>
           <tr>
             <th>Design Temp/Press</th><td>{{ .Detail.DesignTemp }} &deg;{{ .Detail.TempDesignUnit }} / {{ .Detail.DesignPressure }} psig</td>
@@ -630,7 +630,7 @@
 
             const opt = {
               margin:       0,
-              filename:     `RBI_Summary_{{ .Detail.TagNumber }}.pdf`,
+              filename:     `Assessment_Summary_{{ .Detail.TagNumber }}.pdf`,
               image:        { type: 'jpeg', quality: 1.0 },
               html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
               jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
