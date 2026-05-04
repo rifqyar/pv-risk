@@ -22,8 +22,8 @@ type DashboardActionItem struct {
 // 2. Siapkan Struct Utama untuk menampung semua data KPI & Tabel
 type DashboardData struct {
 	TotalAssets       int
-	ExtremeRisk       int
 	HighRisk          int
+	MediumRisk        int
 	InspectionsDue    int
 	RecentAssessments []DashboardActionItem // Array of struct untuk looping di HTML
 }
@@ -40,11 +40,11 @@ func ShowDashboard(c *gin.Context) {
 	// 1. Total Assets (Menghitung jumlah equipment unik yang sudah di-ases)
 	db.QueryRow("SELECT COUNT(DISTINCT equipment_id) FROM assessments").Scan(&data.TotalAssets)
 
-	// 2. Extreme Risk Count
-	db.QueryRow("SELECT COUNT(id) FROM assessment_results WHERE risk_level = 'EXTREME RISK'").Scan(&data.ExtremeRisk)
+	// 2. High Risk Count
+	db.QueryRow("SELECT COUNT(id) FROM assessment_results WHERE risk_level = 'HIGH RISK'").Scan(&data.HighRisk)
 
 	// 3. High Risk Count
-	db.QueryRow("SELECT COUNT(id) FROM assessment_results WHERE risk_level = 'HIGH RISK'").Scan(&data.HighRisk)
+	db.QueryRow("SELECT COUNT(id) FROM assessment_results WHERE risk_level = 'MEDIUM RISK'").Scan(&data.MediumRisk)
 
 	// 4. Inspections Due (Jatuh tempo tahun ini atau sudah lewat)
 	db.QueryRow("SELECT COUNT(id) FROM assessment_results WHERE next_inspection_year <= ?", currentYear).Scan(&data.InspectionsDue)
@@ -100,7 +100,8 @@ func ShowDashboard(c *gin.Context) {
 	}
 
 	// Chart Query
-	var mediumRisk, lowRisk int
+	var highRisk, mediumRisk, lowRisk int
+	db.QueryRow("SELECT COUNT(id) FROM assessment_results WHERE risk_level = 'HIGH RISK'").Scan(&mediumRisk)
 	db.QueryRow("SELECT COUNT(id) FROM assessment_results WHERE risk_level = 'MEDIUM RISK'").Scan(&mediumRisk)
 	db.QueryRow("SELECT COUNT(id) FROM assessment_results WHERE risk_level = 'LOW RISK'").Scan(&lowRisk)
 
@@ -135,6 +136,7 @@ func ShowDashboard(c *gin.Context) {
 		"Dashboard":   data,
 		"CurrentYear": currentYear,
 		"ActiveMenu":  "dashboard", // <--- INI KUNCINYA
+		"HighRisk":    highRisk,
 		"MediumRisk":  mediumRisk,
 		"LowRisk":     lowRisk,
 		"YearsJSON":   string(yearsJSON),

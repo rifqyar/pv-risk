@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starting FIRE...</title>
+    <!-- Ganti href dengan path logo icon lu yang bener -->
+    <link rel="icon" type="image/x-icon" href="/assets/icon.ico">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            background-color: #FFFFFF; /* Warna background, sesuaikan tema lu */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .splash-container {
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+        }
+        .logo {
+            width: 120px; /* Ukuran logo lu */
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 30px;
+        }
+        /* Loading Spinner CSS murni */
+        .loader {
+            border: 4px solid #e3e3e3;
+            border-top: 4px solid #003366;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="splash-container">
+        <!-- Taruh logo aplikasi lu di sini -->
+        <img src="/assets/logo.png" alt="FIRE Logo" class="logo" onerror="this.style.display='none'">
+        
+        <div class="title">PV Integrity</div>
+        <div class="subtitle">Facility Integrity & Risk Evaluation System...</div>
+        
+        <div class="loader"></div>
+    </div>
+
+    <script>
+        // Set delay preloader (misal 2.5 detik = 2500 ms)
+        // Setelah selesai, arahkan ke halaman utama lu (misal /dashboard atau /assessment/list)
+        setTimeout(function() {
+            window.location.replace("/dashboard"); 
+        }, 2500);
+    </script>
+</body>
+</html>

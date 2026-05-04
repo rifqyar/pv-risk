@@ -8,20 +8,19 @@ document.addEventListener("DOMContentLoaded", function() {
   // Pastikan elemennya ada di halaman sebelum di-render
   if (donutEl) {
     // Tarik data dari HTML (dataset)
-    const valExtreme = parseInt(donutEl.dataset.extreme) || 0;
     const valHigh = parseInt(donutEl.dataset.high) || 0;
     const valMedium = parseInt(donutEl.dataset.medium) || 0;
     const valLow = parseInt(donutEl.dataset.low) || 0;
 
     const riskOptions = {
-      series: [valExtreme, valHigh, valMedium, valLow],
-      labels: ['Extreme', 'High', 'Medium', 'Low'],
+      series: [valHigh, valMedium, valLow],
+      labels: ['High', 'Medium', 'Low'],
       chart: {
         type: 'donut',
         height: 320,
         fontFamily: 'Inter, sans-serif'
       },
-      colors: ['#212529', '#ff3e1d', '#ffab00', '#71dd37'], 
+      colors: ['#ff3e1d', '#ffab00', '#71dd37'], 
       plotOptions: {
         pie: {
           donut: {

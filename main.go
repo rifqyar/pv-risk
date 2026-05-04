@@ -2,6 +2,7 @@ package main
 
 import (
 	// "context"
+
 	"embed"
 	"html/template"
 	"io/fs"
@@ -80,7 +81,9 @@ func main() {
 	r.StaticFS("/assets", http.FS(assetsContent))
 
 	// ================= ROUTES =================
-	r.GET("/", controller.ShowDashboard)
+	r.GET("/", func(ctx *gin.Context) {
+		ctx.HTML(http.StatusOK, "splash.html", nil)
+	})
 	r.GET("/dashboard", controller.ShowDashboard)
 	r.GET("/assessment/form", controller.ShowForm)
 	r.POST("/submit", controller.SubmitAssessment)

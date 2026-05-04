@@ -1068,6 +1068,7 @@ $(function () {
     calculateDamageMechanisms();
     calculateCriticalityMatrix();
     calculateInspectionStrategy();
+    calculateInspectionPeriods();
   }
 
   function handleEquipmentTypeChange() {
