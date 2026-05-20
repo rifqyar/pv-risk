@@ -1,0 +1,466 @@
+{{ define "master_data_content" }}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="py-3 mb-4">
+      <span class="text-muted fw-light">Master Data /</span> Equipment & Material
+    </h4>
+
+    {{ if .FlashMessage }}
+    <div class="alert {{ if eq .FlashStatus "success" }}alert-success{{ else }}alert-danger{{ end }} alert-dismissible" role="alert">
+      {{ .FlashMessage }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {{ end }}
+
+    <ul class="nav nav-pills mb-4" role="tablist">
+      <li class="nav-item">
+        <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#tab-equipment">
+          <i class="mdi mdi-factory me-1"></i> Equipment
+        </button>
+      </li>
+      <li class="nav-item">
+        <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#tab-shell">
+          <i class="mdi mdi-layers-outline me-1"></i> Shell / Head Material
+        </button>
+      </li>
+      <li class="nav-item">
+        <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#tab-neck">
+          <i class="mdi mdi-pipe me-1"></i> Neck Material
+        </button>
+      </li>
+      <li class="nav-item">
+        <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#tab-nozzle">
+          <i class="mdi mdi-valve me-1"></i> Nozzle Material
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content p-0">
+      <div class="tab-pane fade show active" id="tab-equipment" role="tabpanel">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0" id="equipment-form-title">Add Equipment</h5>
+          </div>
+          <div class="card-body">
+            <form action="/master-data/equipment/save" method="POST" class="row g-3">
+              <input type="hidden" name="id" id="equipment_id" />
+              <div class="col-md-4">
+                <div class="form-floating form-floating-outline">
+                  <input type="text" class="form-control" name="name" id="equipment_name" placeholder="Equipment Name" required />
+                  <label>Equipment Name</label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-floating form-floating-outline">
+                  <select name="type" id="equipment_type" class="form-select" required>
+                    <option value="">Select Type</option>
+                    <option value="EQT1">EQT1</option>
+                    <option value="EQT2">EQT2</option>
+                    <option value="EQT3">EQT3</option>
+                  </select>
+                  <label>Type</label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-floating form-floating-outline">
+                  <input type="text" class="form-control" name="group_name" id="equipment_group" placeholder="Group Name" required />
+                  <label>Group Name</label>
+                </div>
+              </div>
+              <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">
+                  <i class="mdi mdi-content-save-outline me-1"></i> Save
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="resetEquipmentForm()">
+                  <i class="mdi mdi-refresh"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+              <thead class="bg-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Group</th>
+                  <th>Used</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{ range .Equipments }}
+                <tr>
+                  <td class="fw-semibold">{{ .Name }}</td>
+                  <td><span class="badge bg-label-primary">{{ .Type }}</span></td>
+                  <td>{{ .GroupName }}</td>
+                  <td>{{ .UsageCount }}</td>
+                  <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-icon btn-outline-warning"
+                      onclick="editEquipment('{{ .ID }}', '{{ .Name }}', '{{ .Type }}', '{{ .GroupName }}')">
+                      <i class="mdi mdi-pencil-outline"></i>
+                    </button>
+                    <form action="/master-data/equipment/delete/{{ .ID }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this equipment?')">
+                      <button type="submit" class="btn btn-sm btn-icon btn-outline-danger">
+                        <i class="mdi mdi-trash-can-outline"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {{ else }}
+                <tr><td colspan="5" class="text-center py-4 text-muted">No equipment data found.</td></tr>
+                {{ end }}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-shell" role="tabpanel">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0" id="shell-form-title">Add Shell / Head Material</h5>
+          </div>
+          <div class="card-body">
+            <form action="/master-data/shell-material/save" method="POST" class="row g-3">
+              <input type="hidden" name="id" id="shell_id" />
+              <div class="col-md-4">
+                <div class="form-floating form-floating-outline">
+                  <input type="text" class="form-control" name="name" id="shell_name" placeholder="Material Name" required />
+                  <label>Material Name</label>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="form-floating form-floating-outline">
+                  <select name="external" id="shell_external" class="form-select">
+                    <option value="">Select</option>
+                    <option value="Res">Res</option>
+                    <option value="NonRes">NonRes</option>
+                  </select>
+                  <label>External</label>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="form-floating form-floating-outline">
+                  <select name="internal" id="shell_internal" class="form-select">
+                    <option value="">Select</option>
+                    <option value="Res">Res</option>
+                    <option value="NonRes">NonRes</option>
+                  </select>
+                  <label>Internal</label>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="form-floating form-floating-outline">
+                  <select name="co2_corr" id="shell_co2" class="form-select">
+                    <option value="">Select</option>
+                    <option value="CS">CS</option>
+                    <option value="LA">LA</option>
+                    <option value="SS">SS</option>
+                  </select>
+                  <label>CO2 Corr</label>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="form-floating form-floating-outline">
+                  <select name="mic" id="shell_mic" class="form-select">
+                    <option value="">Select</option>
+                    <option value="MICR">MICR</option>
+                    <option value="MICNR">MICNR</option>
+                  </select>
+                  <label>MIC</label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-floating form-floating-outline">
+                  <select name="amine_cracking" id="shell_amine" class="form-select">
+                    <option value="">Select</option>
+                    <option value="Res">Res</option>
+                    <option value="NonRes">NonRes</option>
+                  </select>
+                  <label>Amine Cracking</label>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-floating form-floating-outline">
+                  <select name="sulfide_cracking" id="shell_sulfide" class="form-select">
+                    <option value="">Select</option>
+                    <option value="Res">Res</option>
+                    <option value="NonRes">NonRes</option>
+                  </select>
+                  <label>Sulfide Cracking</label>
+                </div>
+              </div>
+              <div class="col-md-6 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                  <i class="mdi mdi-content-save-outline me-1"></i> Save Material
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="resetShellForm()">
+                  <i class="mdi mdi-refresh me-1"></i> Reset
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+              <thead class="bg-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Ext</th>
+                  <th>Int</th>
+                  <th>CO2</th>
+                  <th>MIC</th>
+                  <th>Amine</th>
+                  <th>Sulfide</th>
+                  <th>Used</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{ range .ShellMaterials }}
+                <tr>
+                  <td class="fw-semibold">{{ .Name }}</td>
+                  <td>{{ .External }}</td>
+                  <td>{{ .Internal }}</td>
+                  <td>{{ .CO2Corr }}</td>
+                  <td>{{ .MIC }}</td>
+                  <td>{{ .AmineCracking }}</td>
+                  <td>{{ .SulfideCracking }}</td>
+                  <td>{{ .UsageCount }}</td>
+                  <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-icon btn-outline-warning"
+                      onclick="editShell('{{ .ID }}', '{{ .Name }}', '{{ .External }}', '{{ .Internal }}', '{{ .CO2Corr }}', '{{ .MIC }}', '{{ .AmineCracking }}', '{{ .SulfideCracking }}')">
+                      <i class="mdi mdi-pencil-outline"></i>
+                    </button>
+                    <form action="/master-data/shell-material/delete/{{ .ID }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this material?')">
+                      <button type="submit" class="btn btn-sm btn-icon btn-outline-danger">
+                        <i class="mdi mdi-trash-can-outline"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {{ else }}
+                <tr><td colspan="9" class="text-center py-4 text-muted">No shell/head material data found.</td></tr>
+                {{ end }}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-neck" role="tabpanel">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0" id="neck-form-title">Add Neck Material</h5>
+          </div>
+          <div class="card-body">
+            <form action="/master-data/simple-material/save" method="POST" class="row g-3">
+              <input type="hidden" name="kind" value="neck" />
+              <input type="hidden" name="id" id="neck_id" />
+              <div class="col-md-5">
+                <div class="form-floating form-floating-outline">
+                  <input type="text" class="form-control" name="name" id="neck_name" placeholder="Material Name" required />
+                  <label>Material Name</label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-floating form-floating-outline">
+                  <select name="clad_status" id="neck_clad_status" class="form-select" required>
+                    <option value="">Select Clad Status</option>
+                    <option value="Cladded">Cladded</option>
+                    <option value="Non Cladded">Non Cladded</option>
+                  </select>
+                  <label>Clad Status</label>
+                </div>
+              </div>
+              <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">
+                  <i class="mdi mdi-content-save-outline me-1"></i> Save
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="resetSimple('neck')">
+                  <i class="mdi mdi-refresh"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+              <thead class="bg-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Clad Status</th>
+                  <th>Used</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{ range .NeckMaterials }}
+                <tr>
+                  <td class="fw-semibold">{{ .Name }}</td>
+                  <td>{{ .CladStatus }}</td>
+                  <td>{{ .UsageCount }}</td>
+                  <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-icon btn-outline-warning" onclick="editSimple('neck', '{{ .ID }}', '{{ .Name }}', '{{ .CladStatus }}')">
+                      <i class="mdi mdi-pencil-outline"></i>
+                    </button>
+                    <form action="/master-data/simple-material/delete/neck/{{ .ID }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this material?')">
+                      <button type="submit" class="btn btn-sm btn-icon btn-outline-danger">
+                        <i class="mdi mdi-trash-can-outline"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {{ else }}
+                <tr><td colspan="4" class="text-center py-4 text-muted">No neck material data found.</td></tr>
+                {{ end }}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-nozzle" role="tabpanel">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0" id="nozzle-form-title">Add Nozzle Material</h5>
+          </div>
+          <div class="card-body">
+            <form action="/master-data/simple-material/save" method="POST" class="row g-3">
+              <input type="hidden" name="kind" value="nozzle" />
+              <input type="hidden" name="id" id="nozzle_id" />
+              <div class="col-md-5">
+                <div class="form-floating form-floating-outline">
+                  <input type="text" class="form-control" name="name" id="nozzle_name" placeholder="Material Name" required />
+                  <label>Material Name</label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-floating form-floating-outline">
+                  <select name="clad_status" id="nozzle_clad_status" class="form-select" required>
+                    <option value="">Select Clad Status</option>
+                    <option value="Cladded">Cladded</option>
+                    <option value="Non Cladded">Non Cladded</option>
+                  </select>
+                  <label>Clad Status</label>
+                </div>
+              </div>
+              <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">
+                  <i class="mdi mdi-content-save-outline me-1"></i> Save
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="resetSimple('nozzle')">
+                  <i class="mdi mdi-refresh"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+              <thead class="bg-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Clad Status</th>
+                  <th>Used</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{ range .NozzleMaterials }}
+                <tr>
+                  <td class="fw-semibold">{{ .Name }}</td>
+                  <td>{{ .CladStatus }}</td>
+                  <td>{{ .UsageCount }}</td>
+                  <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-icon btn-outline-warning" onclick="editSimple('nozzle', '{{ .ID }}', '{{ .Name }}', '{{ .CladStatus }}')">
+                      <i class="mdi mdi-pencil-outline"></i>
+                    </button>
+                    <form action="/master-data/simple-material/delete/nozzle/{{ .ID }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this material?')">
+                      <button type="submit" class="btn btn-sm btn-icon btn-outline-danger">
+                        <i class="mdi mdi-trash-can-outline"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {{ else }}
+                <tr><td colspan="4" class="text-center py-4 text-muted">No nozzle material data found.</td></tr>
+                {{ end }}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="content-backdrop fade"></div>
+</div>
+
+<script>
+  function setValue(id, value) {
+    document.getElementById(id).value = value || "";
+  }
+
+  function editEquipment(id, name, type, groupName) {
+    setValue("equipment_id", id);
+    setValue("equipment_name", name);
+    setValue("equipment_type", type);
+    setValue("equipment_group", groupName);
+    document.getElementById("equipment-form-title").textContent = "Edit Equipment";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function resetEquipmentForm() {
+    ["equipment_id", "equipment_name", "equipment_type", "equipment_group"].forEach(function (id) {
+      setValue(id, "");
+    });
+    document.getElementById("equipment-form-title").textContent = "Add Equipment";
+  }
+
+  function editShell(id, name, external, internal, co2, mic, amine, sulfide) {
+    setValue("shell_id", id);
+    setValue("shell_name", name);
+    setValue("shell_external", external);
+    setValue("shell_internal", internal);
+    setValue("shell_co2", co2);
+    setValue("shell_mic", mic);
+    setValue("shell_amine", amine);
+    setValue("shell_sulfide", sulfide);
+    document.getElementById("shell-form-title").textContent = "Edit Shell / Head Material";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function resetShellForm() {
+    ["shell_id", "shell_name", "shell_external", "shell_internal", "shell_co2", "shell_mic", "shell_amine", "shell_sulfide"].forEach(function (id) {
+      setValue(id, "");
+    });
+    document.getElementById("shell-form-title").textContent = "Add Shell / Head Material";
+  }
+
+  function editSimple(prefix, id, name, cladStatus) {
+    setValue(prefix + "_id", id);
+    setValue(prefix + "_name", name);
+    setValue(prefix + "_clad_status", cladStatus);
+    document.getElementById(prefix + "-form-title").textContent = "Edit " + (prefix === "neck" ? "Neck" : "Nozzle") + " Material";
+  }
+
+  function resetSimple(prefix) {
+    setValue(prefix + "_id", "");
+    setValue(prefix + "_name", "");
+    setValue(prefix + "_clad_status", "");
+    document.getElementById(prefix + "-form-title").textContent = "Add " + (prefix === "neck" ? "Neck" : "Nozzle") + " Material";
+  }
+</script>
+{{ end }}
+
+{{ template "layouts/master" . }}

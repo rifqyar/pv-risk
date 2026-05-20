@@ -137,6 +137,12 @@
                 <div data-i18n="List Assessment">List Assessment</div>
               </a>
             </li>
+            <li class="menu-item {{ if eq .ActiveMenu "master-data" }}active{{ end }}">
+              <a href="/master-data" class="menu-link">
+                <i class="menu-icon tf-icons mdi mdi-database-cog-outline"></i>
+                <div data-i18n="Master Data">Master Data</div>
+              </a>
+            </li>
           </ul>
         </aside>
         <!-- / Menu -->
@@ -169,6 +175,8 @@
                 {{ template "detail_content" . }}
               {{ else if eq .ActiveMenu "edit-assessment" }} 
                 {{ template "form_edit_content" . }}
+              {{ else if eq .ActiveMenu "master-data" }} 
+                {{ template "master_data_content" . }}
               {{ else }}
                   <div class="p-5 text-center">Page Not Found / Blank Content</div>
               {{ end }}
