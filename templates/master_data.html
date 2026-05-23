@@ -38,41 +38,56 @@
     <div class="tab-content p-0">
       <div class="tab-pane fade show active" id="tab-equipment" role="tabpanel">
         <div class="card mb-4">
-          <div class="card-header">
-            <h5 class="mb-0" id="equipment-form-title">Add Equipment</h5>
+          <div class="card-header d-flex flex-column flex-md-row justify-content-between gap-2">
+            <div>
+              <h5 class="mb-1" id="equipment-form-title">Add Equipment</h5>
+              <small class="text-muted">Register vessel equipment once, then reuse it in assessment forms.</small>
+            </div>
+            <span class="badge bg-label-primary align-self-start align-self-md-center">Master Vessel</span>
           </div>
           <div class="card-body">
-            <form action="/master-data/equipment/save" method="POST" class="row g-3">
+            <form action="/master-data/equipment/save" method="POST" class="row g-3 needs-validation" novalidate id="equipment-form">
               <input type="hidden" name="id" id="equipment_id" />
-              <div class="col-md-4">
+              <div class="col-lg-5 col-md-6">
                 <div class="form-floating form-floating-outline">
-                  <input type="text" class="form-control" name="name" id="equipment_name" placeholder="Equipment Name" required />
-                  <label>Equipment Name</label>
+                  <input type="text" class="form-control" name="name" id="equipment_name" placeholder="e.g. V-101 Separator" autocomplete="off" required />
+                  <label>Equipment Name / Tag</label>
+                  <div class="invalid-feedback">Please enter the equipment name or tag.</div>
                 </div>
+                <div class="form-text">Use the name operators recognize, for example V-101 Separator.</div>
               </div>
-              <div class="col-md-3">
+              <div class="col-lg-3 col-md-6">
                 <div class="form-floating form-floating-outline">
                   <select name="type" id="equipment_type" class="form-select" required>
                     <option value="">Select Type</option>
-                    <option value="EQT1">EQT1</option>
-                    <option value="EQT2">EQT2</option>
-                    <option value="EQT3">EQT3</option>
+                    <option value="EQT1">EQT1 - Vessel</option>
+                    <option value="EQT2">EQT2 - Column / Tower</option>
+                    <option value="EQT3">EQT3 - Heat Exchanger</option>
                   </select>
-                  <label>Type</label>
+                  <label>Equipment Type</label>
+                  <div class="invalid-feedback">Please choose an equipment type.</div>
                 </div>
+                <div class="form-text">For standard pressure vessels, usually select EQT1.</div>
               </div>
-              <div class="col-md-3">
+              <div class="col-lg-4 col-md-8">
                 <div class="form-floating form-floating-outline">
-                  <input type="text" class="form-control" name="group_name" id="equipment_group" placeholder="Group Name" required />
-                  <label>Group Name</label>
+                  <input type="text" class="form-control" name="group_name" id="equipment_group" list="equipment-group-options" placeholder="e.g. Pressure Vessel" autocomplete="off" required />
+                  <label>Equipment Group</label>
+                  <div class="invalid-feedback">Please enter the equipment group.</div>
                 </div>
+                <datalist id="equipment-group-options">
+                  {{ range .Equipments }}
+                  <option value="{{ .GroupName }}"></option>
+                  {{ end }}
+                </datalist>
+                <div class="form-text">Group similar assets for filtering and reporting.</div>
               </div>
-              <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary flex-fill">
-                  <i class="mdi mdi-content-save-outline me-1"></i> Save
-                </button>
+              <div class="col-lg-12 d-flex justify-content-end gap-2">
                 <button type="button" class="btn btn-outline-secondary" onclick="resetEquipmentForm()">
-                  <i class="mdi mdi-refresh"></i>
+                  <i class="mdi mdi-refresh me-1"></i> Reset
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  <i class="mdi mdi-content-save-outline me-1"></i> Save
                 </button>
               </div>
             </form>
@@ -95,12 +110,16 @@
                 {{ range .Equipments }}
                 <tr>
                   <td class="fw-semibold">{{ .Name }}</td>
-                  <td><span class="badge bg-label-primary">{{ .Type }}</span></td>
+                  <td>
+                    <span class="badge bg-label-primary">
+                      {{ if eq .Type "EQT1" }}EQT1 - Vessel{{ else if eq .Type "EQT2" }}EQT2 - Column / Tower{{ else if eq .Type "EQT3" }}EQT3 - Heat Exchanger{{ else }}{{ .Type }}{{ end }}
+                    </span>
+                  </td>
                   <td>{{ .GroupName }}</td>
                   <td>{{ .UsageCount }}</td>
                   <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-icon btn-outline-warning"
-                      onclick="editEquipment('{{ .ID }}', '{{ .Name }}', '{{ .Type }}', '{{ .GroupName }}')">
+                    <button type="button" class="btn btn-sm btn-icon btn-outline-warning js-edit-equipment"
+                      data-id="{{ .ID }}" data-name="{{ .Name }}" data-type="{{ .Type }}" data-group="{{ .GroupName }}">
                       <i class="mdi mdi-pencil-outline"></i>
                     </button>
                     <form action="/master-data/equipment/delete/{{ .ID }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this equipment?')">
@@ -125,12 +144,13 @@
             <h5 class="mb-0" id="shell-form-title">Add Shell / Head Material</h5>
           </div>
           <div class="card-body">
-            <form action="/master-data/shell-material/save" method="POST" class="row g-3">
+            <form action="/master-data/shell-material/save" method="POST" class="row g-3 needs-validation" novalidate id="shell-form">
               <input type="hidden" name="id" id="shell_id" />
               <div class="col-md-4">
                 <div class="form-floating form-floating-outline">
                   <input type="text" class="form-control" name="name" id="shell_name" placeholder="Material Name" required />
                   <label>Material Name</label>
+                  <div class="invalid-feedback">Please enter the shell/head material name.</div>
                 </div>
               </div>
               <div class="col-md-2">
@@ -234,8 +254,9 @@
                   <td>{{ .SulfideCracking }}</td>
                   <td>{{ .UsageCount }}</td>
                   <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-icon btn-outline-warning"
-                      onclick="editShell('{{ .ID }}', '{{ .Name }}', '{{ .External }}', '{{ .Internal }}', '{{ .CO2Corr }}', '{{ .MIC }}', '{{ .AmineCracking }}', '{{ .SulfideCracking }}')">
+                    <button type="button" class="btn btn-sm btn-icon btn-outline-warning js-edit-shell"
+                      data-id="{{ .ID }}" data-name="{{ .Name }}" data-external="{{ .External }}" data-internal="{{ .Internal }}"
+                      data-co2="{{ .CO2Corr }}" data-mic="{{ .MIC }}" data-amine="{{ .AmineCracking }}" data-sulfide="{{ .SulfideCracking }}">
                       <i class="mdi mdi-pencil-outline"></i>
                     </button>
                     <form action="/master-data/shell-material/delete/{{ .ID }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this material?')">
@@ -260,13 +281,14 @@
             <h5 class="mb-0" id="neck-form-title">Add Neck Material</h5>
           </div>
           <div class="card-body">
-            <form action="/master-data/simple-material/save" method="POST" class="row g-3">
+            <form action="/master-data/simple-material/save" method="POST" class="row g-3 needs-validation" novalidate id="neck-form">
               <input type="hidden" name="kind" value="neck" />
               <input type="hidden" name="id" id="neck_id" />
               <div class="col-md-5">
                 <div class="form-floating form-floating-outline">
                   <input type="text" class="form-control" name="name" id="neck_name" placeholder="Material Name" required />
                   <label>Material Name</label>
+                  <div class="invalid-feedback">Please enter the neck material name.</div>
                 </div>
               </div>
               <div class="col-md-4">
@@ -277,6 +299,7 @@
                     <option value="Non Cladded">Non Cladded</option>
                   </select>
                   <label>Clad Status</label>
+                  <div class="invalid-feedback">Please choose the clad status.</div>
                 </div>
               </div>
               <div class="col-md-3 d-flex gap-2">
@@ -309,7 +332,7 @@
                   <td>{{ .CladStatus }}</td>
                   <td>{{ .UsageCount }}</td>
                   <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-icon btn-outline-warning" onclick="editSimple('neck', '{{ .ID }}', '{{ .Name }}', '{{ .CladStatus }}')">
+                    <button type="button" class="btn btn-sm btn-icon btn-outline-warning js-edit-simple" data-prefix="neck" data-id="{{ .ID }}" data-name="{{ .Name }}" data-clad-status="{{ .CladStatus }}">
                       <i class="mdi mdi-pencil-outline"></i>
                     </button>
                     <form action="/master-data/simple-material/delete/neck/{{ .ID }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this material?')">
@@ -334,13 +357,14 @@
             <h5 class="mb-0" id="nozzle-form-title">Add Nozzle Material</h5>
           </div>
           <div class="card-body">
-            <form action="/master-data/simple-material/save" method="POST" class="row g-3">
+            <form action="/master-data/simple-material/save" method="POST" class="row g-3 needs-validation" novalidate id="nozzle-form">
               <input type="hidden" name="kind" value="nozzle" />
               <input type="hidden" name="id" id="nozzle_id" />
               <div class="col-md-5">
                 <div class="form-floating form-floating-outline">
                   <input type="text" class="form-control" name="name" id="nozzle_name" placeholder="Material Name" required />
                   <label>Material Name</label>
+                  <div class="invalid-feedback">Please enter the nozzle material name.</div>
                 </div>
               </div>
               <div class="col-md-4">
@@ -351,6 +375,7 @@
                     <option value="Non Cladded">Non Cladded</option>
                   </select>
                   <label>Clad Status</label>
+                  <div class="invalid-feedback">Please choose the clad status.</div>
                 </div>
               </div>
               <div class="col-md-3 d-flex gap-2">
@@ -383,7 +408,7 @@
                   <td>{{ .CladStatus }}</td>
                   <td>{{ .UsageCount }}</td>
                   <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-icon btn-outline-warning" onclick="editSimple('nozzle', '{{ .ID }}', '{{ .Name }}', '{{ .CladStatus }}')">
+                    <button type="button" class="btn btn-sm btn-icon btn-outline-warning js-edit-simple" data-prefix="nozzle" data-id="{{ .ID }}" data-name="{{ .Name }}" data-clad-status="{{ .CladStatus }}">
                       <i class="mdi mdi-pencil-outline"></i>
                     </button>
                     <form action="/master-data/simple-material/delete/nozzle/{{ .ID }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this material?')">
@@ -411,12 +436,26 @@
     document.getElementById(id).value = value || "";
   }
 
+  function getEquipmentTypeLabel(type) {
+    switch (type) {
+      case "EQT1":
+        return "Vessel";
+      case "EQT2":
+        return "Column / Tower";
+      case "EQT3":
+        return "Heat Exchanger";
+      default:
+        return "Equipment";
+    }
+  }
+
   function editEquipment(id, name, type, groupName) {
     setValue("equipment_id", id);
     setValue("equipment_name", name);
     setValue("equipment_type", type);
     setValue("equipment_group", groupName);
-    document.getElementById("equipment-form-title").textContent = "Edit Equipment";
+    document.getElementById("equipment-form-title").textContent = "Edit " + getEquipmentTypeLabel(type);
+    document.getElementById("equipment-form").classList.remove("was-validated");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -425,6 +464,7 @@
       setValue(id, "");
     });
     document.getElementById("equipment-form-title").textContent = "Add Equipment";
+    document.getElementById("equipment-form").classList.remove("was-validated");
   }
 
   function editShell(id, name, external, internal, co2, mic, amine, sulfide) {
@@ -437,6 +477,7 @@
     setValue("shell_amine", amine);
     setValue("shell_sulfide", sulfide);
     document.getElementById("shell-form-title").textContent = "Edit Shell / Head Material";
+    document.getElementById("shell-form").classList.remove("was-validated");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -445,6 +486,7 @@
       setValue(id, "");
     });
     document.getElementById("shell-form-title").textContent = "Add Shell / Head Material";
+    document.getElementById("shell-form").classList.remove("was-validated");
   }
 
   function editSimple(prefix, id, name, cladStatus) {
@@ -452,6 +494,8 @@
     setValue(prefix + "_name", name);
     setValue(prefix + "_clad_status", cladStatus);
     document.getElementById(prefix + "-form-title").textContent = "Edit " + (prefix === "neck" ? "Neck" : "Nozzle") + " Material";
+    document.getElementById(prefix + "-form").classList.remove("was-validated");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function resetSimple(prefix) {
@@ -459,7 +503,45 @@
     setValue(prefix + "_name", "");
     setValue(prefix + "_clad_status", "");
     document.getElementById(prefix + "-form-title").textContent = "Add " + (prefix === "neck" ? "Neck" : "Nozzle") + " Material";
+    document.getElementById(prefix + "-form").classList.remove("was-validated");
   }
+
+  document.querySelectorAll(".js-edit-equipment").forEach(function (button) {
+    button.addEventListener("click", function () {
+      editEquipment(this.dataset.id, this.dataset.name, this.dataset.type, this.dataset.group);
+    });
+  });
+
+  document.querySelectorAll(".js-edit-shell").forEach(function (button) {
+    button.addEventListener("click", function () {
+      editShell(
+        this.dataset.id,
+        this.dataset.name,
+        this.dataset.external,
+        this.dataset.internal,
+        this.dataset.co2,
+        this.dataset.mic,
+        this.dataset.amine,
+        this.dataset.sulfide
+      );
+    });
+  });
+
+  document.querySelectorAll(".js-edit-simple").forEach(function (button) {
+    button.addEventListener("click", function () {
+      editSimple(this.dataset.prefix, this.dataset.id, this.dataset.name, this.dataset.cladStatus);
+    });
+  });
+
+  document.querySelectorAll(".needs-validation").forEach(function (form) {
+    form.addEventListener("submit", function (event) {
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.classList.add("was-validated");
+    });
+  });
 </script>
 {{ end }}
 
