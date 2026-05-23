@@ -125,6 +125,9 @@
                 <div data-i18n="Dashboard">Dashboard</div>
               </a>
             </li>
+            <li class="menu-header fw-medium mt-4">
+              <span class="menu-header-text">Pressure Vessel Assessment</span>
+            </li>
             <li class="menu-item {{ if eq .ActiveMenu "assessment" }}active{{ end }}">
               <a href="/assessment/form" class="menu-link">
                 <i class="menu-icon tf-icons mdi mdi-clipboard-text-outline"></i>
@@ -140,8 +143,12 @@
             <li class="menu-item {{ if eq .ActiveMenu "master-data" }}active{{ end }}">
               <a href="/master-data" class="menu-link">
                 <i class="menu-icon tf-icons mdi mdi-database-cog-outline"></i>
-                <div data-i18n="Master Data">Master Data</div>
+                <div data-i18n="Master Data">Master Data Vessel</div>
               </a>
+            </li>
+            
+            <li class="menu-header fw-medium mt-4">
+              <span class="menu-header-text">Pipeline Assessment</span>
             </li>
           </ul>
         </aside>

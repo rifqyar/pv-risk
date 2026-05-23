@@ -565,6 +565,17 @@
       </h2>
       <div id="material" class="accordion-collapse collapse" data-bs-parent="#vesselAccordion">
         <div class="accordion-body">
+          
+          <div class="row mb-3">
+            <div class="col-12">
+              <div class="form-check bg-lighter p-2 rounded border border-danger" style="display: inline-block; padding-left: 2.5rem !important;">
+                <input class="form-check-input" type="checkbox" id="na_head_checkbox" name="na_head">
+                <label class="form-check-label text-danger fw-bold" for="na_head_checkbox">
+                  N/A (No Head / Quick Opening Closure / Enclosure)
+                </label>
+              </div>
+            </div>
+          </div>
           <div class="row align-items-center mb-4">
             <div class="col-md-4 mb-3">
               <div class="form-floating form-floating-outline">
@@ -575,7 +586,8 @@
                 <label>Shell Material Spec</label>
               </div>
             </div>
-            <div class="col-md-4 mb-3">
+
+            <div class="col-md-4 mb-3 head-input-group">
               <div class="form-floating form-floating-outline">
                 <select class="select2-tag form-select" name="head_material" id="head_material_spec" data-allow-clear="true">
                   <option value="">Select Material</option>
@@ -584,9 +596,10 @@
                 <label>Head Material Spec</label>
               </div>
             </div>
-            <div class="col-md-4 mb-3">
+
+            <div class="col-md-4 mb-3 head-input-group">
               <div class="form-floating form-floating-outline">
-                <select class="select2 form-select" name="type_head" data-allow-clear="true">
+                <select class="select2 form-select" name="type_head" id="type_head_select" data-allow-clear="true">
                   <option value="">Select Type</option>
                   {{ range .HeadTypes }}<option value="{{ .ID }}">{{ .Name }}</option>{{ end }}
                 </select>
@@ -594,7 +607,7 @@
               </div>
             </div>
 
-            <div class="row justify-content-center align-items-center mb-3" id="div_crown_knuckle_radius" style="display: none;">
+            <div class="row justify-content-center align-items-center mb-3 head-input-group" id="div_crown_knuckle_radius" style="display: none;">
               <div class="col-md-6 mb-3">
                 <label class="form-label">Crown Radius (L)</label>
                 <div class="input-group">
@@ -621,6 +634,7 @@
                 <label>Flange/Neck Material Specs</label>
               </div>
             </div>
+            
             <div class="col-md-4 mb-3">
               <div class="form-floating form-floating-outline">
                 <select class="select2-tag form-select" name="nozzle_material" id="nozzle_material_spec" data-allow-clear="true">
@@ -630,6 +644,7 @@
                 <label>Shell Material Spec (Nozzle)</label>
               </div>
             </div>
+            
             <div class="col-md-4 mb-3">
               <div class="form-floating form-floating-outline">
                 <input type="text" class="form-control" name="internal_parts_material" placeholder="e.g. SS316" />
@@ -653,9 +668,9 @@
               <div class="input-group input-group-merge">
                 <div class="form-floating form-floating-outline">
                   <select name="max_brinell" id="max_brinell" class="form-control">
-                    <option value="A">< 200</option>
+                    <option value="A">&lt; 200</option>
                     <option value="B">200 - 237</option>
-                    <option value="C">> 237</option>
+                    <option value="C">&gt; 237</option>
                   </select>
                   <label>Max Brinell Hardness</label>
                 </div>

@@ -3,7 +3,6 @@ package main
 import (
 	// "context"
 
-	"context"
 	"embed"
 	"html/template"
 	"io/fs"
@@ -86,54 +85,76 @@ func main() {
 		ctx.HTML(http.StatusOK, "splash.html", nil)
 	})
 	r.GET("/dashboard", controller.ShowDashboard)
-	r.GET("/master-data", controller.ShowMasterData)
-	r.POST("/master-data/equipment/save", controller.SaveMasterEquipment)
-	r.POST("/master-data/equipment/delete/:id", controller.DeleteMasterEquipment)
-	r.POST("/master-data/shell-material/save", controller.SaveShellMaterial)
-	r.POST("/master-data/shell-material/delete/:id", controller.DeleteShellMaterial)
-	r.POST("/master-data/simple-material/save", controller.SaveSimpleMaterial)
-	r.POST("/master-data/simple-material/delete/:kind/:id", controller.DeleteSimpleMaterial)
-	r.GET("/assessment/form", controller.ShowForm)
-	r.POST("/submit", controller.SubmitAssessment)
-	r.GET("/assessment/list", controller.ShowListAssessment)
-	r.GET("/assessment/view/:id", controller.ViewAssessmentDetail)
-	r.GET("/assessment/edit/:id", controller.EditAssessment)
-	r.DELETE("/assessment/delete/:id", controller.DeleteAssessment)
-	r.POST("/assessment/update-validate/:id", controller.UpdateValidate)
+
+	// Master Data
+	masterDataRoute := r.Group("/master-data")
+	{
+		masterDataRoute.GET("", controller.ShowMasterData)
+		masterDataRoute.POST("/equipment/save", controller.SaveMasterEquipment)
+		masterDataRoute.POST("/equipment/delete/:id", controller.DeleteMasterEquipment)
+		masterDataRoute.POST("/shell-material/save", controller.SaveShellMaterial)
+		masterDataRoute.POST("/shell-material/delete/:id", controller.DeleteShellMaterial)
+		masterDataRoute.POST("/simple-material/save", controller.SaveSimpleMaterial)
+		masterDataRoute.POST("/simple-material/delete/:kind/:id", controller.DeleteSimpleMaterial)
+	}
+
+	// Assessment PV
+	pressureVesselRoute := r.Group("/assessment")
+	{
+		pressureVesselRoute.GET("/form", controller.ShowForm)
+		pressureVesselRoute.POST("/submit", controller.SubmitAssessment)
+		pressureVesselRoute.GET("/list", controller.ShowListAssessment)
+		pressureVesselRoute.GET("/view/:id", controller.ViewAssessmentDetail)
+		pressureVesselRoute.GET("/edit/:id", controller.EditAssessment)
+		pressureVesselRoute.DELETE("/delete/:id", controller.DeleteAssessment)
+		pressureVesselRoute.POST("/update-validate/:id", controller.UpdateValidate)
+	}
+
+	// Assessment Pipeline
+	pipelineRoute := r.Group("/assessment-pipeline")
+	{
+		pipelineController := controller.PipelineController()
+		pipelineRoute.GET("/form", pipelineController.ShowForm)
+		pipelineRoute.POST("/submit", pipelineController.SubmitAssessment)
+		pipelineRoute.GET("/list", pipelineController.ShowListAssessment)
+		pipelineRoute.GET("/view/:id", pipelineController.ViewAssessmentDetail)
+		pipelineRoute.GET("/edit/:id", pipelineController.EditAssessment)
+		pipelineRoute.DELETE("/delete/:id", pipelineController.DeleteAssessment)
+	}
 
 	r.GET("/api/equipment-autofill/:id", controller.GetEquipmentAutofill)
 	r.GET("/api/assessment-detail/:id", controller.GetAssessmentByID)
 
 	// === DEV ===
-	// r.Run(":8080")
+	r.Run(":8080")
 
 	// ================= SERVER =================
-	srv := &http.Server{
-		Addr:    ":" + port,
-		Handler: r,
-	}
+	// srv := &http.Server{
+	// 	Addr:    ":" + port,
+	// 	Handler: r,
+	// }
 
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server error: %v", err)
-		}
-	}()
+	// go func() {
+	// 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	// 		log.Fatalf("server error: %v", err)
+	// 	}
+	// }()
 
-	// ================= WAIT SERVER READY =================
-	waitForServer(baseURL)
+	// // ================= WAIT SERVER READY =================
+	// waitForServer(baseURL)
 
-	// ================= RUN DESKTOP =================
-	runWebview(baseURL)
+	// // ================= RUN DESKTOP =================
+	// runWebview(baseURL)
 
-	// ================= SHUTDOWN =================
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	// // ================= SHUTDOWN =================
+	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Println("shutdown error:", err)
-	}
+	// if err := srv.Shutdown(ctx); err != nil {
+	// 	log.Println("shutdown error:", err)
+	// }
 
-	log.Println("app closed cleanly")
+	// log.Println("app closed cleanly")
 }
 
 // ================= HELPER =================

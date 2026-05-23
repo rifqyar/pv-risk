@@ -58,7 +58,6 @@ $(function () {
   initDefaultStates();
 
   let editEqId = $("#edit_equipment_id").val();
-  console.log(editEqId);
   if (editEqId) {
     Swal.fire({
       title: "Loading Data...",
@@ -647,7 +646,7 @@ $(function () {
 
         // 5. Tembak AJAX Request
         $.ajax({
-          url: "/submit",
+          url: "/assessment/submit",
           type: "POST",
           contentType: "application/json",
           data: JSON.stringify(payload),
@@ -691,6 +690,26 @@ $(function () {
         });
       }
     });
+  });
+
+  $("#na_head_checkbox").on("change", function () {
+    let isChecked = $(this).is(":checked");
+
+    if (isChecked) {
+      // Kalau dicentang: Disable semua input di dalam grup Head
+      $(".head-input-group").find("select, input").prop("disabled", true);
+
+      // Opsional: Kosongin isinya biar gak bingung
+      $("#head_material_spec").val(null).trigger("change");
+      $("#type_head_select").val(null).trigger("change");
+      $("input[name='crown_radius'], input[name='knuckle_radius']").val("");
+
+      // Sembunyikan form Crown/Knuckle kalau lagi kebuka
+      $("#div_crown_knuckle_radius").slideUp();
+    } else {
+      // Kalau centangan dilepas: Enable lagi
+      $(".head-input-group").find("select, input").prop("disabled", false);
+    }
   });
 
   // ==========================================
@@ -1021,10 +1040,8 @@ $(function () {
 
           // Clear all form
           $("#vesselAssessmentForm")
-            .find(
-              'input[type="text"], input[type="number"], select',
-            )
-            .not('#select2_equipment', 'input[name="diameter_type"]')
+            .find('input[type="text"], input[type="number"], select')
+            .not("#select2_equipment", 'input[name="diameter_type"]')
             .val("")
             .trigger("change");
 
@@ -1534,8 +1551,7 @@ $(function () {
 
     // C. HIC / SOHIC (Hanya menyerang Carbon Steel)
     let isStainless =
-      mat.co2_corr === "SS" ||
-      (mat.name && mat.name.includes("Stainless"));
+      mat.co2_corr === "SS" || (mat.name && mat.name.includes("Stainless"));
 
     if (isStainless) {
       res.hic = "Not"; // Stainless Steel kebal
@@ -1617,8 +1633,7 @@ $(function () {
 
     // D. CISCC (Hanya menyerang Stainless Steel)
     let isStainlessClSCC =
-      mat.co2_corr === "SS" ||
-      (mat.name && mat.name.includes("Stainless"));
+      mat.co2_corr === "SS" || (mat.name && mat.name.includes("Stainless"));
 
     if (!isStainlessClSCC) {
       res.ciscc = "Not"; // Carbon Steel atau Low Alloy kebal dari ClSCC
@@ -1666,8 +1681,7 @@ $(function () {
     }
 
     let isStainlessCO2 =
-      mat.co2_corr === "SS" ||
-      (mat.name && mat.name.includes("Stainless"));
+      mat.co2_corr === "SS" || (mat.name && mat.name.includes("Stainless"));
 
     if (isStainlessCO2) {
       res.co2 = "Not"; // Stainless Steel kebal CO2 Corrosion
@@ -1732,10 +1746,10 @@ $(function () {
     let tempC_MIC = opTemp || 0; // Dari Step 3
 
     let velValue = $("#select2_velocity").val();
-    let biocide_treatment = $('select[name="biocide_treatment"]').val()
+    let biocide_treatment = $('select[name="biocide_treatment"]').val();
 
     // Syarat MIC: Harus ada air & tidak ada biocide treatment
-    if (h2oMIC > 0 && biocide_treatment == 'Yes') {
+    if (h2oMIC > 0 && biocide_treatment == "Yes") {
       if (tempC_MIC >= 10 && tempC_MIC <= 93) {
         // Logika Kecepatan Aliran (Velocity) - STANDAR API 581
         if (velValue === "Vel1") {
@@ -2520,11 +2534,12 @@ $(function () {
     }
 
     // UPDATE SUMMARY GOVERNING
+    let isHeadNA = $("#na_head_checkbox").is(":checked");
     let all_rl = [
       results.shell.rl_st,
       results.shell.rl_lt,
-      results.head.rl_st,
-      results.head.rl_lt,
+      isHeadNA ? 99999 : results.head.rl_st,
+      isHeadNA ? 99999 : results.head.rl_lt,
       results.nozzle.rl_st,
       results.nozzle.rl_lt,
     ];
@@ -2541,7 +2556,7 @@ $(function () {
     if (min_rl && min_rl !== Infinity) {
       $("#summary_rem_life").html(
         (min_rl > 20 ? "> 20" : min_rl.toFixed(1)) +
-        ' <small class="fs-6 fw-normal text-muted">year(s)</small>',
+          ' <small class="fs-6 fw-normal text-muted">year(s)</small>',
       );
       $("#summary_rem_life_source").text("Component: " + governing_comp);
       let next_insp_interval = Math.min(min_rl / 2, 10);
@@ -2914,8 +2929,10 @@ $(function () {
       return isNaN(val) ? 999 : val;
     }
 
+    let isHeadNA = $("#na_head_checkbox").is(":checked");
+
     let rl_shell = parseRL("#sum_rlst_shell");
-    let rl_head = parseRL("#sum_rlst_head");
+    let rl_head = isHeadNA ? 9999 : parseRL("#sum_rlst_head");
     let rl_nozzle = parseRL("#sum_rlst_nozzle");
     let min_rl = Math.min(rl_shell, rl_head, rl_nozzle);
 
@@ -3268,6 +3285,8 @@ $(function () {
     // --- A. VALIDASI INPUTAN WAJIB (Mencegah data sampah masuk DB) ---
     let errors = [];
 
+    let isHeadNA = $("#na_head_checkbox").is(":checked");
+
     // Validasi Step 1 (Header Data)
     let tagNumber = $("input[name='tag_number']").val();
     let eqId = $("#select2_equipment").val();
@@ -3281,8 +3300,10 @@ $(function () {
     if (!tagNumber) errors.push("Step 1: Tag Number is required.");
     if (!eqId) errors.push("Step 1: Equipment must be selected.");
     if (!shellMaterial) errors.push("Step 1: Shell Material must be selected.");
-    if (!headMaterial) errors.push("Step 1: Head Material must be selected.");
-    if (!type_head) errors.push("Step 1: Type Head must be selected.");
+    if (!isHeadNA) {
+      if (!headMaterial) errors.push("Step 1: Head Material must be selected.");
+      if (!type_head) errors.push("Step 1: Type Head must be selected.");
+    }
     if (!neck_material) errors.push("Step 1: Neck Material must be selected.");
     if (!nozzle_material)
       errors.push("Step 1: Nozzle Material must be selected.");
@@ -3342,8 +3363,10 @@ $(function () {
         location: $("input[name='location']").val() || "",
 
         shell_material_id: parseInt($("#shell_material_spec").val()) || 0,
-        head_material_id: parseInt($("#head_material_spec").val()) || 0,
-        type_head: parseInt(type_head) || 0,
+        head_material_id: isHeadNA
+          ? null
+          : parseInt($("#head_material_spec").val()) || 0,
+        type_head: isHeadNA ? null : parseInt(type_head) || 0,
         neck_material_id: parseInt($("#neck_material_spec").val()) || 0,
         nozzle_material_id: parseInt($("#nozzle_material_spec").val()) || 0,
 
@@ -3361,9 +3384,12 @@ $(function () {
         construction_type: $("select[name='construction_type']").val() || "",
         mawp: parseFloat($("input[name='mawp']").val()) || 0,
         hydro_test: parseFloat($("input[name='hydro_test']").val()) || 0,
-        crown_radius: parseFloat($("input[name='crown_radius']").val()) || 0,
-        knuckle_radius:
-          parseFloat($("input[name='knuckle_radius']").val()) || 0,
+        crown_radius: isHeadNA
+          ? null
+          : parseFloat($("input[name='crown_radius']").val()) || 0,
+        knuckle_radius: isHeadNA
+          ? null
+          : parseFloat($("input[name='knuckle_radius']").val()) || 0,
         internal_parts_material:
           $("input[name='internal_parts_material']").val() || "",
         shell_contaminant: $("select[name='shell_contaminant']").val() || "",
@@ -3517,13 +3543,13 @@ $(function () {
             parseRemainingLife($("input[name='rem_life_st_shell']").val()) || 0,
         },
         head: {
-          prev_thick: parseFloat($("input[name='prev_thick_head']").val()) || 0,
-          act_thick: parseFloat($("input[name='act_thick_head']").val()) || 0,
-          t_req: parseFloat($("input[name='req_thick_head_mm']").val()) || 0,
+          prev_thick: isHeadNA ? 99999 : parseFloat($("input[name='prev_thick_head']").val()) || 0,
+          act_thick: isHeadNA ? 99999 : parseFloat($("input[name='act_thick_head']").val()) || 0,
+          t_req: isHeadNA ? 99999 : parseFloat($("input[name='req_thick_head_mm']").val()) || 0,
           corrosion_rate:
-            parseFloat($("input[name='cr_st_head_mm']").val()) || 0,
+            isHeadNA ? 99999 : parseFloat($("input[name='cr_st_head_mm']").val()) || 0,
           remaining_life:
-            parseRemainingLife($("input[name='rem_life_st_head']").val()) || 0,
+            isHeadNA ? 99999 : parseRemainingLife($("input[name='rem_life_st_head']").val()) || 0,
         },
         nozzle: {
           prev_thick:
