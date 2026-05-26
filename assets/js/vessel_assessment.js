@@ -597,8 +597,8 @@ $(function () {
   $("#btn_save_assessment").on("click", function (e) {
     e.preventDefault();
 
-    // 1. Kalkulasi dan Kumpulkan Payload Utama Dulu
-    calculateInspectionStrategy();
+    // Refresh readonly calculation fields before building the saved payload.
+    runMasterCalculations();
     let payload = validateAndCollectPayload();
 
     // Kalau form utama belum lengkap, stop di sini
