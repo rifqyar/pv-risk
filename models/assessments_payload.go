@@ -20,6 +20,7 @@ type EquipmentPayload struct {
 	ShellMaterialID   int    `json:"shell_material_id"`
 	HeadMaterialID    int    `json:"head_material_id"`
 	TypeHead          int    `json:"type_head"`
+	HeadEnclosure     bool   `json:"head_enclosure"`
 	NeckMaterialID    int    `json:"neck_material_id"`
 	NozzleMaterialID  int    `json:"nozzle_material_id"`
 

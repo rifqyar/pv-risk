@@ -208,19 +208,30 @@ func ViewAssessmentDetail(c *gin.Context) {
 		LEFT JOIN chloride_content cc ON a.chloride_index = cc.level
 		LEFT JOIN ph_category pc ON a.ph_index = pc.ph_index
 		LEFT JOIN (
-			SELECT assessment_id, 
-				MAX(corrosion_rate) as cr, MIN(remaining_life) as rl,
+			SELECT 
+				assessment_id, 
+				MAX(NULLIF(corrosion_rate, 99999)) as cr,
+				MIN(remaining_life) as rl,
 				MAX(CASE WHEN component_type = 'shell' THEN act_thick END) as shell_act,
 				MAX(CASE WHEN component_type = 'shell' THEN t_req END) as shell_treq,
-				MAX(CASE WHEN component_type = 'shell' THEN corrosion_rate END) as shell_cr,
+				MAX(CASE 
+					WHEN component_type = 'shell' AND corrosion_rate <> 99999 
+					THEN corrosion_rate 
+				END) as shell_cr,
 				MAX(CASE WHEN component_type = 'shell' THEN remaining_life END) as shell_rl,
 				MAX(CASE WHEN component_type = 'head' THEN act_thick END) as head_act,
 				MAX(CASE WHEN component_type = 'head' THEN t_req END) as head_treq,
-				MAX(CASE WHEN component_type = 'head' THEN corrosion_rate END) as head_cr,
+				MAX(CASE 
+					WHEN component_type = 'head' AND corrosion_rate <> 99999 
+					THEN corrosion_rate 
+				END) as head_cr,
 				MAX(CASE WHEN component_type = 'head' THEN remaining_life END) as head_rl,
 				MAX(CASE WHEN component_type = 'nozzle' THEN act_thick END) as noz_act,
 				MAX(CASE WHEN component_type = 'nozzle' THEN t_req END) as noz_treq,
-				MAX(CASE WHEN component_type = 'nozzle' THEN corrosion_rate END) as noz_cr,
+				MAX(CASE 
+					WHEN component_type = 'nozzle' AND corrosion_rate <> 99999 
+					THEN corrosion_rate 
+				END) as noz_cr,
 				MAX(CASE WHEN component_type = 'nozzle' THEN remaining_life END) as noz_rl
 			FROM assessment_thicknesses
 			GROUP BY assessment_id

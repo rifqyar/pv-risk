@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"pv-risk/config"
 	"pv-risk/models"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +23,7 @@ type AutofillData struct {
 	ShellMaterialID    int     `json:"shell_material_id"`
 	HeadMaterialID     int     `json:"head_material_id"`
 	TypeHead           int     `json:"type_head"`
+	HeadEnclosure      bool    `json:"head_enclosure"`
 	NeckMaterialID     int     `json:"neck_material_id"`
 	NozzleMaterialID   int     `json:"nozzle_material_id"`
 	DesignPressure     float64 `json:"design_pressure"`
@@ -231,7 +231,7 @@ func SubmitAssessment(c *gin.Context) {
 				design_pressure, design_pressure_tube, design_temp, design_temp_tube, diameter, diameter_tube, volume, 
 				diameter_type, diameter_unit, diameter_tube_type, diameter_tube_unit, length, length_unit, volume_unit, 
 				temp_design_unit, temp_design_tube_unit, pwht, certificate, data_reference, nozzle, nozzle_unit, phase_type, 
-				internal_lining, insulation, special_service, protection, cathodic_protection, head_material_id, type_head, 
+				internal_lining, insulation, special_service, protection, cathodic_protection, head_material_id, type_head, head_enclosure,
 				neck_material_id, nozzle_material_id, first_use, 
 				serial_number, equip_life, part_type, construction_code, joint_efficiency, joint_efficiency_head, joint_type, 
 				radiographic, construction_type, mawp, hydro_test, crown_radius, knuckle_radius, internal_parts_material, 
@@ -240,7 +240,7 @@ func SubmitAssessment(c *gin.Context) {
 				head_wall_thickness, nozzle_wall_thick, shell_thick_cladded, head_thick_cladded, nozzle_thick_cladded, 
 				prev_thick_shell, prev_thick_head, nozzle_previous_thick, act_thick_shell, act_thick_head, nozzle_actual_thick
 			) VALUES (
-				?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+				?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
 				?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 			)`,
 			masterEqID, payload.Equipment.TagNumber, payload.Equipment.Location, payload.Equipment.YearBuilt, payload.Equipment.ShellMaterialID,
@@ -249,7 +249,7 @@ func SubmitAssessment(c *gin.Context) {
 			payload.Equipment.DiameterTubeType, payload.Equipment.DiameterTubeUnit, payload.Equipment.Length, payload.Equipment.LengthUnit, payload.Equipment.VolumeUnit,
 			payload.Equipment.TempDesignUnit, payload.Equipment.TempDesignTubeUnit, payload.Equipment.Pwht, payload.Equipment.Certificate, payload.Equipment.DataReference,
 			payload.Equipment.Nozzle, payload.Equipment.NozzleUnit, payload.Equipment.PhaseType, payload.Equipment.InternalLining, payload.Equipment.Insulation,
-			payload.Equipment.SpecialService, payload.Equipment.Protection, payload.Equipment.CathodicProtection, payload.Equipment.HeadMaterialID, payload.Equipment.TypeHead,
+			payload.Equipment.SpecialService, payload.Equipment.Protection, payload.Equipment.CathodicProtection, payload.Equipment.HeadMaterialID, payload.Equipment.TypeHead, payload.Equipment.HeadEnclosure,
 			payload.Equipment.NeckMaterialID, payload.Equipment.NozzleMaterialID, payload.Equipment.FirstUse,
 			// New Variables
 			payload.Equipment.SerialNumber, payload.Equipment.EquipLife, payload.Equipment.PartType, payload.Equipment.ConstructionCode, payload.Equipment.JointEfficiency, payload.Equipment.JointEfficiencyHead, payload.Equipment.JointType,
@@ -261,10 +261,6 @@ func SubmitAssessment(c *gin.Context) {
 		)
 
 		if err != nil {
-			if strings.Contains(err.Error(), "UNIQUE constraint failed: trx_equipments.tag_number") {
-				c.JSON(http.StatusConflict, gin.H{"status": "error", "message": "Tag Number ini sudah pernah didaftarkan."})
-				return
-			}
 			log.Printf("[ERROR INSERT EQUIPMENT]: %v", err)
 			c.JSON(500, gin.H{"status": "error", "message": "Kendala saat menyimpan data."})
 			return
@@ -275,16 +271,16 @@ func SubmitAssessment(c *gin.Context) {
 	} else {
 		_, err = tx.Exec(`
 			UPDATE trx_equipments SET 
-				location=?, year_built=?, shell_material_id=?, design_pressure=?, design_temp=?, design_pressure_tube=?, design_temp_tube=?, diameter=?, diameter_tube=?, volume=?,
+				tag_number=?, location=?, year_built=?, shell_material_id=?, design_pressure=?, design_temp=?, design_pressure_tube=?, design_temp_tube=?, diameter=?, diameter_tube=?, volume=?,
 				diameter_type=?, diameter_unit=?, diameter_tube_type=?, diameter_tube_unit=?, length=?, length_unit=?, volume_unit=?, temp_design_unit=?, temp_design_tube_unit=?,
-				pwht=?, certificate=?, data_reference=?, nozzle=?, nozzle_unit=?, phase_type=?, internal_lining=?, insulation=?, special_service=?, protection=?, cathodic_protection=?, head_material_id=?, type_head=?, neck_material_id=?, nozzle_material_id=?, first_use=?,
+				pwht=?, certificate=?, data_reference=?, nozzle=?, nozzle_unit=?, phase_type=?, internal_lining=?, insulation=?, special_service=?, protection=?, cathodic_protection=?, head_material_id=?, type_head=?, head_enclosure=?, neck_material_id=?, nozzle_material_id=?, first_use=?,
 				serial_number=?, equip_life=?, part_type=?, construction_code=?, joint_efficiency=?, joint_efficiency_head=?, joint_type=?, radiographic=?, construction_type=?, mawp=?, hydro_test=?, crown_radius=?, knuckle_radius=?, internal_parts_material=?,
 				shell_contaminant=?, max_brinell=?, allowable_stress=?, inspection_interval=?, prev_inspection=?, act_inspection=?, corrosion_allowance=?, shell_clad_base_metal=?, head_clad_base_metal=?, nozzle_clad_base_metal=?, shell_wall_thickness=?,
 				head_wall_thickness=?, nozzle_wall_thick=?, shell_thick_cladded=?, head_thick_cladded=?, nozzle_thick_cladded=?, prev_thick_shell=?, prev_thick_head=?, nozzle_previous_thick=?, act_thick_shell=?, act_thick_head=?, nozzle_actual_thick=?
 			WHERE id=?`,
-			payload.Equipment.Location, payload.Equipment.YearBuilt, payload.Equipment.ShellMaterialID, payload.Equipment.DesignPressure, payload.Equipment.DesignTemp, payload.Equipment.DesignPressureTube, payload.Equipment.DesignTempTube, payload.Equipment.Diameter, payload.Equipment.DiameterTube, payload.Equipment.Volume,
+			payload.Equipment.TagNumber, payload.Equipment.Location, payload.Equipment.YearBuilt, payload.Equipment.ShellMaterialID, payload.Equipment.DesignPressure, payload.Equipment.DesignTemp, payload.Equipment.DesignPressureTube, payload.Equipment.DesignTempTube, payload.Equipment.Diameter, payload.Equipment.DiameterTube, payload.Equipment.Volume,
 			payload.Equipment.DiameterType, payload.Equipment.DiameterUnit, payload.Equipment.DiameterTubeType, payload.Equipment.DiameterTubeUnit, payload.Equipment.Length, payload.Equipment.LengthUnit, payload.Equipment.VolumeUnit, payload.Equipment.TempDesignUnit, payload.Equipment.TempDesignTubeUnit,
-			payload.Equipment.Pwht, payload.Equipment.Certificate, payload.Equipment.DataReference, payload.Equipment.Nozzle, payload.Equipment.NozzleUnit, payload.Equipment.PhaseType, payload.Equipment.InternalLining, payload.Equipment.Insulation, payload.Equipment.SpecialService, payload.Equipment.Protection, payload.Equipment.CathodicProtection, payload.Equipment.HeadMaterialID, payload.Equipment.TypeHead, payload.Equipment.NeckMaterialID, payload.Equipment.NozzleMaterialID, payload.Equipment.FirstUse,
+			payload.Equipment.Pwht, payload.Equipment.Certificate, payload.Equipment.DataReference, payload.Equipment.Nozzle, payload.Equipment.NozzleUnit, payload.Equipment.PhaseType, payload.Equipment.InternalLining, payload.Equipment.Insulation, payload.Equipment.SpecialService, payload.Equipment.Protection, payload.Equipment.CathodicProtection, payload.Equipment.HeadMaterialID, payload.Equipment.TypeHead, payload.Equipment.HeadEnclosure, payload.Equipment.NeckMaterialID, payload.Equipment.NozzleMaterialID, payload.Equipment.FirstUse,
 			// New Variables
 			payload.Equipment.SerialNumber, payload.Equipment.EquipLife, payload.Equipment.PartType, payload.Equipment.ConstructionCode, payload.Equipment.JointEfficiency, payload.Equipment.JointEfficiencyHead, payload.Equipment.JointType, payload.Equipment.Radiographic, payload.Equipment.ConstructionType, payload.Equipment.Mawp, payload.Equipment.HydroTest, payload.Equipment.CrownRadius, payload.Equipment.KnuckleRadius, payload.Equipment.InternalPartsMaterial,
 			payload.Equipment.ShellContaminant, payload.Equipment.MaxBrinell, payload.Equipment.AllowableStress, payload.Equipment.InspectionInterval, payload.Equipment.PrevInspection, payload.Equipment.ActInspection, payload.Equipment.CorrosionAllowance, payload.Equipment.ShellCladBaseMetal, payload.Equipment.HeadCladBaseMetal, payload.Equipment.NozzleCladBaseMetal, payload.Equipment.ShellWallThickness,
@@ -477,7 +473,7 @@ func GetAssessmentByID(c *gin.Context) {
 
 	query := `
 		SELECT 
-			COALESCE(t.tag_number, ''), COALESCE(t.location, ''), COALESCE(t.year_built, 0), COALESCE(t.shell_material_id, 0), COALESCE(t.head_material_id, 0), COALESCE(t.type_head, 0), COALESCE(t.neck_material_id, 0), COALESCE(t.nozzle_material_id, 0),
+			COALESCE(t.tag_number, ''), COALESCE(t.location, ''), COALESCE(t.year_built, 0), COALESCE(t.shell_material_id, 0), COALESCE(t.head_material_id, 0), COALESCE(t.type_head, 0), COALESCE(t.head_enclosure, 0), COALESCE(t.neck_material_id, 0), COALESCE(t.nozzle_material_id, 0),
 			COALESCE(t.design_pressure, 0), COALESCE(t.design_temp, 0), COALESCE(t.design_pressure_tube, 0), COALESCE(t.design_temp_tube, 0), COALESCE(t.diameter, 0), COALESCE(t.diameter_tube, 0), COALESCE(t.volume, 0),
 			COALESCE(t.diameter_type, 'inside'), COALESCE(t.diameter_unit, 'inch'), COALESCE(t.diameter_tube_type, 'inside'), COALESCE(t.diameter_tube_unit, 'inch'), COALESCE(CAST(NULLIF(t.length, '-') AS REAL), 0), COALESCE(t.length_unit, 'ft'), COALESCE(t.volume_unit, 'm3'), COALESCE(t.temp_design_unit, 'C'), COALESCE(t.temp_design_tube_unit, 'C'),
 			COALESCE(t.pwht, 'No'), COALESCE(t.certificate, '-'), COALESCE(t.data_reference, '-'), COALESCE(CAST(NULLIF(t.nozzle, '-') AS REAL), 0), COALESCE(t.nozzle_unit, 'inch'), COALESCE(t.phase_type, 'multi phase'), COALESCE(t.internal_lining, 'None'), COALESCE(t.insulation, 'No'), COALESCE(t.special_service, '-'), COALESCE(t.protection, '-'), COALESCE(t.cathodic_protection, 'No'), COALESCE(t.first_use, 0),
@@ -497,7 +493,7 @@ func GetAssessmentByID(c *gin.Context) {
 	`
 
 	err := db.QueryRow(query, assID).Scan(
-		&d.TagNumber, &d.Location, &d.YearBuilt, &d.ShellMaterialID, &d.HeadMaterialID, &d.TypeHead, &d.NeckMaterialID, &d.NozzleMaterialID,
+		&d.TagNumber, &d.Location, &d.YearBuilt, &d.ShellMaterialID, &d.HeadMaterialID, &d.TypeHead, &d.HeadEnclosure, &d.NeckMaterialID, &d.NozzleMaterialID,
 		&d.DesignPressure, &d.DesignTemp, &d.DesignPressureTube, &d.DesignTempTube, &d.Diameter, &d.DiameterTube, &d.Volume,
 		&d.DiameterType, &d.DiameterUnit, &d.DiameterTubeType, &d.DiameterTubeUnit, &d.Length, &d.LengthUnit, &d.VolumeUnit, &d.TempDesignUnit, &d.TempDesignTubeUnit,
 		&d.Pwht, &d.Certificate, &d.DataReference, &d.Nozzle, &d.NozzleUnit, &d.PhaseType, &d.InternalLining, &d.Insulation, &d.SpecialService, &d.Protection, &d.CathodicProtection, &d.FirstUse,
@@ -529,7 +525,7 @@ func GetEquipmentAutofill(c *gin.Context) {
 
 	query := `
 		SELECT 
-			COALESCE(t.tag_number, ''), COALESCE(t.location, ''), COALESCE(t.year_built, 0), COALESCE(t.shell_material_id, 0), COALESCE(t.head_material_id, 0), COALESCE(t.type_head, 0), COALESCE(t.neck_material_id, 0), COALESCE(t.nozzle_material_id, 0),
+			COALESCE(t.tag_number, ''), COALESCE(t.location, ''), COALESCE(t.year_built, 0), COALESCE(t.shell_material_id, 0), COALESCE(t.head_material_id, 0), COALESCE(t.type_head, 0), COALESCE(t.head_enclosure, 0), COALESCE(t.neck_material_id, 0), COALESCE(t.nozzle_material_id, 0),
 			COALESCE(t.design_pressure, 0), COALESCE(t.design_temp, 0), COALESCE(t.design_pressure_tube, 0), COALESCE(t.design_temp_tube, 0), COALESCE(t.diameter, 0), COALESCE(t.diameter_tube, 0), COALESCE(t.volume, 0),
 			COALESCE(t.diameter_type, 'inside'), COALESCE(t.diameter_unit, 'inch'), COALESCE(t.diameter_tube_type, 'inside'), COALESCE(t.diameter_tube_unit, 'inch'), COALESCE(CAST(NULLIF(t.length, '-') AS REAL), 0), COALESCE(t.length_unit, 'ft'), COALESCE(t.volume_unit, 'm3'), COALESCE(t.temp_design_unit, 'C'), COALESCE(t.temp_design_tube_unit, 'C'),
 			COALESCE(t.pwht, 'No'), COALESCE(t.certificate, '-'), COALESCE(t.data_reference, '-'), COALESCE(CAST(NULLIF(t.nozzle, '-') AS REAL), 0), COALESCE(t.nozzle_unit, 'inch'), COALESCE(t.phase_type, 'multi phase'), COALESCE(t.internal_lining, 'None'), COALESCE(t.insulation, 'No'), COALESCE(t.special_service, '-'), COALESCE(t.protection, '-'), COALESCE(t.cathodic_protection, 'No'), COALESCE(t.first_use, 0),
@@ -550,7 +546,7 @@ func GetEquipmentAutofill(c *gin.Context) {
 	`
 
 	err := db.QueryRow(query, eqID).Scan(
-		&d.TagNumber, &d.Location, &d.YearBuilt, &d.ShellMaterialID, &d.HeadMaterialID, &d.TypeHead, &d.NeckMaterialID, &d.NozzleMaterialID,
+		&d.TagNumber, &d.Location, &d.YearBuilt, &d.ShellMaterialID, &d.HeadMaterialID, &d.TypeHead, &d.HeadEnclosure, &d.NeckMaterialID, &d.NozzleMaterialID,
 		&d.DesignPressure, &d.DesignTemp, &d.DesignPressureTube, &d.DesignTempTube, &d.Diameter, &d.DiameterTube, &d.Volume,
 		&d.DiameterType, &d.DiameterUnit, &d.DiameterTubeType, &d.DiameterTubeUnit, &d.Length, &d.LengthUnit, &d.VolumeUnit, &d.TempDesignUnit, &d.TempDesignTubeUnit,
 		&d.Pwht, &d.Certificate, &d.DataReference, &d.Nozzle, &d.NozzleUnit, &d.PhaseType, &d.InternalLining, &d.Insulation, &d.SpecialService, &d.Protection, &d.CathodicProtection, &d.FirstUse,

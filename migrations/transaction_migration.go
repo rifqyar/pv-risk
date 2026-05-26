@@ -1,9 +1,11 @@
 package migrations
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 )
 
 // ==========================================
@@ -51,7 +53,7 @@ func EquipmentsTable(db *sql.DB) {
 	CREATE TABLE IF NOT EXISTS trx_equipments (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		equipment_id INTEGER UNIQUE NOT NULL,
-		tag_number TEXT UNIQUE NOT NULL,
+		tag_number TEXT NOT NULL,
 		year_built INTEGER,
 		shell_material_id INTEGER,
 		design_pressure REAL,
@@ -93,6 +95,7 @@ func EquipmentsTable(db *sql.DB) {
 	checkAndAddColumn(db, "trx_equipments", "cathodic_protection", "TEXT DEFAULT 'No'")
 	checkAndAddColumn(db, "trx_equipments", "head_material_id", "INTEGER DEFAULT null")
 	checkAndAddColumn(db, "trx_equipments", "type_head", "INTEGER DEFAULT null")
+	checkAndAddColumn(db, "trx_equipments", "head_enclosure", "INTEGER DEFAULT 0")
 	checkAndAddColumn(db, "trx_equipments", "neck_material_id", "INTEGER DEFAULT null")
 	checkAndAddColumn(db, "trx_equipments", "nozzle_material_id", "INTEGER DEFAULT null")
 	checkAndAddColumn(db, "trx_equipments", "first_use", "INTEGER DEFAULT null")
@@ -136,6 +139,87 @@ func EquipmentsTable(db *sql.DB) {
 	checkAndAddColumn(db, "trx_equipments", "act_thick_shell", "REAL DEFAULT 0")
 	checkAndAddColumn(db, "trx_equipments", "act_thick_head", "REAL DEFAULT 0")
 	checkAndAddColumn(db, "trx_equipments", "nozzle_actual_thick", "REAL DEFAULT 0")
+
+	removeTagNumberUniqueConstraint(db)
+}
+
+func removeTagNumberUniqueConstraint(db *sql.DB) {
+	ctx := context.Background()
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		log.Printf("Unable to acquire database connection for tag number migration: %v", err)
+		return
+	}
+	defer conn.Close()
+
+	var createSQL string
+	if err := conn.QueryRowContext(ctx, `SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'trx_equipments'`).Scan(&createSQL); err != nil {
+		log.Printf("Unable to read trx_equipments schema: %v", err)
+		return
+	}
+
+	updatedSQL := strings.Replace(createSQL, "tag_number TEXT UNIQUE NOT NULL", "tag_number TEXT NOT NULL", 1)
+	updatedSQL = strings.Replace(updatedSQL, "tag_number TEXT NOT NULL UNIQUE", "tag_number TEXT NOT NULL", 1)
+	if updatedSQL == createSQL {
+		return
+	}
+
+	migratedTableSQL := strings.Replace(updatedSQL, "CREATE TABLE trx_equipments", "CREATE TABLE trx_equipments_tag_migration", 1)
+	if migratedTableSQL == updatedSQL {
+		log.Printf("Unable to prepare trx_equipments schema without tag number uniqueness")
+		return
+	}
+
+	rows, err := conn.QueryContext(ctx, `PRAGMA table_info(trx_equipments)`)
+	if err != nil {
+		log.Printf("Unable to read trx_equipments columns: %v", err)
+		return
+	}
+	var columns []string
+	for rows.Next() {
+		var cid, notNull, pk int
+		var name, columnType string
+		var defaultValue interface{}
+		if err := rows.Scan(&cid, &name, &columnType, &notNull, &defaultValue, &pk); err != nil {
+			rows.Close()
+			log.Printf("Unable to scan trx_equipments columns: %v", err)
+			return
+		}
+		columns = append(columns, `"`+strings.ReplaceAll(name, `"`, `""`)+`"`)
+	}
+	rows.Close()
+
+	if _, err = conn.ExecContext(ctx, "PRAGMA foreign_keys = OFF"); err != nil {
+		log.Printf("Unable to disable foreign key checks for tag number migration: %v", err)
+		return
+	}
+	defer conn.ExecContext(ctx, "PRAGMA foreign_keys = ON")
+
+	tx, err := conn.BeginTx(ctx, nil)
+	if err != nil {
+		log.Printf("Unable to migrate trx_equipments tag number constraint: %v", err)
+		return
+	}
+	defer tx.Rollback()
+
+	if _, err = tx.ExecContext(ctx, migratedTableSQL); err == nil {
+		columnList := strings.Join(columns, ", ")
+		_, err = tx.ExecContext(ctx, fmt.Sprintf("INSERT INTO trx_equipments_tag_migration (%s) SELECT %s FROM trx_equipments", columnList, columnList))
+	}
+	if err == nil {
+		_, err = tx.ExecContext(ctx, "DROP TABLE trx_equipments")
+	}
+	if err == nil {
+		_, err = tx.ExecContext(ctx, "ALTER TABLE trx_equipments_tag_migration RENAME TO trx_equipments")
+	}
+	if err == nil {
+		err = tx.Commit()
+	}
+	if err != nil {
+		log.Printf("Unable to remove tag number uniqueness: %v", err)
+		return
+	}
+	log.Println("Auto-Migration: tag_number can now be reused across assessments")
 }
 
 // ==========================================

@@ -83,8 +83,11 @@ $(function () {
           $("select[name='year_build']").val(d.year_built).trigger("change");
           $("select[name='first_use']").val(d.first_use).trigger("change");
           $("#shell_material_spec").val(d.shell_material_id).trigger("change");
-          $("#head_material_spec").val(d.shell_material_id).trigger("change");
+          $("#head_material_spec").val(d.head_material_id).trigger("change");
           $("select[name='type_head']").val(d.type_head).trigger("change");
+          $("#na_head_checkbox")
+            .prop("checked", Boolean(d.head_enclosure))
+            .trigger("change");
           $("select[name='neck_material']")
             .val(d.neck_material_id)
             .trigger("change");
@@ -754,8 +757,11 @@ $(function () {
           $("select[name='year_build']").val(d.year_built).trigger("change");
           $("select[name='first_use']").val(d.first_use).trigger("change");
           $("#shell_material_spec").val(d.shell_material_id).trigger("change");
-          $("#head_material_spec").val(d.shell_material_id).trigger("change");
+          $("#head_material_spec").val(d.head_material_id).trigger("change");
           $("select[name='type_head']").val(d.type_head).trigger("change");
+          $("#na_head_checkbox")
+            .prop("checked", Boolean(d.head_enclosure))
+            .trigger("change");
           $("select[name='neck_material']")
             .val(d.neck_material_id)
             .trigger("change");
@@ -3367,6 +3373,7 @@ $(function () {
           ? null
           : parseInt($("#head_material_spec").val()) || 0,
         type_head: isHeadNA ? null : parseInt(type_head) || 0,
+        head_enclosure: isHeadNA,
         neck_material_id: parseInt($("#neck_material_spec").val()) || 0,
         nozzle_material_id: parseInt($("#nozzle_material_spec").val()) || 0,
 
