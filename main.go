@@ -3,8 +3,8 @@ package main
 import (
 	// "context"
 
-	"context"
 	"embed"
+	"encoding/json"
 	"html/template"
 	"io/fs"
 	"log"
@@ -59,6 +59,13 @@ func main() {
 		},
 		"mul": func(a, b int) int {
 			return a * b
+		},
+		"toJSON": func(v interface{}) template.JS {
+			b, err := json.Marshal(v)
+			if err != nil {
+				return template.JS("null")
+			}
+			return template.JS(b)
 		},
 	})
 
@@ -120,42 +127,46 @@ func main() {
 		pipelineRoute.GET("/list", pipelineController.ShowListAssessment)
 		pipelineRoute.GET("/view/:id", pipelineController.ViewAssessmentDetail)
 		pipelineRoute.GET("/edit/:id", pipelineController.EditAssessment)
+		pipelineRoute.POST("/update/:id", pipelineController.UpdateAssessment)
+		pipelineRoute.POST("/preview", pipelineController.PreviewAssessment)
+		pipelineRoute.POST("/calculate/:id", pipelineController.CalculateAssessment)
 		pipelineRoute.DELETE("/delete/:id", pipelineController.DeleteAssessment)
+		pipelineRoute.GET("/gas", pipelineController.ShowGasComingSoon)
 	}
 
 	r.GET("/api/equipment-autofill/:id", controller.GetEquipmentAutofill)
 	r.GET("/api/assessment-detail/:id", controller.GetAssessmentByID)
 
 	// === DEV ===
-	// r.Run(":8080")
+	r.Run(":8081")
 
 	// ================= SERVER =================
-	srv := &http.Server{
-		Addr:    ":" + port,
-		Handler: r,
-	}
+	// srv := &http.Server{
+	// 	Addr:    ":" + port,
+	// 	Handler: r,
+	// }
 
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server error: %v", err)
-		}
-	}()
+	// go func() {
+	// 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	// 		log.Fatalf("server error: %v", err)
+	// 	}
+	// }()
 
-	// ================= WAIT SERVER READY =================
-	waitForServer(baseURL)
+	// // ================= WAIT SERVER READY =================
+	// waitForServer(baseURL)
 
-	// ================= RUN DESKTOP =================
-	runWebview(baseURL)
+	// // ================= RUN DESKTOP =================
+	// runWebview(baseURL)
 
-	// ================= SHUTDOWN =================
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	// // ================= SHUTDOWN =================
+	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Println("shutdown error:", err)
-	}
+	// if err := srv.Shutdown(ctx); err != nil {
+	// 	log.Println("shutdown error:", err)
+	// }
 
-	log.Println("app closed cleanly")
+	// log.Println("app closed cleanly")
 }
 
 // ================= HELPER =================

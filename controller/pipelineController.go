@@ -89,10 +89,6 @@ func (ctrl *NewPipelineController) EditAssessment(c *gin.Context) {
 		c.String(http.StatusNotFound, "Pipeline assessment not found")
 		return
 	}
-	if assessment.Status != models.PipelineOilStatusDraft {
-		c.Redirect(http.StatusFound, "/assessment-pipeline/view/"+strconv.Itoa(id))
-		return
-	}
 	c.HTML(http.StatusOK, "pipeline_assessment_form.html", gin.H{
 		"ActiveMenu":   "pipeline-oil-form",
 		"Mode":         "edit",
@@ -152,7 +148,22 @@ func (ctrl *NewPipelineController) CalculateAssessment(c *gin.Context) {
 		c.JSON(statusFromPipelineError(err), gin.H{"status": "error", "message": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Pipeline calculation saved.", "id": id, "result": result})
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Pipeline assessment saved.", "id": id, "result": result})
+}
+
+func (ctrl *NewPipelineController) PreviewAssessment(c *gin.Context) {
+	var input models.PipelineOilInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid JSON Payload: " + err.Error()})
+		return
+	}
+	service := models.NewPipelineOilService(config.DB)
+	result, err := service.PreviewAssessment(input)
+	if err != nil {
+		c.JSON(statusFromPipelineError(err), gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Pipeline calculation ready for review.", "result": result})
 }
 
 func (ctrl *NewPipelineController) ShowGasComingSoon(c *gin.Context) {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"html/template"
 	"testing"
 )
@@ -16,6 +17,13 @@ func TestEmbeddedTemplatesParse(t *testing.T) {
 		},
 		"mul": func(a, b int) int {
 			return a * b
+		},
+		"toJSON": func(v interface{}) template.JS {
+			b, err := json.Marshal(v)
+			if err != nil {
+				return template.JS("null")
+			}
+			return template.JS(b)
 		},
 	}).ParseFS(templateFS,
 		"templates/*.html",

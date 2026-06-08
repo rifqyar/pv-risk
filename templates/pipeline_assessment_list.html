@@ -1,30 +1,79 @@
 {{ define "pipeline_list_content" }}
 <div class="content-wrapper">
   <div class="container-xxl flex-grow-1 container-p-y">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h4 class="mb-1">Pipeline Assessments</h4>
-        <div class="text-muted small">Draft and calculated Pipeline assessment records.</div>
-      </div>
-      <a href="/assessment-pipeline/form" class="btn btn-primary"><i class="mdi mdi-plus me-1"></i> New Pipeline</a>
-    </div>
+    <h4 class="py-3 mb-4">
+      <span class="text-muted fw-light">Risk Assessment / Pipeline /</span>
+      Assessment Records
+    </h4>
 
-    <div class="card">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr><th>Report No.</th><th>Line Identification</th><th>Service</th><th>Status</th><th>Risk</th><th>Remaining Life</th><th>Updated</th><th class="text-center">Actions</th></tr>
+    <div class="card shadow-sm">
+      <div class="card-header d-flex flex-column flex-lg-row justify-content-between gap-3">
+        <div>
+          <h5 class="mb-1">Pipeline Assessment</h5>
+          <p class="text-muted mb-0 small">Review saved pipeline risk assessments and continue draft calculations.</p>
+        </div>
+        <a href="/assessment-pipeline/form" class="btn btn-primary">
+          <i class="mdi mdi-plus me-1"></i> New Assessment
+        </a>
+      </div>
+
+      <div class="table-responsive text-nowrap">
+        <table class="table table-hover table-borderless border-top align-middle" id="pipelineAssessmentTable">
+          <thead class="bg-light">
+            <tr>
+              <th class="fw-bold">TAG NUMBER</th>
+              <th class="fw-bold">PIPELINE NAME</th>
+              <th class="fw-bold">FLUID TYPE</th>
+              <th class="fw-bold">LOCATION</th>
+              <th class="fw-bold">PoF</th>
+              <th class="fw-bold">CoF</th>
+              <th class="fw-bold">RISK CODE</th>
+              <th class="fw-bold">RISK LEVEL</th>
+              <th class="fw-bold">ASSESSMENT DATE</th>
+              <th class="fw-bold text-center">ACTIONS</th>
+            </tr>
           </thead>
           <tbody>
             {{ range .Assessments }}
             <tr>
-              <td class="fw-semibold">{{ .Input.ReportNo }}</td>
-              <td class="text-wrap" style="min-width: 280px;">{{ .Input.LineIdentification }}</td>
-              <td>{{ .Input.Service }}</td>
-              <td><span class="badge bg-label-primary">{{ .Status }}</span></td>
-              <td>{{ if .Result }}{{ .Result.RiskRanking }}{{ else }}Pending{{ end }}</td>
-              <td>{{ if .Result }}{{ .Result.RemainingLifeYears }} years{{ else }}-{{ end }}</td>
-              <td>{{ .UpdatedAt }}</td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="avatar avatar-sm me-3">
+                    <span class="avatar-initial rounded bg-label-primary"><i class="mdi mdi-pipe"></i></span>
+                  </div>
+                  <span class="text-heading fw-semibold">{{ .Input.ReportNo }}</span>
+                </div>
+              </td>
+              <td class="text-wrap" style="min-width: 260px;">
+                <span class="fw-medium">{{ .Input.LineIdentification }}</span>
+              </td>
+              <td>
+                {{ if eq .Input.Service "Gas" }}
+                <span class="badge rounded-pill bg-label-info">GAS</span>
+                {{ else }}
+                <span class="badge rounded-pill bg-label-primary">{{ .Input.Service }}</span>
+                {{ end }}
+              </td>
+              <td class="text-wrap" style="min-width: 180px;">{{ .Input.Location }}</td>
+              <td>{{ if .Result }}<span class="badge bg-label-secondary">{{ .Result.PoF }}</span>{{ else }}<span class="text-muted">Pending</span>{{ end }}</td>
+              <td>{{ if .Result }}<span class="badge bg-label-secondary">{{ .Result.CoF }}</span>{{ else }}<span class="text-muted">Pending</span>{{ end }}</td>
+              <td>{{ if .Result }}<span class="fw-bold">{{ .Result.FinalRiskCode }}</span>{{ else }}-{{ end }}</td>
+              <td>
+                {{ if .Result }}
+                  {{ if eq .Result.FinalRiskLevel "Critical Risk" }}
+                  <span class="badge rounded-pill bg-label-dark">CRITICAL RISK</span>
+                  {{ else if eq .Result.FinalRiskLevel "High Risk" }}
+                  <span class="badge rounded-pill bg-label-danger">HIGH RISK</span>
+                  {{ else if eq .Result.FinalRiskLevel "Medium Risk" }}
+                  <span class="badge rounded-pill bg-label-warning">MEDIUM RISK</span>
+                  {{ else }}
+                  <span class="badge rounded-pill bg-label-success">LOW RISK</span>
+                  {{ end }}
+                {{ else }}
+                <span class="badge rounded-pill bg-label-secondary">{{ .Status }}</span>
+                {{ end }}
+              </td>
+              <td><i class="mdi mdi-calendar-blank-outline text-muted me-1"></i>{{ .UpdatedAt }}</td>
               <td class="text-center">
                 <div class="dropdown">
                   <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="mdi mdi-dots-vertical"></i></button>
@@ -37,8 +86,21 @@
               </td>
             </tr>
             {{ else }}
-            <tr><td colspan="8" class="text-center text-muted py-5">No Pipeline Oil assessment records found.</td></tr>
+            <tr class="pipeline-empty-row">
+              <td colspan="10" class="text-center py-5 text-muted">
+                <i class="mdi mdi-pipe-disconnected mdi-48px mb-2"></i><br>
+                <div class="fw-semibold mb-1">No pipeline assessments yet.</div>
+                <div class="small mb-3">Create the first assessment to calculate pipeline risk.</div>
+                <a href="/assessment-pipeline/form" class="btn btn-sm btn-primary"><i class="mdi mdi-plus me-1"></i> New Pipeline Assessment</a>
+              </td>
+            </tr>
             {{ end }}
+            <tr id="pipelineNoSearchResult" class="d-none">
+              <td colspan="10" class="text-center py-5 text-muted">
+                <i class="mdi mdi-file-search-outline mdi-36px mb-2"></i><br>
+                No matching pipeline assessment found.
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -50,17 +112,42 @@
 {{ define "pipeline_list_scripts" }}
 <script>
 function archivePipelineAssessment(id) {
-  Swal.fire({title: "Archive assessment?", icon: "warning", showCancelButton: true, confirmButtonText: "Archive"}).then((result) => {
+  Swal.fire({
+    title: "Archive pipeline assessment?",
+    text: "The record will be hidden from the active list.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Archive",
+    cancelButtonText: "Cancel",
+    customClass: {
+      confirmButton: "btn btn-danger me-2",
+      cancelButton: "btn btn-outline-secondary"
+    },
+    buttonsStyling: false
+  }).then((result) => {
     if (!result.isConfirmed) return;
     fetch(`/assessment-pipeline/delete/${id}`, { method: "DELETE" })
       .then((r) => r.json())
       .then((res) => {
         if (res.status === "success") window.location.reload();
-        else Swal.fire("Failed", res.message, "error");
+        else Swal.fire("Failed", res.message || "Unable to archive assessment.", "error");
       })
       .catch(() => Swal.fire("Error", "Failed to connect to server.", "error"));
   });
 }
+
+$(function () {
+  $("#pipelineListSearch").on("input", function () {
+    const query = $(this).val().toLowerCase().trim();
+    let visible = 0;
+    $("#pipelineAssessmentTable tbody tr").not("#pipelineNoSearchResult, .pipeline-empty-row").each(function () {
+      const match = $(this).text().toLowerCase().includes(query);
+      $(this).toggle(match);
+      if (match) visible += 1;
+    });
+    $("#pipelineNoSearchResult").toggleClass("d-none", visible !== 0 || $(".pipeline-empty-row").length > 0);
+  });
+});
 </script>
 {{ end }}
 {{ template "layouts/master" . }}

@@ -330,6 +330,15 @@ func (s *PipelineOilService) CalculateAssessment(id int, input PipelineOilInput)
 	return result, s.repo.SaveCalculationResult(id, input, result)
 }
 
+func (s *PipelineOilService) PreviewAssessment(input PipelineOilInput) (*PipelineOilResult, error) {
+	applyPipelineOilDefaults(&input)
+	result, errs := CalculatePipelineOil(input)
+	if len(errs) > 0 {
+		return nil, fmt.Errorf("%w: %s", ErrPipelineValidation, formatPipelineValidationErrors(errs))
+	}
+	return result, nil
+}
+
 func (s *PipelineOilService) GetAssessmentDetail(id int) (*PipelineOilAssessment, error) {
 	return s.repo.GetAssessment(id)
 }
@@ -410,10 +419,10 @@ func (r *PipelineOilRepository) SaveCalculationResult(id int, input PipelineOilI
 		SET status=?, report_no=?, line_identification=?, owner_user=?, location=?, service=?,
 			assessment_by=?, formula_version=?, input_json=?, result_json=?, formula_trace_json=?,
 			snapshot_json=?, updated_by=?, updated_at=CURRENT_TIMESTAMP
-		WHERE id=? AND status=?`,
+		WHERE id=? AND status <> ?`,
 		PipelineOilStatusCalculated, input.ReportNo, input.LineIdentification, input.OwnerUser,
 		input.Location, input.Service, input.AssessmentBy, PipelineOilFormulaVersion, inputJSON,
-		resultJSON, traceJSON, snapshotJSON, input.AssessmentBy, id, PipelineOilStatusDraft,
+		resultJSON, traceJSON, snapshotJSON, input.AssessmentBy, id, PipelineOilStatusArchived,
 	)
 	if err != nil {
 		return err
