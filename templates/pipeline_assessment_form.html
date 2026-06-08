@@ -1,0 +1,203 @@
+{{ define "pipeline_form_content" }}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="mb-1">Pipeline Assessment</h4>
+        <div class="text-muted small">RBI 571 / RBI 581 structural module based on workbook formulas.</div>
+      </div>
+      <a href="/assessment-pipeline/list" class="btn btn-outline-secondary">
+        <i class="mdi mdi-arrow-left me-1"></i> Back
+      </a>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <div id="wizard-pipeline-assessment" class="bs-stepper vertical wizard-modern shadow-none">
+              <div class="bs-stepper-header">
+                <div class="step" data-target="#pipeline-step-1">
+                  <button type="button" class="step-trigger">
+                    <span class="bs-stepper-circle"><i class="mdi mdi-information-outline"></i></span>
+                    <span class="bs-stepper-label">
+                      <span class="bs-stepper-number">01</span>
+                      <span class="d-flex flex-column gap-1 ms-2 text-start">
+                        <span class="bs-stepper-title">Asset Identity</span>
+                        <span class="bs-stepper-subtitle">Pipeline Header</span>
+                      </span>
+                    </span>
+                  </button>
+                </div>
+                <div class="line"></div>
+
+                <div class="step" data-target="#pipeline-step-2">
+                  <button type="button" class="step-trigger">
+                    <span class="bs-stepper-circle"><i class="mdi mdi-ruler-square"></i></span>
+                    <span class="bs-stepper-label">
+                      <span class="bs-stepper-number">02</span>
+                      <span class="d-flex flex-column gap-1 ms-2 text-start">
+                        <span class="bs-stepper-title">Design & Material</span>
+                        <span class="bs-stepper-subtitle">ASME B31.4 Data</span>
+                      </span>
+                    </span>
+                  </button>
+                </div>
+                <div class="line"></div>
+
+                <div class="step" data-target="#pipeline-step-3">
+                  <button type="button" class="step-trigger">
+                    <span class="bs-stepper-circle"><i class="mdi mdi-shield-check-outline"></i></span>
+                    <span class="bs-stepper-label">
+                      <span class="bs-stepper-number">03</span>
+                      <span class="d-flex flex-column gap-1 ms-2 text-start">
+                        <span class="bs-stepper-title">Protection & RBI</span>
+                        <span class="bs-stepper-subtitle">Inspection Context</span>
+                      </span>
+                    </span>
+                  </button>
+                </div>
+                <div class="line"></div>
+
+                <div class="step" data-target="#pipeline-step-4">
+                  <button type="button" class="step-trigger">
+                    <span class="bs-stepper-circle"><i class="mdi mdi-calculator"></i></span>
+                    <span class="bs-stepper-label">
+                      <span class="bs-stepper-number">04</span>
+                      <span class="d-flex flex-column gap-1 ms-2 text-start">
+                        <span class="bs-stepper-title">Calculation</span>
+                        <span class="bs-stepper-subtitle">Thickness Points</span>
+                      </span>
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="bs-stepper-content">
+                <form id="pipelineOilForm" data-mode="{{ .Mode }}" data-assessment-id="{{ .AssessmentID }}" onsubmit="return false;">
+                  <div id="pipeline-step-1" class="content">
+                    <div class="row g-3">
+                      <div class="col-md-4"><label class="form-label">Report No. <span class="text-danger">*</span></label><input class="form-control" name="report_no" value="{{ .Input.ReportNo }}" required></div>
+                      <div class="col-md-4"><label class="form-label">Place Issued</label><input class="form-control" name="place_issued" value="{{ .Input.PlaceIssued }}"></div>
+                      <div class="col-md-4"><label class="form-label">Date Issued</label><input class="form-control" name="date_issued" value="{{ .Input.DateIssued }}"></div>
+                      <div class="col-md-4"><label class="form-label">Owner/User</label><input class="form-control" name="owner_user" value="{{ .Input.OwnerUser }}"></div>
+                      <div class="col-md-4"><label class="form-label">Contractor</label><input class="form-control" name="contractor" value="{{ .Input.Contractor }}"></div>
+                      <div class="col-md-4"><label class="form-label">Location</label><input class="form-control" name="location" value="{{ .Input.Location }}"></div>
+                      <div class="col-md-8"><label class="form-label">Line Identification <span class="text-danger">*</span></label><input class="form-control" name="line_identification" value="{{ .Input.LineIdentification }}" required></div>
+                      <div class="col-md-2"><label class="form-label">Year Built</label><input type="number" class="form-control" name="year_built" value="{{ .Input.YearBuilt }}"></div>
+                      <div class="col-md-2"><label class="form-label">Year Used</label><input type="number" class="form-control" name="year_used" value="{{ .Input.YearUsed }}"></div>
+                      <div class="col-md-4">
+                        <label class="form-label">Service <span class="text-danger">*</span></label>
+                        <select class="form-select" name="service">
+                          <option value="Oil" {{ if eq .Input.Service "Oil" }}selected{{ end }}>Oil</option>
+                          <option value="Gas" {{ if eq .Input.Service "Gas" }}selected{{ end }}>Gas</option>
+                        </select>
+                      </div>
+                      <div class="col-md-8"><label class="form-label">Pipe Size</label><input class="form-control" name="pipe_size" value="{{ .Input.PipeSize }}"></div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-4">
+                      <button type="button" class="btn btn-primary pipeline-step-next">Next <i class="mdi mdi-arrow-right ms-1"></i></button>
+                    </div>
+                  </div>
+
+                  <div id="pipeline-step-2" class="content">
+                    <div class="row g-3">
+                      <div class="col-md-3"><label class="form-label">Pipe Length <span class="text-muted">(m)</span></label><input type="number" step="any" class="form-control" name="pipe_length_m" value="{{ .Input.PipeLengthM }}"></div>
+                      <div class="col-md-3"><label class="form-label">Outside Diameter <span class="text-muted">(in)</span></label><input type="number" step="any" class="form-control" name="outside_diameter_in" value="{{ .Input.OutsideDiameterIn }}"></div>
+                      <div class="col-md-3"><label class="form-label">Nominal Thickness <span class="text-muted">(mm)</span></label><input type="number" step="any" class="form-control" name="nominal_wall_thickness_mm" value="{{ .Input.NominalWallThicknessMM }}"></div>
+                      <div class="col-md-3"><label class="form-label">Actual Thickness <span class="text-muted">(mm)</span></label><input type="number" step="any" class="form-control" name="actual_wall_thickness_mm" value="{{ .Input.ActualWallThicknessMM }}"></div>
+                      <div class="col-md-3"><label class="form-label">Internal Design Pressure <span class="text-muted">(psig)</span></label><input type="number" step="any" class="form-control" name="internal_design_pressure_psi" value="{{ .Input.InternalDesignPressurePsi }}"></div>
+                      <div class="col-md-3"><label class="form-label">Operating Pressure <span class="text-muted">(psig)</span></label><input type="number" step="any" class="form-control" name="operating_pressure_psi" value="{{ .Input.OperatingPressurePsi }}"></div>
+                      <div class="col-md-3"><label class="form-label">Design Temperature <span class="text-muted">(&deg;F)</span></label><input type="number" step="any" class="form-control" name="design_temperature_f" value="{{ .Input.DesignTemperatureF }}"></div>
+                      <div class="col-md-3"><label class="form-label">Test Pressure <span class="text-muted">(psig)</span></label><input type="number" step="any" class="form-control" name="test_pressure_psi" value="{{ .Input.TestPressurePsi }}"></div>
+                      <div class="col-md-3"><label class="form-label">Material Spec.</label><input class="form-control" name="material_specification" value="{{ .Input.MaterialSpecification }}"></div>
+                      <div class="col-md-3"><label class="form-label">Flange Material Spec.</label><input class="form-control" name="flange_material_spec" value="{{ .Input.FlangeMaterialSpec }}"></div>
+                      <div class="col-md-3"><label class="form-label">SMYS <span class="text-muted">(psi)</span></label><input type="number" step="any" class="form-control" name="smys_psi" value="{{ .Input.SMYSPsi }}"></div>
+                      <div class="col-md-3"><label class="form-label">Material Stress <span class="text-muted">(psi)</span></label><input type="number" step="any" class="form-control" name="material_stress_psi" value="{{ .Input.MaterialStressPsi }}"></div>
+                      <div class="col-md-3"><label class="form-label">Joint Efficiency</label><input type="number" step="any" class="form-control" name="joint_efficiency" value="{{ .Input.JointEfficiency }}"></div>
+                      <div class="col-md-3"><label class="form-label">Quality Factor (E)</label><input type="number" step="any" class="form-control" name="quality_factor" value="{{ .Input.QualityFactor }}"></div>
+                      <div class="col-md-3"><label class="form-label">Weld Joint Factor (W)</label><input type="number" step="any" class="form-control" name="weld_joint_strength_factor" value="{{ .Input.WeldJointStrengthFactor }}"></div>
+                      <div class="col-md-3"><label class="form-label">Design Factor (F)</label><input type="number" step="any" class="form-control" name="design_factor" value="{{ .Input.DesignFactor }}"></div>
+                      <div class="col-md-3"><label class="form-label">Allowance <span class="text-muted">(in)</span></label><input type="number" step="any" class="form-control" name="allowance_in" value="{{ .Input.AllowanceIn }}"></div>
+                      <div class="col-md-3"><label class="form-label">Radiographic <span class="text-muted">(%)</span></label><input type="number" step="any" class="form-control" name="radiographic_percent" value="{{ .Input.RadiographicPercent }}"></div>
+                      <div class="col-md-3"><label class="form-label">Applicable Code</label><input class="form-control" name="applicable_code" value="{{ .Input.ApplicableCode }}"></div>
+                      <div class="col-md-3"><label class="form-label">Method of Joining</label><input class="form-control" name="method_of_joining" value="{{ .Input.MethodOfJoining }}"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                      <button type="button" class="btn btn-outline-secondary pipeline-step-prev"><i class="mdi mdi-arrow-left me-1"></i> Back</button>
+                      <button type="button" class="btn btn-primary pipeline-step-next">Next <i class="mdi mdi-arrow-right ms-1"></i></button>
+                    </div>
+                  </div>
+
+                  <div id="pipeline-step-3" class="content">
+                    <div class="row g-3">
+                      <div class="col-md-3"><label class="form-label">Coating Type</label><input class="form-control" name="coating_type" value="{{ .Input.CoatingType }}"></div>
+                      <div class="col-md-3"><label class="form-label">Corrosion Control</label><input class="form-control" name="corrosion_control" value="{{ .Input.CorrosionControl }}"></div>
+                      <div class="col-md-3"><label class="form-label">ROW <span class="text-muted">(m)</span></label><input class="form-control" name="right_of_way" value="{{ .Input.RightOfWay }}"></div>
+                      <div class="col-md-3"><label class="form-label">Area Classification</label><input class="form-control" name="area_classification" value="{{ .Input.AreaClassification }}"></div>
+                      <div class="col-md-4"><label class="form-label">Safety Device</label><input class="form-control" name="safety_device" value="{{ .Input.SafetyDevice }}"></div>
+                      <div class="col-md-4"><label class="form-label">Inspection Period</label><input class="form-control" name="inspection_period" value="{{ .Input.InspectionPeriod }}"></div>
+                      <div class="col-md-4"><label class="form-label">Inspection Result</label><input class="form-control" name="inspection_result" value="{{ .Input.InspectionResult }}"></div>
+                      <div class="col-md-4"><label class="form-label">Type of Installation</label><input class="form-control" name="type_of_installation" value="{{ .Input.TypeOfInstallation }}"></div>
+                      <div class="col-md-4"><label class="form-label">Previous SKPP</label><input class="form-control" name="previous_skpp" value="{{ .Input.PreviousSKPP }}"></div>
+                      <div class="col-md-4"><label class="form-label">Expiration Date</label><input class="form-control" name="expiration_date" value="{{ .Input.ExpirationDate }}"></div>
+                      <div class="col-md-4"><label class="form-label">Assessment By <span class="text-danger">*</span></label><input class="form-control" name="assessment_by" value="{{ .Input.AssessmentBy }}" required></div>
+                      <div class="col-md-4"><label class="form-label">Damage Mechanism</label><input class="form-control" name="damage_mechanism" value="{{ .Input.RBI.DamageMechanism }}"></div>
+                      <div class="col-md-4"><label class="form-label">Inspection Effectiveness</label><input class="form-control" name="inspection_effectivity" value="{{ .Input.RBI.InspectionEffectivity }}"></div>
+                      <div class="col-12"><label class="form-label">Engineering Notes</label><textarea class="form-control" rows="2" name="engineering_notes">{{ .Input.RBI.EngineeringNotes }}</textarea></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                      <button type="button" class="btn btn-outline-secondary pipeline-step-prev"><i class="mdi mdi-arrow-left me-1"></i> Back</button>
+                      <button type="button" class="btn btn-primary pipeline-step-next">Next <i class="mdi mdi-arrow-right ms-1"></i></button>
+                    </div>
+                  </div>
+
+                  <div id="pipeline-step-4" class="content">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <h5 class="mb-0">Thickness Measurement Points</h5>
+                      <button type="button" class="btn btn-sm btn-outline-primary" id="addPipelinePoint"><i class="mdi mdi-plus me-1"></i> Add Point</button>
+                    </div>
+                    <div class="table-responsive">
+                      <table class="table align-middle mb-0" id="pipelinePointsTable">
+                        <thead class="table-light">
+                          <tr><th>Point</th><th>Location Class</th><th>Installation</th><th>Nominal (mm)</th><th>Actual (mm)</th><th>Measured Year</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                          {{ range .Input.InspectionPoints }}
+                          <tr>
+                            <td><input class="form-control" name="inspection_point" value="{{ .InspectionPoint }}"></td>
+                            <td><input class="form-control" name="location_class" value="{{ .LocationClass }}"></td>
+                            <td><input class="form-control" name="installation_type" value="{{ .InstallationType }}"></td>
+                            <td><input type="number" step="any" class="form-control" name="point_nominal_thickness_mm" value="{{ .NominalThicknessMM }}"></td>
+                            <td><input type="number" step="any" class="form-control" name="point_actual_thickness_mm" value="{{ .ActualThicknessMM }}"></td>
+                            <td><input type="number" class="form-control" name="measured_year" value="{{ .MeasuredYear }}"></td>
+                            <td><button type="button" class="btn btn-sm btn-icon btn-outline-danger remove-point"><i class="mdi mdi-trash-can-outline"></i></button></td>
+                          </tr>
+                          {{ end }}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="d-flex justify-content-between flex-wrap gap-2 mt-4">
+                      <button type="button" class="btn btn-outline-secondary pipeline-step-prev"><i class="mdi mdi-arrow-left me-1"></i> Back</button>
+                      <div class="text-muted small">RBI PoF, CoF, and ranking stay as TODO_ENGINEERING_CONFIRMATION until formulas are provided.</div>
+                      <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary" id="savePipelineDraft"><i class="mdi mdi-content-save-outline me-1"></i> Save Draft</button>
+                        <button type="button" class="btn btn-primary" id="calculatePipelineOil"><i class="mdi mdi-calculator me-1"></i> Calculate & Save Result</button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{{ end }}
+
+{{ define "pipeline_form_scripts" }}
+<script src="/assets/js/pipeline_oil_assessment.js"></script>
+{{ end }}
+{{ template "layouts/master" . }}

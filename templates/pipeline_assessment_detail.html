@@ -1,0 +1,91 @@
+{{ define "pipeline_detail_content" }}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="mb-1">Pipeline Detail</h4>
+        <div class="text-muted small">Record #{{ .Assessment.ID }} | {{ .Assessment.Status }} | {{ .Assessment.FormulaVersion }}</div>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="/assessment-pipeline/list" class="btn btn-outline-secondary"><i class="mdi mdi-arrow-left me-1"></i> Back</a>
+        {{ if eq .Assessment.Status "DRAFT" }}<a href="/assessment-pipeline/edit/{{ .Assessment.ID }}" class="btn btn-primary"><i class="mdi mdi-pencil-outline me-1"></i> Edit Draft</a>{{ end }}
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="card h-100">
+          <div class="card-header"><h5 class="mb-0">Asset</h5></div>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between"><span>Report No.</span><strong class="text-end">{{ .Assessment.Input.ReportNo }}</strong></li>
+            <li class="list-group-item"><div class="text-muted small">Line Identification</div><div class="fw-semibold">{{ .Assessment.Input.LineIdentification }}</div></li>
+            <li class="list-group-item d-flex justify-content-between"><span>Owner</span><strong class="text-end">{{ .Assessment.Input.OwnerUser }}</strong></li>
+            <li class="list-group-item d-flex justify-content-between"><span>Service</span><strong>{{ .Assessment.Input.Service }}</strong></li>
+            <li class="list-group-item d-flex justify-content-between"><span>Location</span><strong class="text-end">{{ .Assessment.Input.Location }}</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="card h-100">
+          <div class="card-header"><h5 class="mb-0">Calculation Result</h5></div>
+          <div class="card-body">
+            {{ if .Assessment.Result }}
+            <div class="row g-3">
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">PoF</div><div class="fw-bold">{{ .Assessment.Result.PoF }}</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">CoF</div><div class="fw-bold">{{ .Assessment.Result.CoF }}</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">Risk Ranking</div><div class="fw-bold">{{ .Assessment.Result.RiskRanking }}</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">Remaining Life</div><div class="fw-bold">{{ .Assessment.Result.RemainingLifeYears }} years</div></div></div>
+              <div class="col-md-4"><div class="p-3 border rounded"><div class="text-muted small">Required Thickness</div><div class="fw-bold">{{ .Assessment.Result.SummaryRequiredThicknessMM }} mm / {{ .Assessment.Result.SummaryRequiredThicknessIn }} in</div></div></div>
+              <div class="col-md-4"><div class="p-3 border rounded"><div class="text-muted small">Highest Hoop Stress</div><div class="fw-bold">{{ .Assessment.Result.HighestHoopStressPsi }} psi / {{ .Assessment.Result.HighestHoopStressKgCM2 }} kg/cm2</div></div></div>
+              <div class="col-md-4"><div class="p-3 border rounded"><div class="text-muted small">Lowest MAOP</div><div class="fw-bold">{{ .Assessment.Result.LowestMAOPPsi }} psi / {{ .Assessment.Result.LowestMAOPKgCM2 }} kg/cm2</div></div></div>
+              <div class="col-md-4"><div class="p-3 border rounded"><div class="text-muted small">Thickness Status</div><div class="fw-bold">{{ .Assessment.Result.RequiredThicknessStatus }}</div></div></div>
+              <div class="col-md-4"><div class="p-3 border rounded"><div class="text-muted small">Hoop Stress Status</div><div class="fw-bold">{{ .Assessment.Result.HoopStressStatus }}</div></div></div>
+              <div class="col-md-4"><div class="p-3 border rounded"><div class="text-muted small">MAOP Status</div><div class="fw-bold">{{ .Assessment.Result.MAOPStatus }}</div></div></div>
+            </div>
+            {{ else }}
+            <div class="text-muted">No calculation result saved yet.</div>
+            {{ end }}
+          </div>
+        </div>
+      </div>
+
+      {{ if .Assessment.Result }}
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header"><h5 class="mb-0">Inspection Point Results</h5></div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+              <thead class="table-light"><tr><th>Point</th><th>t_r (in)</th><th>Actual (mm)</th><th>CR (mm/year)</th><th>RL (years)</th><th>Hoop Stress</th><th>MAOP</th><th>Status</th></tr></thead>
+              <tbody>{{ range .Assessment.Result.PointResults }}<tr><td>{{ .InspectionPoint }}</td><td>{{ .AppraisalThicknessIn }}</td><td>{{ .ActualThicknessMM }}</td><td>{{ .CorrosionRateMMYear }}</td><td>{{ .RemainingLifeYears }}</td><td>{{ .HoopStressPsi }}</td><td>{{ .MAOPPsi }}</td><td>{{ .ThicknessStatus }} / {{ .HoopStressStatus }} / {{ .MAOPStatus }}</td></tr>{{ end }}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header"><h5 class="mb-0">Formula Trace</h5></div>
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead class="table-light"><tr><th>Name</th><th>Excel Ref</th><th>Expression</th><th>Output</th></tr></thead>
+              <tbody>{{ range .Assessment.Result.FormulaTrace }}<tr><td>{{ .FormulaName }}</td><td>{{ .ExcelRef }}</td><td>{{ .Expression }}</td><td>{{ .Output }}</td></tr>{{ end }}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card border-warning">
+          <div class="card-header"><h5 class="mb-0">TODO_ENGINEERING_CONFIRMATION</h5></div>
+          <div class="card-body">
+            <ul class="mb-0">{{ range .Assessment.Result.TODOEngineeringConfirmation }}<li>{{ . }}</li>{{ end }}</ul>
+          </div>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+  </div>
+</div>
+{{ end }}
+{{ template "layouts/master" . }}

@@ -150,6 +150,24 @@
             <li class="menu-header fw-medium mt-4">
               <span class="menu-header-text">Pipeline Assessment</span>
             </li>
+            <li class="menu-item {{ if eq .ActiveMenu "pipeline-oil-form" }}active{{ end }}">
+              <a href="/assessment-pipeline/form" class="menu-link">
+                <i class="menu-icon tf-icons mdi mdi-pipe"></i>
+                <div data-i18n="Pipeline Form">Pipeline Form</div>
+              </a>
+            </li>
+            <li class="menu-item {{ if eq .ActiveMenu "pipeline-oil-list" }}active{{ end }}">
+              <a href="/assessment-pipeline/list" class="menu-link">
+                <i class="menu-icon tf-icons mdi mdi-format-list-checks"></i>
+                <div data-i18n="Pipeline List">Pipeline List</div>
+              </a>
+            </li>
+            <li class="menu-item {{ if eq .ActiveMenu "pipeline-gas" }}active{{ end }}">
+              <a href="/assessment-pipeline/gas" class="menu-link">
+                <i class="menu-icon tf-icons mdi mdi-gas-cylinder"></i>
+                <div data-i18n="Pipeline Gas">Pipeline Gas</div>
+              </a>
+            </li>
           </ul>
         </aside>
         <!-- / Menu -->
@@ -184,6 +202,14 @@
                 {{ template "form_edit_content" . }}
               {{ else if eq .ActiveMenu "master-data" }} 
                 {{ template "master_data_content" . }}
+              {{ else if eq .ActiveMenu "pipeline-oil-form" }} 
+                {{ template "pipeline_form_content" . }}
+              {{ else if eq .ActiveMenu "pipeline-oil-list" }} 
+                {{ template "pipeline_list_content" . }}
+              {{ else if eq .ActiveMenu "pipeline-oil-detail" }} 
+                {{ template "pipeline_detail_content" . }}
+              {{ else if eq .ActiveMenu "pipeline-gas" }} 
+                {{ template "pipeline_gas_content" . }}
               {{ else }}
                   <div class="p-5 text-center">Page Not Found / Blank Content</div>
               {{ end }}
@@ -253,6 +279,10 @@
         {{ template "form_scripts" . }}
     {{ else if eq .ActiveMenu "list-assessment" }}
     {{ else if eq .ActiveMenu "detail-assessment" }}
+    {{ else if eq .ActiveMenu "pipeline-oil-form" }}
+        {{ template "pipeline_form_scripts" . }}
+    {{ else if eq .ActiveMenu "pipeline-oil-list" }}
+        {{ template "pipeline_list_scripts" . }}
     {{ else }}
     {{ end }}
   </body>

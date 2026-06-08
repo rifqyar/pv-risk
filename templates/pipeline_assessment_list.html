@@ -1,0 +1,66 @@
+{{ define "pipeline_list_content" }}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="mb-1">Pipeline Assessments</h4>
+        <div class="text-muted small">Draft and calculated Pipeline assessment records.</div>
+      </div>
+      <a href="/assessment-pipeline/form" class="btn btn-primary"><i class="mdi mdi-plus me-1"></i> New Pipeline</a>
+    </div>
+
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>Report No.</th><th>Line Identification</th><th>Service</th><th>Status</th><th>Risk</th><th>Remaining Life</th><th>Updated</th><th class="text-center">Actions</th></tr>
+          </thead>
+          <tbody>
+            {{ range .Assessments }}
+            <tr>
+              <td class="fw-semibold">{{ .Input.ReportNo }}</td>
+              <td class="text-wrap" style="min-width: 280px;">{{ .Input.LineIdentification }}</td>
+              <td>{{ .Input.Service }}</td>
+              <td><span class="badge bg-label-primary">{{ .Status }}</span></td>
+              <td>{{ if .Result }}{{ .Result.RiskRanking }}{{ else }}Pending{{ end }}</td>
+              <td>{{ if .Result }}{{ .Result.RemainingLifeYears }} years{{ else }}-{{ end }}</td>
+              <td>{{ .UpdatedAt }}</td>
+              <td class="text-center">
+                <div class="dropdown">
+                  <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="mdi mdi-dots-vertical"></i></button>
+                  <div class="dropdown-menu">
+                    <a class="dropdown-item" href="/assessment-pipeline/view/{{ .ID }}"><i class="mdi mdi-eye-outline me-1 text-info"></i> View Detail</a>
+                    {{ if eq .Status "DRAFT" }}<a class="dropdown-item" href="/assessment-pipeline/edit/{{ .ID }}"><i class="mdi mdi-pencil-outline me-1 text-warning"></i> Edit Draft</a>{{ end }}
+                    <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="archivePipelineAssessment('{{ .ID }}')"><i class="mdi mdi-archive-outline me-1"></i> Archive</a>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {{ else }}
+            <tr><td colspan="8" class="text-center text-muted py-5">No Pipeline Oil assessment records found.</td></tr>
+            {{ end }}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{{ end }}
+
+{{ define "pipeline_list_scripts" }}
+<script>
+function archivePipelineAssessment(id) {
+  Swal.fire({title: "Archive assessment?", icon: "warning", showCancelButton: true, confirmButtonText: "Archive"}).then((result) => {
+    if (!result.isConfirmed) return;
+    fetch(`/assessment-pipeline/delete/${id}`, { method: "DELETE" })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.status === "success") window.location.reload();
+        else Swal.fire("Failed", res.message, "error");
+      })
+      .catch(() => Swal.fire("Error", "Failed to connect to server.", "error"));
+  });
+}
+</script>
+{{ end }}
+{{ template "layouts/master" . }}
