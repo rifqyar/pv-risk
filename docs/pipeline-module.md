@@ -1,113 +1,90 @@
-# Pipeline Oil & Gas Module
+# Pipeline Risk Assessment Module
 
 ## Overview
 
-This module adds an isolated Pipeline Oil & Gas assessment area beside the existing Pressure Vessel assessment module. Pipeline Oil is implemented from `1. pipeline oil.xlsx`; Pipeline Gas is registered as coming soon only.
+This module adds an isolated Pipeline Risk Assessment area beside the existing Pressure Vessel assessment module. It is an MVP simplified/index-based RBI module for gas, oil, and liquid pipeline segments.
 
-## Folder Structure
+The storage pattern remains the existing `pipeline_oil_assessments` table with full input/result JSON snapshots, so old records stay reproducible and no disruptive schema migration is required for the new factor fields.
 
-- `controller/pipelineController.go`: Pipeline route handlers.
-- `models/pipeline_oil.go`: Pipeline Oil DTOs, repository, service orchestration, validation, and calculation engine.
-- `migrations/pipeline_oil_migration.go`: Pipeline Oil SQLite table and indexes.
-- `templates/pipeline_assessment_*.html`: list, form, detail, and gas placeholder pages.
-- `assets/js/pipeline_oil_assessment.js`: Pipeline Oil form payload and actions.
-- `models/pipeline_oil_test.go`: formula and validation tests.
+## Main Files
 
-## Database Tables
-
-- `pipeline_oil_assessments`
-
-Stored columns include status, report number, line identification, owner/user, location, service, assessment by, formula version, input JSON, result JSON, formula trace JSON, snapshot JSON, audit timestamps, created_by, and updated_by.
-
-The table stores a full calculation snapshot so old records remain reproducible if formulas change later.
+- `controller/pipelineController.go`: route handlers, default sample data, draft/calculate flow.
+- `models/pipeline_oil.go`: DTOs, repository, service orchestration, validation, calculation functions, formula trace.
+- `templates/pipeline_assessment_form.html`: pipeline form with general data, PoF inputs, CoF inputs, and calculation actions.
+- `templates/pipeline_assessment_detail.html`: result summary, DF drivers, PoF/CoF/risk ranking, recommendation, and formula trace.
+- `assets/js/pipeline_oil_assessment.js`: form serialization into the existing JSON API payload.
+- `models/pipeline_oil_test.go`: calculation and validation tests.
 
 ## Routes
 
 - `GET /assessment-pipeline/list`
 - `GET /assessment-pipeline/form`
+- `GET /assessment-pipeline/gas`
 - `POST /assessment-pipeline/submit`
 - `GET /assessment-pipeline/view/:id`
 - `GET /assessment-pipeline/edit/:id`
 - `POST /assessment-pipeline/update/:id`
 - `POST /assessment-pipeline/calculate/:id`
 - `DELETE /assessment-pipeline/delete/:id`
-- `GET /assessment-pipeline/gas`
 
-## Service Flow
+## Calculation
 
-1. Create draft validates required identity fields and stores input as JSON.
-2. Update draft prevents changes to calculated or archived assessments.
-3. Calculate validates engineering inputs, runs pure calculation functions, stores input/result/trace/snapshot in one transaction, and changes status to `CALCULATED`.
-4. Archive marks the record `ARCHIVED`.
+Pipeline PoF uses:
 
-## Calculation Flow
+`PoF = GFF * DF * FMS`
 
-Implemented formulas from workbook:
+The governing damage factor is:
 
-- `Input!G17`: pipe length feet = `((pipe_length_m*100)/2.54)/12`
-- `Input!G23`: design temperature Celsius = `(5/9)*(design_temperature_f-32)`
-- `Input!G29`: allowance mm = `allowance_in*25.4`
-- `Input!G36`: outside diameter mm = `outside_diameter_in*25.4`
-- `Input!D39`: nominal wall thickness inch = `nominal_wall_thickness_mm/25.4`
-- `7 Appraisal!J63`: required thickness inch = `((P*D)/(2*F*E*SMYS))+c`
-- `7 Appraisal!N25/N37/N38`: pressure/stress conversions = `psi/14.223`
-- `2 Data!O30:O32`: corrosion rate = `(nominal_thickness_mm-actual_thickness_mm)/(measured_year-year_used)`
-- `2 Data!S30:S32`: remaining life = `(actual_thickness_mm-required_thickness_mm)/corrosion_rate_mm_year`
-- `7 Appraisal!O90:O92`: hoop stress = `(P*D)/(2*actual_thickness_in)`
-- `7 Appraisal!O122:O124`: MAOP = `(2*actual_thickness_in*SMYS*F*E)/D`
-- `7 Appraisal!H106`: highest hoop stress = `MAX(O90:Q104)`
-- `7 Appraisal!H107`: percent SMYS = `(H106/K37)*100`
-- `7 Appraisal!H138`: lowest MAOP = `MIN(O122:O136)`
-- `7 Appraisal!O195/R195`: summary required thickness = `MIN(K159:M160)` and inch conversion
-- `7 Appraisal!O197/O199/O201`: conclusion summary for hoop stress, MAOP, and remaining life
+`DF = max(DF_TPD, DF_EXTERNAL_CORROSION, DF_INTERNAL_CORROSION)`
 
-## Formula Versioning
+Implemented helper functions:
 
-Current formula version: `pipeline-oil-rbi581-v1`.
+- `calculateThirdPartyDamageFactor()`
+- `calculateExternalCorrosionFactor()`
+- `calculateInternalCorrosionFactor()`
+- `calculatePipelinePoF()`
+- `calculateGasCoF()`
+- `calculateLiquidCoF()`
+- `calculatePipelineRiskRanking()`
+- `generatePipelineRecommendation()`
 
-## Validation Rules
+Gas CoF uses PIR:
 
-- Required: report number, line identification, service, assessment by.
-- Service must be `Oil`.
-- Positive values required for pressure, diameter, thickness, factors, stress, and length.
-- Inspection measured year must be after year used.
-- Actual thickness cannot exceed nominal thickness for workbook corrosion-rate formula.
-- Extreme design pressure over 20,000 psig requires engineering confirmation.
+`PIR = 0.69 * outside_diameter_in * sqrt(operating_pressure_psi)`
 
-## Known Limitations
+Oil/liquid CoF uses spill volume:
 
-- RBI 581 PoF formula is not present in the workbook.
-- RBI 581 CoF formula is not present in the workbook.
-- Risk ranking matrix/formula is not present in the workbook.
-- `6 Verification` contains `#REF!` formulas, and downstream `2 Data` ranges for additional points also contain `#REF!`.
+`Spill Volume = flow_rate * detection_time + internal_pipeline_volume_between_valves`
 
-## Pipeline Gas Status
+Environmental sensitivity, nearby receptor, and isolation valve availability adjust liquid consequence before category assignment.
 
-Pipeline Gas has a disabled/coming-soon route and page only. No formulas are implemented.
+## Result Fields
 
-## TODO_ENGINEERING_CONFIRMATION
+The detail page shows:
 
-- Confirm RBI 581 PoF calculation for Pipeline Oil.
-- Confirm RBI 581 CoF calculation for Pipeline Oil.
-- Confirm risk matrix/ranking rules.
-- Confirm how to handle workbook `#REF!` inspection rows.
-- Confirm whether remaining-life calculation should continue using workbook `2 Data` required thickness values or design-appraisal required thickness for all future records.
+- DF_TPD, DF_External_Corrosion, DF_Internal_Corrosion
+- Governing DF and driver
+- GFF, FMS, final PoF, and PoF category
+- PIR for gas
+- Spill volume and adjusted spill volume for oil/liquid
+- CoF category
+- Final risk code and level
+- Recommendation based on the dominant damage mechanism and high CoF drivers
+- Formula trace for auditability
 
-## Adding Pipeline Gas Later
+## Validation
 
-1. Add a gas workbook/formula source.
-2. Create gas input/result structs beside Pipeline Oil.
-3. Add gas calculation tests from workbook samples.
-4. Add gas migration/table or shared pipeline table only after confirming storage requirements.
-5. Replace the coming-soon handler/template with list/form/detail flow.
+- Required draft fields: report number, line identification, service, assessment by.
+- Service must be `Oil`, `Liquid`, or `Gas`.
+- Calculation requires positive diameter, pressure, wall thickness, design factors, base rates, and GFF.
+- Gas consequence validates building count.
+- Oil/liquid consequence validates flow rate, detection time, valve segment length, and environmental sensitivity.
+- Inspection point validation remains for the existing mechanical/thickness appraisal outputs.
 
 ## Manual QA Checklist
 
-- Open Pipeline Oil list.
-- Create a draft from default workbook sample values.
-- Edit the draft and save.
-- Calculate the draft.
-- Confirm detail page shows formula version, result, trace, and TODOs.
-- Confirm calculated records cannot be overwritten from edit flow.
-- Archive a record.
+- Open Pipeline list and create a draft from sample values.
+- Calculate an oil/liquid record and confirm spill volume, CoF, risk code, and recommendation.
+- Open `/assessment-pipeline/gas`, calculate a gas record, and confirm PIR, CoF, risk code, and recommendation.
+- Confirm formula trace includes the pipeline MVP formulas.
 - Confirm Pressure Vessel list/form/detail still opens.

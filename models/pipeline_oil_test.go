@@ -28,6 +28,12 @@ func samplePipelineOilInput() PipelineOilInput {
 		DesignFactor:              0.72,
 		MaterialStressPsi:         20000,
 		AssessmentBy:              "Engineer",
+		RBI: PipelineOilRBIStructuralInput{
+			GenericFailureFrequency: 0.00003,
+			ManagementSystemScore:   500,
+			DamageFactor:            12,
+			ConsequenceFinancial:    250000,
+		},
 		InspectionPoints: []PipelineOilInspectionPoint{
 			{InspectionPoint: "IP-82", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 7.98, MeasuredYear: 2025},
 			{InspectionPoint: "IP-8 A", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 6.12, MeasuredYear: 2025},
@@ -61,11 +67,39 @@ func TestCalculatePipelineOilMatchesWorkbookSamples(t *testing.T) {
 	assertClose(t, result.HighestHoopStressPercentSMY, 51.13795518207282, 1e-9)
 	assertClose(t, result.LowestMAOPPsi, 1407.9561793906196, 1e-9)
 	assertClose(t, result.LowestMAOPKgCM2, 98.99150526545873, 1e-9)
+	assertClose(t, result.ManagementSystemFactor, 1, 1e-12)
+	assertClose(t, result.ThirdPartyDamageFactor, 0.5787037037037037, 1e-12)
+	assertClose(t, result.ExternalCorrosionFactor, 3.24, 1e-12)
+	assertClose(t, result.InternalCorrosionFactor, 13.0321, 1e-12)
+	assertClose(t, result.GoverningDamageFactor, 13.0321, 1e-12)
+	assertClose(t, result.PoFValue, 0.000390963, 1e-12)
+	assertClose(t, result.CoFValue, 4617.82163797161, 1e-9)
+	assertClose(t, result.RiskValue, 15, 1e-9)
+	if result.PoF != "3" || result.CoF != "E" || result.FinalRiskCode != "3E" || result.FinalRiskLevel != "High Risk" {
+		t.Fatalf("unexpected pipeline risk ranking: pof=%s cof=%s code=%s level=%s", result.PoF, result.CoF, result.FinalRiskCode, result.FinalRiskLevel)
+	}
 	if result.RequiredThicknessStatus != "ACCEPTABLE" {
 		t.Fatalf("expected aggregate thickness status to match workbook sample")
 	}
-	if result.PoF != "TODO_ENGINEERING_CONFIRMATION" {
-		t.Fatalf("PoF must remain a TODO because workbook has no RBI formula")
+	if result.GoverningDamageMechanism != "Internal Corrosion" {
+		t.Fatalf("expected internal corrosion to govern")
+	}
+}
+
+func TestCalculatePipelineGasCoFUsesPIRAndBuildings(t *testing.T) {
+	in := samplePipelineOilInput()
+	in.Service = "Gas"
+	in.RBI.BuildingCountInsidePIR = 25
+	in.RBI.ClassLocation = "urban_dense"
+
+	result, errs := CalculatePipelineOil(in)
+	if len(errs) > 0 {
+		t.Fatalf("unexpected validation errors: %+v", errs)
+	}
+
+	assertClose(t, result.PIRFeet, 25.002333817628404, 1e-12)
+	if result.CoF != "E" || result.FinalRiskCode != "3E" || result.FinalRiskLevel != "High Risk" {
+		t.Fatalf("unexpected gas risk ranking: cof=%s code=%s level=%s", result.CoF, result.FinalRiskCode, result.FinalRiskLevel)
 	}
 }
 
@@ -91,7 +125,7 @@ func TestPipelineOilValidation(t *testing.T) {
 		}},
 		{"invalid service unit", func() PipelineOilInput {
 			in := samplePipelineOilInput()
-			in.Service = "Gas"
+			in.Service = "Steam"
 			return in
 		}},
 		{"divide by zero date", func() PipelineOilInput {

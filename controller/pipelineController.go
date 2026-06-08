@@ -156,8 +156,15 @@ func (ctrl *NewPipelineController) CalculateAssessment(c *gin.Context) {
 }
 
 func (ctrl *NewPipelineController) ShowGasComingSoon(c *gin.Context) {
-	c.HTML(http.StatusOK, "pipeline_gas_coming_soon.html", gin.H{
-		"ActiveMenu": "pipeline-gas",
+	input := pipelineOilDefaultInput()
+	input.Service = "Gas"
+	input.RBI.ReleaseFluid = "Gas"
+	input.RBI.BuildingCountInsidePIR = 3
+	input.RBI.ClassLocation = "village"
+	c.HTML(http.StatusOK, "pipeline_assessment_form.html", gin.H{
+		"ActiveMenu": "pipeline-oil-form",
+		"Mode":       "create",
+		"Input":      input,
 	})
 }
 
@@ -210,13 +217,38 @@ func pipelineOilDefaultInput() models.PipelineOilInput {
 			{InspectionPoint: "IP-8 C", InstallationType: "Above Ground", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 6.21, MeasuredYear: 2025},
 		},
 		RBI: models.PipelineOilRBIStructuralInput{
-			DamageMechanism:       "Corrosion/Thinning",
-			InspectionEffectivity: "TODO_ENGINEERING_CONFIRMATION",
-			ReleaseFluid:          "Oil",
-			ConsequenceBasis:      "TODO_ENGINEERING_CONFIRMATION",
-			ProbabilityBasis:      "TODO_ENGINEERING_CONFIRMATION",
-			EngineeringNotes:      "Workbook contains mechanical/design appraisal formulas only. RBI PoF/CoF formulas require engineering confirmation.",
-			RequiresConfirmation:  true,
+			DamageMechanism:             "Pipeline MVP Index RBI",
+			InspectionEffectivity:       "Representative",
+			ReleaseFluid:                "Oil",
+			GenericFailureFrequency:     0.00003,
+			ManagementSystemScore:       500,
+			BaseTPDRate:                 1,
+			BaseExternalCorrRate:        1,
+			BaseInternalCorrRate:        1,
+			DepthOfCover:                "1-2m",
+			PatrolFrequency:             "monthly",
+			ROWCondition:                "fair",
+			SoilResistivity:             "1000-5000",
+			CoatingCondition:            "fair",
+			CPStatus:                    "normal",
+			CPPotentialMV:               -900,
+			FluidCorrosivity:            "medium",
+			WaterContent:                "medium",
+			CO2H2SPresence:              "present",
+			MICRisk:                     "low",
+			WallThicknessCondition:      "warning",
+			BuildingCountInsidePIR:      0,
+			ClassLocation:               "remote",
+			EmergencyResponse:           "available",
+			FlowRate:                    100,
+			DetectionTimeHours:          1,
+			SegmentLengthBetweenValvesM: 9966,
+			EnvironmentalSensitivity:    "medium",
+			IsolationValveAvailable:     true,
+			ConsequenceBasis:            "Pipeline MVP index-based CoF",
+			ProbabilityBasis:            "PoF = GFF x max(DF_TPD, DF_EXTERNAL, DF_INTERNAL) x FMS",
+			EngineeringNotes:            "MVP simplified pipeline RBI calculation.",
+			RequiresConfirmation:        false,
 		},
 	}
 }

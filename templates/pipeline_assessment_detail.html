@@ -36,12 +36,25 @@
               <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">CoF</div><div class="fw-bold">{{ .Assessment.Result.CoF }}</div></div></div>
               <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">Risk Ranking</div><div class="fw-bold">{{ .Assessment.Result.RiskRanking }}</div></div></div>
               <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">Remaining Life</div><div class="fw-bold">{{ .Assessment.Result.RemainingLifeYears }} years</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">FMS</div><div class="fw-bold">{{ .Assessment.Result.ManagementSystemFactor }}</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">PoF Value</div><div class="fw-bold">{{ .Assessment.Result.PoFValue }}</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">CoF Value</div><div class="fw-bold">{{ .Assessment.Result.CoFValue }}</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">Risk Value</div><div class="fw-bold">{{ .Assessment.Result.RiskValue }}</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">DF TPD</div><div class="fw-bold">{{ .Assessment.Result.ThirdPartyDamageFactor }}</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">DF External Corr.</div><div class="fw-bold">{{ .Assessment.Result.ExternalCorrosionFactor }}</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">DF Internal Corr.</div><div class="fw-bold">{{ .Assessment.Result.InternalCorrosionFactor }}</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">Governing DF</div><div class="fw-bold">{{ .Assessment.Result.GoverningDamageFactor }}</div><div class="small text-muted">{{ .Assessment.Result.GoverningDamageMechanism }}</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">Final Risk Code</div><div class="fw-bold">{{ .Assessment.Result.FinalRiskCode }}</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">Final Risk Level</div><div class="fw-bold">{{ .Assessment.Result.FinalRiskLevel }}</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">PIR</div><div class="fw-bold">{{ .Assessment.Result.PIRFeet }} ft</div></div></div>
+              <div class="col-md-3"><div class="p-3 border rounded"><div class="text-muted small">Spill Volume</div><div class="fw-bold">{{ .Assessment.Result.SpillVolume }}</div><div class="small text-muted">Adjusted {{ .Assessment.Result.AdjustedSpillVolume }}</div></div></div>
               <div class="col-md-4"><div class="p-3 border rounded"><div class="text-muted small">Required Thickness</div><div class="fw-bold">{{ .Assessment.Result.SummaryRequiredThicknessMM }} mm / {{ .Assessment.Result.SummaryRequiredThicknessIn }} in</div></div></div>
               <div class="col-md-4"><div class="p-3 border rounded"><div class="text-muted small">Highest Hoop Stress</div><div class="fw-bold">{{ .Assessment.Result.HighestHoopStressPsi }} psi / {{ .Assessment.Result.HighestHoopStressKgCM2 }} kg/cm2</div></div></div>
               <div class="col-md-4"><div class="p-3 border rounded"><div class="text-muted small">Lowest MAOP</div><div class="fw-bold">{{ .Assessment.Result.LowestMAOPPsi }} psi / {{ .Assessment.Result.LowestMAOPKgCM2 }} kg/cm2</div></div></div>
               <div class="col-md-4"><div class="p-3 border rounded"><div class="text-muted small">Thickness Status</div><div class="fw-bold">{{ .Assessment.Result.RequiredThicknessStatus }}</div></div></div>
               <div class="col-md-4"><div class="p-3 border rounded"><div class="text-muted small">Hoop Stress Status</div><div class="fw-bold">{{ .Assessment.Result.HoopStressStatus }}</div></div></div>
               <div class="col-md-4"><div class="p-3 border rounded"><div class="text-muted small">MAOP Status</div><div class="fw-bold">{{ .Assessment.Result.MAOPStatus }}</div></div></div>
+              <div class="col-12"><div class="p-3 border rounded"><div class="text-muted small">Recommendation</div><div class="fw-semibold">{{ .Assessment.Result.Recommendation }}</div></div></div>
             </div>
             {{ else }}
             <div class="text-muted">No calculation result saved yet.</div>
@@ -75,6 +88,7 @@
         </div>
       </div>
 
+      {{ if .Assessment.Result.TODOEngineeringConfirmation }}
       <div class="col-12">
         <div class="card border-warning">
           <div class="card-header"><h5 class="mb-0">TODO_ENGINEERING_CONFIRMATION</h5></div>
@@ -83,6 +97,7 @@
           </div>
         </div>
       </div>
+      {{ end }}
       {{ end }}
     </div>
   </div>

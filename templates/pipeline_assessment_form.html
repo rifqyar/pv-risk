@@ -3,8 +3,8 @@
   <div class="container-xxl flex-grow-1 container-p-y">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
-        <h4 class="mb-1">Pipeline Assessment</h4>
-        <div class="text-muted small">RBI 571 / RBI 581 structural module based on workbook formulas.</div>
+        <h4 class="mb-1">Pipeline Risk Assessment</h4>
+        <div class="text-muted small">MVP index-based pipeline RBI with transparent PoF, CoF, and risk ranking.</div>
       </div>
       <a href="/assessment-pipeline/list" class="btn btn-outline-secondary">
         <i class="mdi mdi-arrow-left me-1"></i> Back
@@ -90,6 +90,7 @@
                         <label class="form-label">Service <span class="text-danger">*</span></label>
                         <select class="form-select" name="service">
                           <option value="Oil" {{ if eq .Input.Service "Oil" }}selected{{ end }}>Oil</option>
+                          <option value="Liquid" {{ if eq .Input.Service "Liquid" }}selected{{ end }}>Liquid</option>
                           <option value="Gas" {{ if eq .Input.Service "Gas" }}selected{{ end }}>Gas</option>
                         </select>
                       </div>
@@ -144,6 +145,42 @@
                       <div class="col-md-4"><label class="form-label">Assessment By <span class="text-danger">*</span></label><input class="form-control" name="assessment_by" value="{{ .Input.AssessmentBy }}" required></div>
                       <div class="col-md-4"><label class="form-label">Damage Mechanism</label><input class="form-control" name="damage_mechanism" value="{{ .Input.RBI.DamageMechanism }}"></div>
                       <div class="col-md-4"><label class="form-label">Inspection Effectiveness</label><input class="form-control" name="inspection_effectivity" value="{{ .Input.RBI.InspectionEffectivity }}"></div>
+                      <div class="col-md-4"><label class="form-label">GFF</label><input type="number" step="any" class="form-control" name="generic_failure_frequency" value="{{ .Input.RBI.GenericFailureFrequency }}"></div>
+                      <div class="col-md-4"><label class="form-label">Management Score <span class="text-muted">0-1000</span></label><input type="number" step="any" class="form-control" name="management_system_score" value="{{ .Input.RBI.ManagementSystemScore }}"></div>
+                      <div class="col-md-4"><label class="form-label">Base TPD Rate</label><input type="number" step="any" class="form-control" name="base_tpd_rate" value="{{ .Input.RBI.BaseTPDRate }}"></div>
+                      <div class="col-md-4"><label class="form-label">Base External Corr. Rate</label><input type="number" step="any" class="form-control" name="base_external_corr_rate" value="{{ .Input.RBI.BaseExternalCorrRate }}"></div>
+                      <div class="col-md-4"><label class="form-label">Base Internal Corr. Rate</label><input type="number" step="any" class="form-control" name="base_internal_corr_rate" value="{{ .Input.RBI.BaseInternalCorrRate }}"></div>
+
+                      <div class="col-12"><hr><h6 class="mb-0">Third-Party Damage</h6></div>
+                      <div class="col-md-4"><label class="form-label">Depth of Cover</label><select class="form-select" name="depth_of_cover"><option value="<1m" {{ if eq .Input.RBI.DepthOfCover "<1m" }}selected{{ end }}>&lt;1m</option><option value="1-2m" {{ if eq .Input.RBI.DepthOfCover "1-2m" }}selected{{ end }}>1-2m</option><option value=">2m" {{ if eq .Input.RBI.DepthOfCover ">2m" }}selected{{ end }}>&gt;2m</option></select></div>
+                      <div class="col-md-4"><label class="form-label">Patrol Frequency</label><select class="form-select" name="patrol_frequency"><option value="rare" {{ if eq .Input.RBI.PatrolFrequency "rare" }}selected{{ end }}>Rare / Never</option><option value="monthly" {{ if eq .Input.RBI.PatrolFrequency "monthly" }}selected{{ end }}>Monthly</option><option value="weekly_daily" {{ if eq .Input.RBI.PatrolFrequency "weekly_daily" }}selected{{ end }}>Weekly / Daily</option></select></div>
+                      <div class="col-md-4"><label class="form-label">ROW Condition</label><select class="form-select" name="row_condition"><option value="poor" {{ if eq .Input.RBI.ROWCondition "poor" }}selected{{ end }}>Poor</option><option value="fair" {{ if eq .Input.RBI.ROWCondition "fair" }}selected{{ end }}>Fair</option><option value="good" {{ if eq .Input.RBI.ROWCondition "good" }}selected{{ end }}>Good</option></select></div>
+
+                      <div class="col-12"><hr><h6 class="mb-0">External Corrosion</h6></div>
+                      <div class="col-md-3"><label class="form-label">Soil Resistivity</label><select class="form-select" name="soil_resistivity"><option value="<1000" {{ if eq .Input.RBI.SoilResistivity "<1000" }}selected{{ end }}>&lt;1000 ohm-cm</option><option value="1000-5000" {{ if eq .Input.RBI.SoilResistivity "1000-5000" }}selected{{ end }}>1000-5000 ohm-cm</option><option value=">5000" {{ if eq .Input.RBI.SoilResistivity ">5000" }}selected{{ end }}>&gt;5000 ohm-cm</option></select></div>
+                      <div class="col-md-3"><label class="form-label">Coating Condition</label><select class="form-select" name="coating_condition"><option value="poor" {{ if eq .Input.RBI.CoatingCondition "poor" }}selected{{ end }}>Poor / Failed</option><option value="fair" {{ if eq .Input.RBI.CoatingCondition "fair" }}selected{{ end }}>Fair</option><option value="good" {{ if eq .Input.RBI.CoatingCondition "good" }}selected{{ end }}>Good</option></select></div>
+                      <div class="col-md-3"><label class="form-label">CP Status</label><select class="form-select" name="cp_status"><option value="failed" {{ if eq .Input.RBI.CPStatus "failed" }}selected{{ end }}>Failed / Off</option><option value="borderline" {{ if eq .Input.RBI.CPStatus "borderline" }}selected{{ end }}>Borderline</option><option value="normal" {{ if eq .Input.RBI.CPStatus "normal" }}selected{{ end }}>Normal / Compliant</option></select></div>
+                      <div class="col-md-3"><label class="form-label">CP Potential <span class="text-muted">(mV)</span></label><input type="number" step="any" class="form-control" name="cp_potential_mv" value="{{ .Input.RBI.CPPotentialMV }}"></div>
+
+                      <div class="col-12"><hr><h6 class="mb-0">Internal Corrosion</h6></div>
+                      <div class="col-md"><label class="form-label">Fluid Corrosivity</label><select class="form-select" name="fluid_corrosivity"><option value="low" {{ if eq .Input.RBI.FluidCorrosivity "low" }}selected{{ end }}>Low</option><option value="medium" {{ if eq .Input.RBI.FluidCorrosivity "medium" }}selected{{ end }}>Medium</option><option value="high" {{ if eq .Input.RBI.FluidCorrosivity "high" }}selected{{ end }}>High</option></select></div>
+                      <div class="col-md"><label class="form-label">Water Content</label><select class="form-select" name="water_content"><option value="low" {{ if eq .Input.RBI.WaterContent "low" }}selected{{ end }}>Low</option><option value="medium" {{ if eq .Input.RBI.WaterContent "medium" }}selected{{ end }}>Medium</option><option value="high" {{ if eq .Input.RBI.WaterContent "high" }}selected{{ end }}>High</option></select></div>
+                      <div class="col-md"><label class="form-label">CO2/H2S</label><select class="form-select" name="co2_h2s_presence"><option value="none" {{ if eq .Input.RBI.CO2H2SPresence "none" }}selected{{ end }}>None</option><option value="present" {{ if eq .Input.RBI.CO2H2SPresence "present" }}selected{{ end }}>Present</option><option value="high" {{ if eq .Input.RBI.CO2H2SPresence "high" }}selected{{ end }}>High</option></select></div>
+                      <div class="col-md"><label class="form-label">MIC Risk</label><select class="form-select" name="mic_risk"><option value="low" {{ if eq .Input.RBI.MICRisk "low" }}selected{{ end }}>Low</option><option value="medium" {{ if eq .Input.RBI.MICRisk "medium" }}selected{{ end }}>Medium</option><option value="high" {{ if eq .Input.RBI.MICRisk "high" }}selected{{ end }}>High</option></select></div>
+                      <div class="col-md"><label class="form-label">Wall Condition</label><select class="form-select" name="wall_thickness_condition"><option value="healthy" {{ if eq .Input.RBI.WallThicknessCondition "healthy" }}selected{{ end }}>Healthy</option><option value="warning" {{ if eq .Input.RBI.WallThicknessCondition "warning" }}selected{{ end }}>Warning</option><option value="critical" {{ if eq .Input.RBI.WallThicknessCondition "critical" }}selected{{ end }}>Critical</option></select></div>
+
+                      <div class="col-12"><hr><h6 class="mb-0">Consequence of Failure</h6></div>
+                      <div class="col-md-3"><label class="form-label">Buildings in PIR</label><input type="number" class="form-control" name="building_count_inside_pir" value="{{ .Input.RBI.BuildingCountInsidePIR }}"></div>
+                      <div class="col-md-3"><label class="form-label">Class Location</label><select class="form-select" name="class_location"><option value="remote" {{ if eq .Input.RBI.ClassLocation "remote" }}selected{{ end }}>Remote</option><option value="village" {{ if eq .Input.RBI.ClassLocation "village" }}selected{{ end }}>Village</option><option value="urban_dense" {{ if eq .Input.RBI.ClassLocation "urban_dense" }}selected{{ end }}>Urban Dense</option></select></div>
+                      <div class="col-md-3"><label class="form-label">Emergency Response</label><select class="form-select" name="emergency_response"><option value="available" {{ if eq .Input.RBI.EmergencyResponse "available" }}selected{{ end }}>Available</option><option value="limited" {{ if eq .Input.RBI.EmergencyResponse "limited" }}selected{{ end }}>Limited</option><option value="remote" {{ if eq .Input.RBI.EmergencyResponse "remote" }}selected{{ end }}>Remote</option></select></div>
+                      <div class="col-md-3"><label class="form-label">Flow Rate <span class="text-muted">(bbl/hr)</span></label><input type="number" step="any" class="form-control" name="flow_rate" value="{{ .Input.RBI.FlowRate }}"></div>
+                      <div class="col-md-3"><label class="form-label">Detection Time <span class="text-muted">(hr)</span></label><input type="number" step="any" class="form-control" name="detection_time_hours" value="{{ .Input.RBI.DetectionTimeHours }}"></div>
+                      <div class="col-md-3"><label class="form-label">Valve Segment <span class="text-muted">(m)</span></label><input type="number" step="any" class="form-control" name="segment_length_between_valves_m" value="{{ .Input.RBI.SegmentLengthBetweenValvesM }}"></div>
+                      <div class="col-md-3"><label class="form-label">Environmental Sensitivity</label><select class="form-select" name="environmental_sensitivity"><option value="low" {{ if eq .Input.RBI.EnvironmentalSensitivity "low" }}selected{{ end }}>Low</option><option value="medium" {{ if eq .Input.RBI.EnvironmentalSensitivity "medium" }}selected{{ end }}>Medium</option><option value="high" {{ if eq .Input.RBI.EnvironmentalSensitivity "high" }}selected{{ end }}>High</option></select></div>
+                      <div class="col-md-3 d-flex align-items-end gap-3">
+                        <div class="form-check"><input class="form-check-input" type="checkbox" name="nearby_sensitive_receptor" {{ if .Input.RBI.NearbySensitiveReceptor }}checked{{ end }}><label class="form-check-label">Nearby receptor</label></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" name="isolation_valve_available" {{ if .Input.RBI.IsolationValveAvailable }}checked{{ end }}><label class="form-check-label">Isolation valve</label></div>
+                      </div>
                       <div class="col-12"><label class="form-label">Engineering Notes</label><textarea class="form-control" rows="2" name="engineering_notes">{{ .Input.RBI.EngineeringNotes }}</textarea></div>
                     </div>
                     <div class="d-flex justify-content-between mt-4">
@@ -179,7 +216,7 @@
                     </div>
                     <div class="d-flex justify-content-between flex-wrap gap-2 mt-4">
                       <button type="button" class="btn btn-outline-secondary pipeline-step-prev"><i class="mdi mdi-arrow-left me-1"></i> Back</button>
-                      <div class="text-muted small">RBI PoF, CoF, and ranking stay as TODO_ENGINEERING_CONFIRMATION until formulas are provided.</div>
+                      <div class="text-muted small">Calculation uses PoF = GFF x max(DF_TPD, DF_EXTERNAL, DF_INTERNAL) x FMS.</div>
                       <div class="d-flex gap-2">
                         <button type="button" class="btn btn-outline-secondary" id="savePipelineDraft"><i class="mdi mdi-content-save-outline me-1"></i> Save Draft</button>
                         <button type="button" class="btn btn-primary" id="calculatePipelineOil"><i class="mdi mdi-calculator me-1"></i> Calculate & Save Result</button>
