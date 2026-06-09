@@ -167,16 +167,96 @@ func (ctrl *NewPipelineController) PreviewAssessment(c *gin.Context) {
 }
 
 func (ctrl *NewPipelineController) ShowGasComingSoon(c *gin.Context) {
-	input := pipelineOilDefaultInput()
-	input.Service = "Gas"
-	input.RBI.ReleaseFluid = "Gas"
-	input.RBI.BuildingCountInsidePIR = 3
-	input.RBI.ClassLocation = "village"
+	input := pipelineGasDefaultInput()
 	c.HTML(http.StatusOK, "pipeline_assessment_form.html", gin.H{
 		"ActiveMenu": "pipeline-oil-form",
 		"Mode":       "create",
 		"Input":      input,
 	})
+}
+
+func pipelineGasDefaultInput() models.PipelineOilInput {
+	return models.PipelineOilInput{
+		ReportNo:                  "PR 2057/PL-MIT/120/2025",
+		PlaceIssued:               "Jakarta",
+		DateIssued:                "July 2025",
+		OwnerUser:                 "PetroChina International Jabung Ltd",
+		Contractor:                "PT Meindo Elang Indah",
+		Location:                  "Betara, Tanjung Jabung Barat, Jambi",
+		LineIdentification:        "NPS 12 Main Gas Trunkline from Pig Launcher SB#1 Station to Pig Receiver WB PPF",
+		YearBuilt:                 2017,
+		YearUsed:                  2017,
+		Service:                   "Gas",
+		PipeSize:                  "323,85 mm (OD) x 10,31 mm (T) x 9966 m (L)",
+		PipeLengthM:               9966,
+		MaterialSpecification:     "API 5L X52",
+		FlangeMaterialSpec:        "-",
+		SMYSPsi:                   52000,
+		InternalDesignPressurePsi: 1350,
+		DesignTemperatureF:        200,
+		MethodOfJoining:           "Welding",
+		JointEfficiency:           1,
+		CoatingType:               "3 LPE & Painting",
+		CorrosionControl:          "SACP",
+		AllowanceIn:               0,
+		RightOfWay:                "6 - 9",
+		SafetyDevice:              "3 Unit Ball Valve, 4 Unit Gate Valve, 2 Unit Check Valve, & 1 Unit PSV",
+		AreaClassification:        "2",
+		InspectionPeriod:          "March 2025",
+		InspectionResult:          "ACCEPTABLE",
+		ApplicableCode:            "ASME B31.8",
+		OutsideDiameterIn:         12.75,
+		OperatingPressurePsi:      650,
+		RadiographicPercent:       100,
+		NominalWallThicknessMM:    11.13,
+		ActualWallThicknessMM:     9.22,
+		TypeOfInstallation:        "Underground",
+		QualityFactor:             1,
+		WeldJointStrengthFactor:   1,
+		DesignFactor:              0.6,
+		MaterialStressPsi:         20000,
+		PreviousSKPP:              "MIT-2021.1557-03072-PL",
+		TemperatureDeratingFactor: 1,
+		AssessmentBy:              "Engineer",
+		InspectionPoints: []models.PipelineOilInspectionPoint{
+			{InspectionPoint: "IP-2", InstallationType: "Underground", NominalThicknessMM: 10.31, RequiredThicknessMM: 7.01, ActualThicknessMM: 9.22, MeasuredYear: 2024},
+			{InspectionPoint: "IP-11", InstallationType: "Underground", NominalThicknessMM: 10.31, RequiredThicknessMM: 7.01, ActualThicknessMM: 9.58, MeasuredYear: 2024},
+		},
+		RBI: models.PipelineOilRBIStructuralInput{
+			DamageMechanism:             "Pipeline MVP Index RBI",
+			InspectionEffectivity:       "Representative",
+			ReleaseFluid:                "Gas",
+			GenericFailureFrequency:     0.00003,
+			ManagementSystemScore:       500,
+			BaseTPDRate:                 1,
+			BaseExternalCorrRate:        1,
+			BaseInternalCorrRate:        1,
+			DepthOfCover:                "1-2m",
+			PatrolFrequency:             "monthly",
+			ROWCondition:                "fair",
+			SoilResistivity:             "1000-5000",
+			CoatingCondition:            "fair",
+			CPStatus:                    "normal",
+			CPPotentialMV:               -900,
+			FluidCorrosivity:            "medium",
+			WaterContent:                "medium",
+			CO2H2SPresence:              "present",
+			MICRisk:                     "low",
+			WallThicknessCondition:      "warning",
+			BuildingCountInsidePIR:      3,
+			ClassLocation:               "village",
+			EmergencyResponse:           "available",
+			FlowRate:                    100,
+			DetectionTimeHours:          1,
+			SegmentLengthBetweenValvesM: 9966,
+			EnvironmentalSensitivity:    "medium",
+			IsolationValveAvailable:     true,
+			ConsequenceBasis:            "Pipeline MVP index-based CoF",
+			ProbabilityBasis:            "PoF = GFF x max(DF_TPD, DF_EXTERNAL, DF_INTERNAL) x FMS",
+			EngineeringNotes:            "Gas pipeline defaults from workbook 1. Kalkulasi NPS 12 Main Gas Trunkline from SB#1 to WB PPF.xlsx.",
+			RequiresConfirmation:        false,
+		},
+	}
 }
 
 func pipelineOilDefaultInput() models.PipelineOilInput {
