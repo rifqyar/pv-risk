@@ -97,7 +97,6 @@
               <input type="hidden" name="inspection_result" value="{{ .Input.InspectionResult }}">
               <input type="hidden" name="radiographic_percent" value="{{ .Input.RadiographicPercent }}">
               <input type="hidden" name="type_of_installation" value="{{ .Input.TypeOfInstallation }}">
-              <input type="hidden" name="weld_joint_strength_factor" value="{{ .Input.WeldJointStrengthFactor }}">
               <input type="hidden" name="previous_skpp" value="{{ .Input.PreviousSKPP }}">
               <input type="hidden" name="expiration_date" value="{{ .Input.ExpirationDate }}">
 
@@ -193,12 +192,16 @@
                             <div class="input-group"><input type="number" step="any" class="form-control" name="material_stress_psi" value="{{ .Input.MaterialStressPsi }}" placeholder="20000"><span class="input-group-text">psi</span></div>
                           </div>
                           <div class="col-md-3">
-                            <label class="form-label">Design Factor</label>
+                            <label class="form-label">Design Factor / Coefficient Y</label>
                             <input type="number" step="any" class="form-control" name="design_factor" value="{{ .Input.DesignFactor }}" placeholder="0.6">
                           </div>
                           <div class="col-md-3">
                             <label class="form-label">Quality Factor</label>
                             <input type="number" step="any" class="form-control" name="quality_factor" value="{{ .Input.QualityFactor }}" placeholder="1">
+                          </div>
+                          <div class="col-md-3">
+                            <label class="form-label">Weld Joint Strength Factor</label>
+                            <input type="number" step="any" class="form-control" name="weld_joint_strength_factor" value="{{ .Input.WeldJointStrengthFactor }}" placeholder="1">
                           </div>
                           <div class="col-md-3">
                             <label class="form-label">Design Temperature</label>

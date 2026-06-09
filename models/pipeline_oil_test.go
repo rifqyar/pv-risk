@@ -73,6 +73,45 @@ func samplePipelineGasWorkbookInput() PipelineOilInput {
 	return in
 }
 
+func sampleRawGasPipingWorkbookInput() PipelineOilInput {
+	in := samplePipelineOilInput()
+	in.ReportNo = "PR 2057/PL-MIT/132/2025"
+	in.LineIdentification = "NPS 4 Raw Gas Flowline from NEB #84 Wellhead to NEB #94 Manifold"
+	in.OwnerUser = "PetroChina International Jabung Ltd"
+	in.Contractor = "PetroChina International Jabung Ltd"
+	in.Location = "Tanjung Jabung Barat, Jambi"
+	in.YearUsed = 2018
+	in.Service = "Gas"
+	in.PipeSize = "114,3 mm (OD) x 8,56 mm (T) x 280 m (L)"
+	in.PipeLengthM = 280
+	in.MaterialSpecification = "ASTM A312 TP 316L"
+	in.SMYSPsi = 37700
+	in.InternalDesignPressurePsi = 1520
+	in.CoatingType = "Wrapping"
+	in.CorrosionControl = "N/A"
+	in.RightOfWay = "9"
+	in.SafetyDevice = "1 Unit Gate Valve & 1 Unit Shut Down Valve"
+	in.AreaClassification = "1 Div.2"
+	in.ApplicableCode = "ASME B31.3"
+	in.OutsideDiameterIn = 4.5
+	in.OperatingPressurePsi = 600
+	in.NominalWallThicknessMM = 8.56
+	in.ActualWallThicknessMM = 8.19
+	in.TypeOfInstallation = "Underground & Aboveground"
+	in.WeldJointStrengthFactor = 1
+	in.DesignFactor = 0.4
+	in.MaterialStressPsi = 20000
+	in.InspectionPoints = []PipelineOilInspectionPoint{
+		{InspectionPoint: "IP-2", NominalThicknessMM: 8.56, RequiredThicknessMM: 4.19, ActualThicknessMM: 8.19, MeasuredYear: 2025},
+		{InspectionPoint: "IP-15", NominalThicknessMM: 8.56, RequiredThicknessMM: 4.19, ActualThicknessMM: 8.4, MeasuredYear: 2025},
+		{InspectionPoint: "IP-22", NominalThicknessMM: 8.56, RequiredThicknessMM: 4.19, ActualThicknessMM: 8.44, MeasuredYear: 2025},
+	}
+	in.RBI.ReleaseFluid = "Gas"
+	in.RBI.BuildingCountInsidePIR = 0
+	in.RBI.ClassLocation = "remote"
+	return in
+}
+
 func TestCalculatePipelineOilMatchesWorkbookSamples(t *testing.T) {
 	result, errs := CalculatePipelineOil(samplePipelineOilInput())
 	if len(errs) > 0 {
@@ -145,6 +184,31 @@ func TestCalculatePipelineGasMatchesAppraisalWorkbook(t *testing.T) {
 	assertClose(t, result.LowestMAOPKgCM2, 124.90516554334017, 1e-9)
 	if result.RequiredThicknessStatus != "ACCEPTABLE" || result.HoopStressStatus != "ACCEPTABLE" || result.MAOPStatus != "ACCEPTABLE" {
 		t.Fatalf("expected gas appraisal statuses to match workbook, got thickness=%s hoop=%s maop=%s", result.RequiredThicknessStatus, result.HoopStressStatus, result.MAOPStatus)
+	}
+}
+
+func TestCalculateRawGasPipingUsesASMEB313AppraisalFormula(t *testing.T) {
+	result, errs := CalculatePipelineOil(sampleRawGasPipingWorkbookInput())
+	if len(errs) > 0 {
+		t.Fatalf("unexpected validation errors: %+v", errs)
+	}
+
+	assertClose(t, result.PipeLengthFt, 918.63517060367451, 1e-9)
+	assertClose(t, result.OutsideDiameterMM, 114.3, 1e-12)
+	assertClose(t, result.RequiredThicknessIn, 0.1659549689440994, 1e-12)
+	assertClose(t, result.RequiredThicknessMM, 4.215256211180124, 1e-12)
+	assertClose(t, result.DesignPressureKgCM2, 106.86915559305351, 1e-9)
+	assertClose(t, result.OperatingPressureKgCM2, 42.185192997257957, 1e-9)
+	assertClose(t, result.SMYSKgCM2, 2650.6362933277087, 1e-9)
+	assertClose(t, result.PointResults[0].CorrosionRateMMYear, 0.052857142857143, 1e-12)
+	assertClose(t, result.PointResults[0].RemainingLifeYears, 75.67567567567545, 1e-9)
+	assertClose(t, result.HighestHoopStressPsi, 10606.593406593407, 1e-9)
+	assertClose(t, result.HighestHoopStressKgCM2, 745.73531650097777, 1e-9)
+	assertClose(t, result.HighestHoopStressPercentSMY, 28.134200017489142, 1e-9)
+	assertClose(t, result.LowestMAOPPsi, 3040.427664550618, 1e-9)
+	assertClose(t, result.LowestMAOPKgCM2, 213.76837970545017, 1e-9)
+	if result.RequiredThicknessStatus != "ACCEPTABLE" || result.HoopStressStatus != "ACCEPTABLE" || result.MAOPStatus != "ACCEPTABLE" {
+		t.Fatalf("expected raw gas appraisal statuses to be acceptable, got thickness=%s hoop=%s maop=%s", result.RequiredThicknessStatus, result.HoopStressStatus, result.MAOPStatus)
 	}
 }
 

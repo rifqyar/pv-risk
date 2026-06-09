@@ -391,6 +391,7 @@ $(function () {
       ["smys_psi", "SMYS must be a valid number."],
       ["design_factor", "Design factor must be a valid number."],
       ["quality_factor", "Quality factor must be a valid number."],
+      ["weld_joint_strength_factor", "Weld joint strength factor must be a valid number."],
       ["material_stress_psi", "Material stress must be a valid number."],
       ["generic_failure_frequency", "Generic Failure Frequency (GFF) must be a valid number."],
       ["management_system_score", "Management score must be a valid number."],

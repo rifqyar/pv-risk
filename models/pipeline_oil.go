@@ -542,15 +542,21 @@ func CalculatePipelineOil(input PipelineOilInput) (*PipelineOilResult, []Pipelin
 
 	applyPipelineIndexRisk(input, result)
 
-	tReqIn := requiredThicknessIn(input.InternalDesignPressurePsi, input.OutsideDiameterIn, input.DesignFactor, input.QualityFactor, input.SMYSPsi, input.AllowanceIn)
+	tReqIn := requiredThicknessInForInput(input)
 	result.RequiredThicknessIn = tReqIn
 	result.RequiredThicknessMM = tReqIn * 25.4
+	requiredThicknessExpression := "((P*D)/(2*F*E*SMYS))+c"
+	requiredThicknessInputs := map[string]interface{}{"P": input.InternalDesignPressurePsi, "D": input.OutsideDiameterIn, "F": input.DesignFactor, "E": input.QualityFactor, "SMYS": input.SMYSPsi, "c": input.AllowanceIn}
+	if isASMECode(input.ApplicableCode, "B31.3") {
+		requiredThicknessExpression = "(P*D)/(2*(S*E*W+P*Y))+c"
+		requiredThicknessInputs = map[string]interface{}{"P": input.InternalDesignPressurePsi, "D": input.OutsideDiameterIn, "S": input.MaterialStressPsi, "E": input.QualityFactor, "W": input.WeldJointStrengthFactor, "Y": input.DesignFactor, "c": input.AllowanceIn}
+	}
 	result.FormulaTrace = append(result.FormulaTrace,
 		trace("pipe_length_ft", "Input!G17", "((D17*100)/2.54)/12", map[string]interface{}{"pipe_length_m": input.PipeLengthM}, result.PipeLengthFt, ""),
 		trace("design_temperature_c", "Input!G23", "(5/9)*(D23-32)", map[string]interface{}{"design_temperature_f": input.DesignTemperatureF}, result.DesignTemperatureC, ""),
 		trace("outside_diameter_mm", "Input!G36", "D36*25.4", map[string]interface{}{"outside_diameter_in": input.OutsideDiameterIn}, result.OutsideDiameterMM, ""),
 		trace("allowance_mm", "Input!G29", "D29*25.4", map[string]interface{}{"allowance_in": input.AllowanceIn}, result.AllowanceMM, ""),
-		trace("required_thickness", "7 Appraisal!J63", "((P*D)/(2*F*E*SMYS))+c", map[string]interface{}{"P": input.InternalDesignPressurePsi, "D": input.OutsideDiameterIn, "F": input.DesignFactor, "E": input.QualityFactor, "SMYS": input.SMYSPsi, "c": input.AllowanceIn}, result.RequiredThicknessIn, ""),
+		trace("required_thickness", "7 Appraisal!J63", requiredThicknessExpression, requiredThicknessInputs, result.RequiredThicknessIn, ""),
 		trace("design_pressure_kg_cm2", "7 Appraisal!N25", "design_pressure_psi/14.223", map[string]interface{}{"design_pressure_psi": input.InternalDesignPressurePsi}, result.DesignPressureKgCM2, ""),
 		trace("operating_pressure_kg_cm2", "7 Appraisal!N26", "operating_pressure_psi/14.223", map[string]interface{}{"operating_pressure_psi": input.OperatingPressurePsi}, result.OperatingPressureKgCM2, "Workbook cached value is #VALUE!, formula chain indicates psi to kg/cm2 conversion."),
 		trace("smys_kg_cm2", "7 Appraisal!N37", "smys_psi/14.223", map[string]interface{}{"smys_psi": input.SMYSPsi}, result.SMYSKgCM2, ""),
@@ -574,7 +580,7 @@ func CalculatePipelineOil(input PipelineOilInput) (*PipelineOilResult, []Pipelin
 		}
 		rl := remainingLifeYears(point.ActualThicknessMM, remainingLifeBasisMM, cr)
 		hs := hoopStressPsi(input.InternalDesignPressurePsi, input.OutsideDiameterIn, actualIn)
-		maop := maopPsi(actualIn, input.SMYSPsi, input.DesignFactor, input.QualityFactor, input.OutsideDiameterIn)
+		maop := maopPsiForInput(input, actualIn)
 
 		pr := PipelineOilPointResult{
 			InspectionPoint:       point.InspectionPoint,
@@ -598,7 +604,7 @@ func CalculatePipelineOil(input PipelineOilInput) (*PipelineOilResult, []Pipelin
 			trace("corrosion_rate", "2 Data!O30:O32", "(nominal_thickness_mm-actual_thickness_mm)/(measured_year-year_used)", map[string]interface{}{"point": point.InspectionPoint, "nominal_thickness_mm": point.NominalThicknessMM, "actual_thickness_mm": point.ActualThicknessMM, "measured_year": point.MeasuredYear, "year_used": input.YearUsed}, cr, ""),
 			trace("remaining_life", "2 Data!S30:S32 / 7 Appraisal!R159:R160", "(actual_thickness_mm-required_thickness_mm)/corrosion_rate_mm_year", map[string]interface{}{"point": point.InspectionPoint, "actual_thickness_mm": point.ActualThicknessMM, "required_thickness_mm": remainingLifeBasisMM, "corrosion_rate_mm_year": cr}, rl, "Workbook remaining life references '2 Data' required thickness where provided."),
 			trace("hoop_stress", "7 Appraisal!O90:O92", "(P*D)/(2*actual_thickness_in)", map[string]interface{}{"point": point.InspectionPoint, "P": input.InternalDesignPressurePsi, "D": input.OutsideDiameterIn, "actual_thickness_in": actualIn}, hs, ""),
-			trace("maop", "7 Appraisal!O122:O124", "(2*actual_thickness_in*SMYS*F*E)/D", map[string]interface{}{"point": point.InspectionPoint, "actual_thickness_in": actualIn, "SMYS": input.SMYSPsi, "F": input.DesignFactor, "E": input.QualityFactor, "D": input.OutsideDiameterIn}, maop, ""),
+			trace("maop", "7 Appraisal!O122:O124", maopExpression(input), maopInputs(input, point.InspectionPoint, actualIn), maop, ""),
 		)
 		result.SummaryRequiredThicknessIn = math.Min(result.SummaryRequiredThicknessIn, appraisalRequiredIn)
 		result.MinimumActualThicknessMM = math.Min(result.MinimumActualThicknessMM, point.ActualThicknessMM)
@@ -951,6 +957,7 @@ func ValidatePipelineOilCalculation(input PipelineOilInput) []PipelineOilValidat
 		{"nominal_wall_thickness_mm", input.NominalWallThicknessMM},
 		{"actual_wall_thickness_mm", input.ActualWallThicknessMM},
 		{"quality_factor", input.QualityFactor},
+		{"weld_joint_strength_factor", input.WeldJointStrengthFactor},
 		{"design_factor", input.DesignFactor},
 		{"material_stress_psi", input.MaterialStressPsi},
 	}
@@ -1143,12 +1150,48 @@ func requiredThicknessIn(p, d, f, e, s, c float64) float64 {
 	return ((p * d) / (2 * f * e * s)) + c
 }
 
+func requiredThicknessInForInput(input PipelineOilInput) float64 {
+	if isASMECode(input.ApplicableCode, "B31.3") {
+		denominator := 2 * ((input.MaterialStressPsi * input.QualityFactor * input.WeldJointStrengthFactor) + (input.InternalDesignPressurePsi * input.DesignFactor))
+		if denominator == 0 {
+			return 0
+		}
+		return ((input.InternalDesignPressurePsi * input.OutsideDiameterIn) / denominator) + input.AllowanceIn
+	}
+	return requiredThicknessIn(input.InternalDesignPressurePsi, input.OutsideDiameterIn, input.DesignFactor, input.QualityFactor, input.SMYSPsi, input.AllowanceIn)
+}
+
 func hoopStressPsi(p, d, actualThicknessIn float64) float64 {
 	return (p * d) / (2 * actualThicknessIn)
 }
 
 func maopPsi(actualThicknessIn, s, f, e, d float64) float64 {
 	return (2 * actualThicknessIn * s * f * e) / d
+}
+
+func maopPsiForInput(input PipelineOilInput, actualThicknessIn float64) float64 {
+	if isASMECode(input.ApplicableCode, "B31.3") {
+		denominator := input.OutsideDiameterIn - (2 * input.DesignFactor * actualThicknessIn)
+		if denominator == 0 {
+			return 0
+		}
+		return (2 * input.MaterialStressPsi * input.QualityFactor * input.WeldJointStrengthFactor * actualThicknessIn) / denominator
+	}
+	return maopPsi(actualThicknessIn, input.SMYSPsi, input.DesignFactor, input.QualityFactor, input.OutsideDiameterIn)
+}
+
+func maopExpression(input PipelineOilInput) string {
+	if isASMECode(input.ApplicableCode, "B31.3") {
+		return "(2*S*E*W*actual_thickness_in)/(D-2*Y*actual_thickness_in)"
+	}
+	return "(2*actual_thickness_in*SMYS*F*E)/D"
+}
+
+func maopInputs(input PipelineOilInput, point string, actualThicknessIn float64) map[string]interface{} {
+	if isASMECode(input.ApplicableCode, "B31.3") {
+		return map[string]interface{}{"point": point, "actual_thickness_in": actualThicknessIn, "S": input.MaterialStressPsi, "E": input.QualityFactor, "W": input.WeldJointStrengthFactor, "D": input.OutsideDiameterIn, "Y": input.DesignFactor}
+	}
+	return map[string]interface{}{"point": point, "actual_thickness_in": actualThicknessIn, "SMYS": input.SMYSPsi, "F": input.DesignFactor, "E": input.QualityFactor, "D": input.OutsideDiameterIn}
 }
 
 func psiToKgCM2(psi float64) float64 {
@@ -1206,6 +1249,12 @@ func trace(name, excelRef, expression string, inputs map[string]interface{}, out
 
 func formatEngineeringValue(value float64) string {
 	return fmt.Sprintf("%.6g", value)
+}
+
+func isASMECode(applicableCode, code string) bool {
+	normalizedCode := strings.ReplaceAll(strings.ToUpper(applicableCode), " ", "")
+	normalizedNeedle := strings.ReplaceAll(strings.ToUpper(code), " ", "")
+	return strings.Contains(normalizedCode, normalizedNeedle)
 }
 
 func pipelineOilJSONPayloads(input PipelineOilInput, result *PipelineOilResult) (string, string, string, string, error) {

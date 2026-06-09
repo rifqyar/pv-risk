@@ -79,7 +79,7 @@
                   <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="mdi mdi-dots-vertical"></i></button>
                   <div class="dropdown-menu">
                     <a class="dropdown-item" href="/assessment-pipeline/view/{{ .ID }}"><i class="mdi mdi-eye-outline me-1 text-info"></i> View Detail</a>
-                    {{ if eq .Status "DRAFT" }}<a class="dropdown-item" href="/assessment-pipeline/edit/{{ .ID }}"><i class="mdi mdi-pencil-outline me-1 text-warning"></i> Edit Draft</a>{{ end }}
+                    <a class="dropdown-item" href="/assessment-pipeline/edit/{{ .ID }}"><i class="mdi mdi-pencil-outline me-1 text-warning"></i> Edit Assessment</a>
                     <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="archivePipelineAssessment('{{ .ID }}')"><i class="mdi mdi-archive-outline me-1"></i> Archive</a>
                   </div>
                 </div>
