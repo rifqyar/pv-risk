@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const PipelineOilFormulaVersion = "pipeline-oil-rbi581-v1"
+const PipelineOilFormulaVersion = "pipeline-oil-risk-v1"
 
 var (
 	ErrPipelineValidation = errors.New("pipeline oil validation failed")
@@ -128,10 +128,10 @@ type PipelineOilInput struct {
 	TemperatureDeratingFactor float64                       `json:"temperature_derating_factor" form:"temperature_derating_factor"`
 	AssessmentBy              string                        `json:"assessment_by" form:"assessment_by"`
 	InspectionPoints          []PipelineOilInspectionPoint  `json:"inspection_points"`
-	RBI                       PipelineOilRBIStructuralInput `json:"rbi"`
+	RiskInput                       PipelineOilRiskInput `json:"risk_input"`
 }
 
-type PipelineOilRBIStructuralInput struct {
+type PipelineOilRiskInput struct {
 	DamageMechanism             string  `json:"damage_mechanism" form:"damage_mechanism"`
 	InspectionEffectivity       string  `json:"inspection_effectivity" form:"inspection_effectivity"`
 	ReleaseFluid                string  `json:"release_fluid" form:"release_fluid"`
@@ -530,10 +530,10 @@ func CalculatePipelineOil(input PipelineOilInput) (*PipelineOilResult, []Pipelin
 		PoF:                     "TODO_ENGINEERING_CONFIRMATION",
 		CoF:                     "TODO_ENGINEERING_CONFIRMATION",
 		RiskRanking:             "TODO_ENGINEERING_CONFIRMATION",
-		InspectionEffectiveness: input.RBI.InspectionEffectivity,
+		InspectionEffectiveness: input.RiskInput.InspectionEffectivity,
 		TODOEngineeringConfirmation: []string{
-			"RBI 581 probability of failure formula is not present in workbook.",
-			"RBI 581 consequence of failure formula is not present in workbook.",
+			"Probability of failure formula is not present in workbook.",
+			"Consequence of failure formula is not present in workbook.",
 			"Risk ranking matrix/formula is not present in workbook.",
 			"Workbook contains #REF! formulas in sheet '6 Verification' and downstream '2 Data' ranges for additional inspection rows.",
 			"API 581 exact GFF tables, damage-factor tables, CoF category thresholds, and risk matrix thresholds require licensed engineering data.",
@@ -645,13 +645,13 @@ func CalculatePipelineOil(input PipelineOilInput) (*PipelineOilResult, []Pipelin
 }
 
 func applyPipelineIndexRisk(input PipelineOilInput, result *PipelineOilResult) {
-	dfTPD := calculateThirdPartyDamageFactor(input.RBI.BaseTPDRate, input.RBI.DepthOfCover, input.RBI.PatrolFrequency, input.RBI.ROWCondition)
-	dfExternal := calculateExternalCorrosionFactor(input.RBI.BaseExternalCorrRate, input.RBI.SoilResistivity, input.RBI.CoatingCondition, input.RBI.CPStatus, input.RBI.CPPotentialMV)
-	dfInternal := calculateInternalCorrosionFactor(input.RBI.BaseInternalCorrRate, input.RBI.FluidCorrosivity, input.RBI.WaterContent, input.RBI.CO2H2SPresence, input.RBI.MICRisk, input.RBI.WallThicknessCondition)
-	pofValue, fms, governingDF, governingDriver := calculatePipelinePoF(input.RBI.GenericFailureFrequency, input.RBI.ManagementSystemScore, dfTPD, dfExternal, dfInternal)
+	dfTPD := calculateThirdPartyDamageFactor(input.RiskInput.BaseTPDRate, input.RiskInput.DepthOfCover, input.RiskInput.PatrolFrequency, input.RiskInput.ROWCondition)
+	dfExternal := calculateExternalCorrosionFactor(input.RiskInput.BaseExternalCorrRate, input.RiskInput.SoilResistivity, input.RiskInput.CoatingCondition, input.RiskInput.CPStatus, input.RiskInput.CPPotentialMV)
+	dfInternal := calculateInternalCorrosionFactor(input.RiskInput.BaseInternalCorrRate, input.RiskInput.FluidCorrosivity, input.RiskInput.WaterContent, input.RiskInput.CO2H2SPresence, input.RiskInput.MICRisk, input.RiskInput.WallThicknessCondition)
+	pofValue, fms, governingDF, governingDriver := calculatePipelinePoF(input.RiskInput.GenericFailureFrequency, input.RiskInput.ManagementSystemScore, dfTPD, dfExternal, dfInternal)
 
-	result.GenericFailureFrequency = input.RBI.GenericFailureFrequency
-	result.ManagementSystemScore = input.RBI.ManagementSystemScore
+	result.GenericFailureFrequency = input.RiskInput.GenericFailureFrequency
+	result.ManagementSystemScore = input.RiskInput.ManagementSystemScore
 	result.ManagementSystemFactor = fms
 	result.ThirdPartyDamageFactor = dfTPD
 	result.ExternalCorrosionFactor = dfExternal
@@ -663,12 +663,12 @@ func applyPipelineIndexRisk(input PipelineOilInput, result *PipelineOilResult) {
 	result.PoF = pofCategory(pofValue)
 
 	if isGasService(input.Service) {
-		cofCategory, pir := calculateGasCoF(input.OutsideDiameterIn, input.OperatingPressurePsi, input.RBI.BuildingCountInsidePIR, input.RBI.ClassLocation)
+		cofCategory, pir := calculateGasCoF(input.OutsideDiameterIn, input.OperatingPressurePsi, input.RiskInput.BuildingCountInsidePIR, input.RiskInput.ClassLocation)
 		result.PIRFeet = pir
 		result.CoF = cofCategory
 		result.CoFValue = cofNumeric(cofCategory)
 	} else {
-		cofCategory, spillVolume, adjustedSpillVolume := calculateLiquidCoF(input.RBI.FlowRate, input.RBI.DetectionTimeHours, input.OutsideDiameterIn, input.RBI.SegmentLengthBetweenValvesM, input.RBI.EnvironmentalSensitivity, input.RBI.NearbySensitiveReceptor, input.RBI.IsolationValveAvailable)
+		cofCategory, spillVolume, adjustedSpillVolume := calculateLiquidCoF(input.RiskInput.FlowRate, input.RiskInput.DetectionTimeHours, input.OutsideDiameterIn, input.RiskInput.SegmentLengthBetweenValvesM, input.RiskInput.EnvironmentalSensitivity, input.RiskInput.NearbySensitiveReceptor, input.RiskInput.IsolationValveAvailable)
 		result.SpillVolume = spillVolume
 		result.AdjustedSpillVolume = adjustedSpillVolume
 		result.CoF = cofCategory
@@ -681,10 +681,10 @@ func applyPipelineIndexRisk(input PipelineOilInput, result *PipelineOilResult) {
 	result.Recommendation = generatePipelineRecommendation(result, input.Service)
 	result.TODOEngineeringConfirmation = nil
 	result.FormulaTrace = append(result.FormulaTrace,
-		trace("pipeline_third_party_damage_df", "Pipeline MVP", "DF_TPD = Base_TPD_Rate / (Depth_Factor * Patrol_Factor * ROW_Factor)", map[string]interface{}{"base_tpd_rate": input.RBI.BaseTPDRate, "depth_of_cover": input.RBI.DepthOfCover, "patrol_frequency": input.RBI.PatrolFrequency, "row_condition": input.RBI.ROWCondition}, dfTPD, ""),
-		trace("pipeline_external_corrosion_df", "Pipeline MVP", "DF_EXTERNAL = Base_Corr_Rate * Soil_Factor * Coating_Factor * CP_Factor", map[string]interface{}{"base_external_corr_rate": input.RBI.BaseExternalCorrRate, "soil_resistivity": input.RBI.SoilResistivity, "coating_condition": input.RBI.CoatingCondition, "cp_status": input.RBI.CPStatus, "cp_potential_mv": input.RBI.CPPotentialMV}, dfExternal, "CP potential around -850 mV or more negative is generally protective; non-compliant CP increases risk through CP status."),
-		trace("pipeline_internal_corrosion_df", "Pipeline MVP", "DF_INTERNAL = Base_Internal_Corr_Rate * Fluid * Water * CO2/H2S * MIC * Wall", map[string]interface{}{"base_internal_corr_rate": input.RBI.BaseInternalCorrRate, "fluid_corrosivity": input.RBI.FluidCorrosivity, "water_content": input.RBI.WaterContent, "co2_h2s_presence": input.RBI.CO2H2SPresence, "mic_risk": input.RBI.MICRisk, "wall_thickness_condition": input.RBI.WallThicknessCondition}, dfInternal, ""),
-		trace("pipeline_pof", "Pipeline MVP", "PoF = GFF * max(DF_TPD, DF_EXTERNAL, DF_INTERNAL) * FMS", map[string]interface{}{"gff": input.RBI.GenericFailureFrequency, "governing_df": governingDF, "fms": fms}, pofValue, ""),
+		trace("pipeline_third_party_damage_df", "Pipeline MVP", "DF_TPD = Base_TPD_Rate / (Depth_Factor * Patrol_Factor * ROW_Factor)", map[string]interface{}{"base_tpd_rate": input.RiskInput.BaseTPDRate, "depth_of_cover": input.RiskInput.DepthOfCover, "patrol_frequency": input.RiskInput.PatrolFrequency, "row_condition": input.RiskInput.ROWCondition}, dfTPD, ""),
+		trace("pipeline_external_corrosion_df", "Pipeline MVP", "DF_EXTERNAL = Base_Corr_Rate * Soil_Factor * Coating_Factor * CP_Factor", map[string]interface{}{"base_external_corr_rate": input.RiskInput.BaseExternalCorrRate, "soil_resistivity": input.RiskInput.SoilResistivity, "coating_condition": input.RiskInput.CoatingCondition, "cp_status": input.RiskInput.CPStatus, "cp_potential_mv": input.RiskInput.CPPotentialMV}, dfExternal, "CP potential around -850 mV or more negative is generally protective; non-compliant CP increases risk through CP status."),
+		trace("pipeline_internal_corrosion_df", "Pipeline MVP", "DF_INTERNAL = Base_Internal_Corr_Rate * Fluid * Water * CO2/H2S * MIC * Wall", map[string]interface{}{"base_internal_corr_rate": input.RiskInput.BaseInternalCorrRate, "fluid_corrosivity": input.RiskInput.FluidCorrosivity, "water_content": input.RiskInput.WaterContent, "co2_h2s_presence": input.RiskInput.CO2H2SPresence, "mic_risk": input.RiskInput.MICRisk, "wall_thickness_condition": input.RiskInput.WallThicknessCondition}, dfInternal, ""),
+		trace("pipeline_pof", "Pipeline MVP", "PoF = GFF * max(DF_TPD, DF_EXTERNAL, DF_INTERNAL) * FMS", map[string]interface{}{"gff": input.RiskInput.GenericFailureFrequency, "governing_df": governingDF, "fms": fms}, pofValue, ""),
 		trace("pipeline_risk_ranking", "Pipeline MVP", "Risk = PoF Category x CoF Category", map[string]interface{}{"pof_category": result.PoF, "cof_category": result.CoF}, result.RiskRanking, ""),
 	)
 }
@@ -867,38 +867,38 @@ func isGasService(service string) bool {
 }
 
 func applyAPI581PublicMethodology(input PipelineOilInput, result *PipelineOilResult) {
-	result.GenericFailureFrequency = input.RBI.GenericFailureFrequency
-	result.ManagementSystemScore = input.RBI.ManagementSystemScore
-	result.DamageFactor = input.RBI.DamageFactor
+	result.GenericFailureFrequency = input.RiskInput.GenericFailureFrequency
+	result.ManagementSystemScore = input.RiskInput.ManagementSystemScore
+	result.DamageFactor = input.RiskInput.DamageFactor
 
-	if input.RBI.ManagementSystemScore > 0 {
-		pscore := (input.RBI.ManagementSystemScore / 1000) * 100
+	if input.RiskInput.ManagementSystemScore > 0 {
+		pscore := (input.RiskInput.ManagementSystemScore / 1000) * 100
 		result.ManagementSystemFactor = math.Pow(10, (-0.02*pscore)+1)
 		result.FormulaTrace = append(result.FormulaTrace,
-			trace("api581_management_system_factor", "API 581 public methodology", "FMS = 10^((-0.02*(score/1000*100))+1)", map[string]interface{}{"management_system_score": input.RBI.ManagementSystemScore, "pscore": pscore}, result.ManagementSystemFactor, "Uses public API 581 methodology summary; scoring source remains engineer supplied."),
+			trace("api581_management_system_factor", "API 581 public methodology", "FMS = 10^((-0.02*(score/1000*100))+1)", map[string]interface{}{"management_system_score": input.RiskInput.ManagementSystemScore, "pscore": pscore}, result.ManagementSystemFactor, "Uses public API 581 methodology summary; scoring source remains engineer supplied."),
 		)
 	}
 
-	if input.RBI.GenericFailureFrequency > 0 && result.ManagementSystemFactor > 0 && input.RBI.DamageFactor > 0 {
-		result.PoFValue = input.RBI.GenericFailureFrequency * result.ManagementSystemFactor * input.RBI.DamageFactor
+	if input.RiskInput.GenericFailureFrequency > 0 && result.ManagementSystemFactor > 0 && input.RiskInput.DamageFactor > 0 {
+		result.PoFValue = input.RiskInput.GenericFailureFrequency * result.ManagementSystemFactor * input.RiskInput.DamageFactor
 		result.PoF = formatEngineeringValue(result.PoFValue)
 		result.FormulaTrace = append(result.FormulaTrace,
-			trace("api581_probability_of_failure", "API 581 public methodology", "PoF(t) = GFF * FMS * Df(t)", map[string]interface{}{"gff": input.RBI.GenericFailureFrequency, "fms": result.ManagementSystemFactor, "damage_factor": input.RBI.DamageFactor}, result.PoFValue, "GFF and Df are engineer supplied because API 581 lookup tables are not included in the workbook."),
+			trace("api581_probability_of_failure", "API 581 public methodology", "PoF(t) = GFF * FMS * Df(t)", map[string]interface{}{"gff": input.RiskInput.GenericFailureFrequency, "fms": result.ManagementSystemFactor, "damage_factor": input.RiskInput.DamageFactor}, result.PoFValue, "GFF and Df are engineer supplied because API 581 lookup tables are not included in the workbook."),
 		)
 	}
 
 	switch {
-	case input.RBI.ConsequenceFinancial > 0:
-		result.CoFValue = input.RBI.ConsequenceFinancial
+	case input.RiskInput.ConsequenceFinancial > 0:
+		result.CoFValue = input.RiskInput.ConsequenceFinancial
 		result.CoF = formatEngineeringValue(result.CoFValue)
 		result.FormulaTrace = append(result.FormulaTrace,
-			trace("api581_consequence_financial", "API 581 public methodology", "CoF = financial consequence input", map[string]interface{}{"consequence_financial": input.RBI.ConsequenceFinancial}, result.CoFValue, "Financial consequence is engineer supplied; API 581 detailed Level 1/2 consequence model is not in workbook."),
+			trace("api581_consequence_financial", "API 581 public methodology", "CoF = financial consequence input", map[string]interface{}{"consequence_financial": input.RiskInput.ConsequenceFinancial}, result.CoFValue, "Financial consequence is engineer supplied; API 581 detailed Level 1/2 consequence model is not in workbook."),
 		)
-	case input.RBI.ConsequenceArea > 0:
-		result.CoFValue = input.RBI.ConsequenceArea
+	case input.RiskInput.ConsequenceArea > 0:
+		result.CoFValue = input.RiskInput.ConsequenceArea
 		result.CoF = formatEngineeringValue(result.CoFValue)
 		result.FormulaTrace = append(result.FormulaTrace,
-			trace("api581_consequence_area", "API 581 public methodology", "CoF = affected area consequence input", map[string]interface{}{"consequence_area": input.RBI.ConsequenceArea}, result.CoFValue, "Affected area consequence is engineer supplied; API 581 detailed Level 1/2 consequence model is not in workbook."),
+			trace("api581_consequence_area", "API 581 public methodology", "CoF = affected area consequence input", map[string]interface{}{"consequence_area": input.RiskInput.ConsequenceArea}, result.CoFValue, "Affected area consequence is engineer supplied; API 581 detailed Level 1/2 consequence model is not in workbook."),
 		)
 	}
 
@@ -909,14 +909,14 @@ func applyAPI581PublicMethodology(input PipelineOilInput, result *PipelineOilRes
 		)
 	}
 
-	if input.RBI.PoFCategory != "" {
-		result.PoF = input.RBI.PoFCategory
+	if input.RiskInput.PoFCategory != "" {
+		result.PoF = input.RiskInput.PoFCategory
 	}
-	if input.RBI.CoFCategory != "" {
-		result.CoF = input.RBI.CoFCategory
+	if input.RiskInput.CoFCategory != "" {
+		result.CoF = input.RiskInput.CoFCategory
 	}
-	if input.RBI.RiskRanking != "" {
-		result.RiskRanking = input.RBI.RiskRanking
+	if input.RiskInput.RiskRanking != "" {
+		result.RiskRanking = input.RiskInput.RiskRanking
 	} else if result.RiskValue > 0 {
 		result.RiskRanking = formatEngineeringValue(result.RiskValue)
 	}
@@ -978,14 +978,14 @@ func ValidatePipelineOilCalculation(input PipelineOilInput) []PipelineOilValidat
 	if input.InternalDesignPressurePsi > 20000 {
 		errs = append(errs, PipelineOilValidationError{Field: "internal_design_pressure_psi", Message: "extreme pressure requires engineering confirmation"})
 	}
-	if input.RBI.ManagementSystemScore < 0 || input.RBI.ManagementSystemScore > 1000 {
-		errs = append(errs, PipelineOilValidationError{Field: "rbi.management_system_score", Message: "must be between 0 and 1000"})
+	if input.RiskInput.ManagementSystemScore < 0 || input.RiskInput.ManagementSystemScore > 1000 {
+		errs = append(errs, PipelineOilValidationError{Field: "RiskInput.management_system_score", Message: "must be between 0 and 1000"})
 	}
-	if input.RBI.GenericFailureFrequency <= 0 {
-		errs = append(errs, PipelineOilValidationError{Field: "rbi.generic_failure_frequency", Message: "must be greater than zero"})
+	if input.RiskInput.GenericFailureFrequency <= 0 {
+		errs = append(errs, PipelineOilValidationError{Field: "RiskInput.generic_failure_frequency", Message: "must be greater than zero"})
 	}
-	if input.RBI.BaseTPDRate <= 0 || input.RBI.BaseExternalCorrRate <= 0 || input.RBI.BaseInternalCorrRate <= 0 {
-		errs = append(errs, PipelineOilValidationError{Field: "rbi.base_rates", Message: "must be greater than zero"})
+	if input.RiskInput.BaseTPDRate <= 0 || input.RiskInput.BaseExternalCorrRate <= 0 || input.RiskInput.BaseInternalCorrRate <= 0 {
+		errs = append(errs, PipelineOilValidationError{Field: "RiskInput.base_rates", Message: "must be greater than zero"})
 	}
 	validateOption := func(field, value string, allowed map[string]float64) {
 		if _, ok := allowed[strings.TrimSpace(value)]; !ok {
@@ -994,32 +994,32 @@ func ValidatePipelineOilCalculation(input PipelineOilInput) []PipelineOilValidat
 			}
 		}
 	}
-	validateOption("rbi.depth_of_cover", input.RBI.DepthOfCover, pipelineDepthFactors)
-	validateOption("rbi.patrol_frequency", input.RBI.PatrolFrequency, pipelinePatrolFactors)
-	validateOption("rbi.row_condition", input.RBI.ROWCondition, pipelineROWFactors)
-	validateOption("rbi.soil_resistivity", input.RBI.SoilResistivity, pipelineSoilFactors)
-	validateOption("rbi.coating_condition", input.RBI.CoatingCondition, pipelineConditionFactors)
-	validateOption("rbi.cp_status", input.RBI.CPStatus, pipelineCPFactors)
-	validateOption("rbi.fluid_corrosivity", input.RBI.FluidCorrosivity, pipelineInternalFactors)
-	validateOption("rbi.water_content", input.RBI.WaterContent, pipelineInternalFactors)
-	validateOption("rbi.co2_h2s_presence", input.RBI.CO2H2SPresence, pipelineInternalFactors)
-	validateOption("rbi.mic_risk", input.RBI.MICRisk, pipelineInternalFactors)
-	validateOption("rbi.wall_thickness_condition", input.RBI.WallThicknessCondition, pipelineInternalFactors)
+	validateOption("RiskInput.depth_of_cover", input.RiskInput.DepthOfCover, pipelineDepthFactors)
+	validateOption("RiskInput.patrol_frequency", input.RiskInput.PatrolFrequency, pipelinePatrolFactors)
+	validateOption("RiskInput.row_condition", input.RiskInput.ROWCondition, pipelineROWFactors)
+	validateOption("RiskInput.soil_resistivity", input.RiskInput.SoilResistivity, pipelineSoilFactors)
+	validateOption("RiskInput.coating_condition", input.RiskInput.CoatingCondition, pipelineConditionFactors)
+	validateOption("RiskInput.cp_status", input.RiskInput.CPStatus, pipelineCPFactors)
+	validateOption("RiskInput.fluid_corrosivity", input.RiskInput.FluidCorrosivity, pipelineInternalFactors)
+	validateOption("RiskInput.water_content", input.RiskInput.WaterContent, pipelineInternalFactors)
+	validateOption("RiskInput.co2_h2s_presence", input.RiskInput.CO2H2SPresence, pipelineInternalFactors)
+	validateOption("RiskInput.mic_risk", input.RiskInput.MICRisk, pipelineInternalFactors)
+	validateOption("RiskInput.wall_thickness_condition", input.RiskInput.WallThicknessCondition, pipelineInternalFactors)
 	if isGasService(input.Service) {
-		if input.RBI.BuildingCountInsidePIR < 0 {
-			errs = append(errs, PipelineOilValidationError{Field: "rbi.building_count_inside_pir", Message: "cannot be negative"})
+		if input.RiskInput.BuildingCountInsidePIR < 0 {
+			errs = append(errs, PipelineOilValidationError{Field: "RiskInput.building_count_inside_pir", Message: "cannot be negative"})
 		}
 	} else {
-		if input.RBI.FlowRate <= 0 {
-			errs = append(errs, PipelineOilValidationError{Field: "rbi.flow_rate", Message: "must be greater than zero"})
+		if input.RiskInput.FlowRate <= 0 {
+			errs = append(errs, PipelineOilValidationError{Field: "RiskInput.flow_rate", Message: "must be greater than zero"})
 		}
-		if input.RBI.DetectionTimeHours <= 0 {
-			errs = append(errs, PipelineOilValidationError{Field: "rbi.detection_time_hours", Message: "must be greater than zero"})
+		if input.RiskInput.DetectionTimeHours <= 0 {
+			errs = append(errs, PipelineOilValidationError{Field: "RiskInput.detection_time_hours", Message: "must be greater than zero"})
 		}
-		if input.RBI.SegmentLengthBetweenValvesM <= 0 {
-			errs = append(errs, PipelineOilValidationError{Field: "rbi.segment_length_between_valves_m", Message: "must be greater than zero"})
+		if input.RiskInput.SegmentLengthBetweenValvesM <= 0 {
+			errs = append(errs, PipelineOilValidationError{Field: "RiskInput.segment_length_between_valves_m", Message: "must be greater than zero"})
 		}
-		validateOption("rbi.environmental_sensitivity", input.RBI.EnvironmentalSensitivity, pipelineEnvironmentalMultipliers)
+		validateOption("RiskInput.environmental_sensitivity", input.RiskInput.EnvironmentalSensitivity, pipelineEnvironmentalMultipliers)
 	}
 	if len(input.InspectionPoints) == 0 {
 		errs = append(errs, PipelineOilValidationError{Field: "inspection_points", Message: "at least one inspection point is required"})
@@ -1067,71 +1067,71 @@ func applyPipelineOilDefaults(input *PipelineOilInput) {
 	if input.TemperatureDeratingFactor == 0 {
 		input.TemperatureDeratingFactor = 1
 	}
-	if input.RBI.GenericFailureFrequency == 0 {
-		input.RBI.GenericFailureFrequency = defaultPipelineGFF
+	if input.RiskInput.GenericFailureFrequency == 0 {
+		input.RiskInput.GenericFailureFrequency = defaultPipelineGFF
 	}
-	if input.RBI.ManagementSystemScore == 0 {
-		input.RBI.ManagementSystemScore = defaultPipelineManagementScore
+	if input.RiskInput.ManagementSystemScore == 0 {
+		input.RiskInput.ManagementSystemScore = defaultPipelineManagementScore
 	}
-	if input.RBI.BaseTPDRate == 0 {
-		input.RBI.BaseTPDRate = defaultPipelineBaseTPDRate
+	if input.RiskInput.BaseTPDRate == 0 {
+		input.RiskInput.BaseTPDRate = defaultPipelineBaseTPDRate
 	}
-	if input.RBI.BaseExternalCorrRate == 0 {
-		input.RBI.BaseExternalCorrRate = defaultPipelineBaseCorrRate
+	if input.RiskInput.BaseExternalCorrRate == 0 {
+		input.RiskInput.BaseExternalCorrRate = defaultPipelineBaseCorrRate
 	}
-	if input.RBI.BaseInternalCorrRate == 0 {
-		input.RBI.BaseInternalCorrRate = defaultPipelineBaseCorrRate
+	if input.RiskInput.BaseInternalCorrRate == 0 {
+		input.RiskInput.BaseInternalCorrRate = defaultPipelineBaseCorrRate
 	}
-	if input.RBI.DepthOfCover == "" {
-		input.RBI.DepthOfCover = "1-2m"
+	if input.RiskInput.DepthOfCover == "" {
+		input.RiskInput.DepthOfCover = "1-2m"
 	}
-	if input.RBI.PatrolFrequency == "" {
-		input.RBI.PatrolFrequency = "monthly"
+	if input.RiskInput.PatrolFrequency == "" {
+		input.RiskInput.PatrolFrequency = "monthly"
 	}
-	if input.RBI.ROWCondition == "" {
-		input.RBI.ROWCondition = "fair"
+	if input.RiskInput.ROWCondition == "" {
+		input.RiskInput.ROWCondition = "fair"
 	}
-	if input.RBI.SoilResistivity == "" {
-		input.RBI.SoilResistivity = "1000-5000"
+	if input.RiskInput.SoilResistivity == "" {
+		input.RiskInput.SoilResistivity = "1000-5000"
 	}
-	if input.RBI.CoatingCondition == "" {
-		input.RBI.CoatingCondition = "fair"
+	if input.RiskInput.CoatingCondition == "" {
+		input.RiskInput.CoatingCondition = "fair"
 	}
-	if input.RBI.CPStatus == "" {
-		input.RBI.CPStatus = "normal"
+	if input.RiskInput.CPStatus == "" {
+		input.RiskInput.CPStatus = "normal"
 	}
-	if input.RBI.FluidCorrosivity == "" {
-		input.RBI.FluidCorrosivity = "medium"
+	if input.RiskInput.FluidCorrosivity == "" {
+		input.RiskInput.FluidCorrosivity = "medium"
 	}
-	if input.RBI.WaterContent == "" {
-		input.RBI.WaterContent = "medium"
+	if input.RiskInput.WaterContent == "" {
+		input.RiskInput.WaterContent = "medium"
 	}
-	if input.RBI.CO2H2SPresence == "" {
-		input.RBI.CO2H2SPresence = "present"
+	if input.RiskInput.CO2H2SPresence == "" {
+		input.RiskInput.CO2H2SPresence = "present"
 	}
-	if input.RBI.MICRisk == "" {
-		input.RBI.MICRisk = "low"
+	if input.RiskInput.MICRisk == "" {
+		input.RiskInput.MICRisk = "low"
 	}
-	if input.RBI.WallThicknessCondition == "" {
-		input.RBI.WallThicknessCondition = "warning"
+	if input.RiskInput.WallThicknessCondition == "" {
+		input.RiskInput.WallThicknessCondition = "warning"
 	}
-	if input.RBI.ClassLocation == "" {
-		input.RBI.ClassLocation = "remote"
+	if input.RiskInput.ClassLocation == "" {
+		input.RiskInput.ClassLocation = "remote"
 	}
-	if input.RBI.EmergencyResponse == "" {
-		input.RBI.EmergencyResponse = "available"
+	if input.RiskInput.EmergencyResponse == "" {
+		input.RiskInput.EmergencyResponse = "available"
 	}
-	if input.RBI.FlowRate == 0 {
-		input.RBI.FlowRate = 100
+	if input.RiskInput.FlowRate == 0 {
+		input.RiskInput.FlowRate = 100
 	}
-	if input.RBI.DetectionTimeHours == 0 {
-		input.RBI.DetectionTimeHours = 1
+	if input.RiskInput.DetectionTimeHours == 0 {
+		input.RiskInput.DetectionTimeHours = 1
 	}
-	if input.RBI.SegmentLengthBetweenValvesM == 0 {
-		input.RBI.SegmentLengthBetweenValvesM = input.PipeLengthM
+	if input.RiskInput.SegmentLengthBetweenValvesM == 0 {
+		input.RiskInput.SegmentLengthBetweenValvesM = input.PipeLengthM
 	}
-	if input.RBI.EnvironmentalSensitivity == "" {
-		input.RBI.EnvironmentalSensitivity = "medium"
+	if input.RiskInput.EnvironmentalSensitivity == "" {
+		input.RiskInput.EnvironmentalSensitivity = "medium"
 	}
 	if input.YearUsed == 0 {
 		input.YearUsed = input.YearBuilt
@@ -1294,3 +1294,4 @@ func formatPipelineValidationErrors(errs []PipelineOilValidationError) string {
 	}
 	return strings.Join(parts, "; ")
 }
+

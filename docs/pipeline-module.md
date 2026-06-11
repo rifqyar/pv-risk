@@ -2,7 +2,7 @@
 
 ## Overview
 
-This module adds an isolated Pipeline Risk Assessment area beside the existing Pressure Vessel assessment module. It is an MVP simplified/index-based RBI module for gas, oil, and liquid pipeline segments.
+This module adds an isolated Pipeline Risk Assessment area beside the existing Pressure Vessel assessment module. It is an MVP simplified/index-based RiskInput module for gas, oil, and liquid pipeline segments.
 
 The storage pattern remains the existing `pipeline_oil_assessments` table with full input/result JSON snapshots, so old records stay reproducible and no disruptive schema migration is required for the new factor fields.
 
@@ -88,3 +88,4 @@ The detail page shows:
 - Open `/assessment-pipeline/gas`, calculate a gas record, and confirm PIR, CoF, risk code, and recommendation.
 - Confirm formula trace includes the pipeline MVP formulas.
 - Confirm Pressure Vessel list/form/detail still opens.
+

@@ -222,8 +222,8 @@ func pipelineGasDefaultInput() models.PipelineOilInput {
 			{InspectionPoint: "IP-2", InstallationType: "Underground", NominalThicknessMM: 10.31, RequiredThicknessMM: 7.01, ActualThicknessMM: 9.22, MeasuredYear: 2024},
 			{InspectionPoint: "IP-11", InstallationType: "Underground", NominalThicknessMM: 10.31, RequiredThicknessMM: 7.01, ActualThicknessMM: 9.58, MeasuredYear: 2024},
 		},
-		RBI: models.PipelineOilRBIStructuralInput{
-			DamageMechanism:             "Pipeline MVP Index RBI",
+		RiskInput: models.PipelineOilRiskInput{
+			DamageMechanism:             "Pipeline MVP Index Risk",
 			InspectionEffectivity:       "Representative",
 			ReleaseFluid:                "Gas",
 			GenericFailureFrequency:     0.00003,
@@ -307,8 +307,8 @@ func pipelineOilDefaultInput() models.PipelineOilInput {
 			{InspectionPoint: "IP-8 A", InstallationType: "Above Ground", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 6.12, MeasuredYear: 2025},
 			{InspectionPoint: "IP-8 C", InstallationType: "Above Ground", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 6.21, MeasuredYear: 2025},
 		},
-		RBI: models.PipelineOilRBIStructuralInput{
-			DamageMechanism:             "Pipeline MVP Index RBI",
+		RiskInput: models.PipelineOilRiskInput{
+			DamageMechanism:             "Pipeline MVP Index Risk",
 			InspectionEffectivity:       "Representative",
 			ReleaseFluid:                "Oil",
 			GenericFailureFrequency:     0.00003,
@@ -338,7 +338,7 @@ func pipelineOilDefaultInput() models.PipelineOilInput {
 			IsolationValveAvailable:     true,
 			ConsequenceBasis:            "Pipeline MVP index-based CoF",
 			ProbabilityBasis:            "PoF = GFF x max(DF_TPD, DF_EXTERNAL, DF_INTERNAL) x FMS",
-			EngineeringNotes:            "MVP simplified pipeline RBI calculation.",
+			EngineeringNotes:            "MVP simplified pipeline RiskInput calculation.",
 			RequiresConfirmation:        false,
 		},
 	}
@@ -356,3 +356,4 @@ func statusFromPipelineError(err error) int {
 	}
 	return http.StatusInternalServerError
 }
+

@@ -187,8 +187,8 @@ $(function () {
       data.internal_design_pressure_psi = data.operating_pressure_psi;
     }
 
-    data.rbi = {
-      damage_mechanism: $("input[name='damage_mechanism']").val() || "Pipeline MVP Index RBI",
+    data.RiskInput = {
+      damage_mechanism: $("input[name='damage_mechanism']").val() || "Pipeline MVP Index Risk",
       inspection_effectivity: $("input[name='inspection_effectivity']").val() || "Representative",
       release_fluid: $("[name='service']").val(),
       generic_failure_frequency: numberValue($("input[name='generic_failure_frequency']").val()),
@@ -259,6 +259,7 @@ $(function () {
       .text(normalizeRiskLevel(result.final_risk_level));
     $("#pipelineRiskExplanation").text(`This pipeline is classified as ${normalizeRiskLevel(result.final_risk_level)} because the probability of failure is ${result.pof || "-"} and the consequence category is ${result.cof || "-"}.`);
     $("#pipelineRiskMatrix").html(buildRiskMatrix(result.final_risk_code));
+    $("#pipelineThicknessResult").html(buildThicknessResult(result.point_results || []));
     $("#pipelinePofBreakdown").html(listItems([
       ["Third-Party Damage Factor", fmt(result.third_party_damage_factor)],
       ["External Corrosion Factor", fmt(result.external_corrosion_factor)],
@@ -281,7 +282,7 @@ $(function () {
     if (isGas) {
       return listItems([
         ["Potential Impact Radius", `${fmt(result.pir_feet)} ft`],
-        ["House/building count inside PIR", $("input[name='building_count_inside_pir']").val() || 0],
+        ["Buildings Inside Gas Impact Radius", $("input[name='building_count_inside_pir']").val() || 0],
         ["Class Location", labelFor($("[name='class_location']"))],
         ["CoF Category", result.cof],
       ]);
@@ -347,6 +348,21 @@ $(function () {
     return `risk-${matrixLevel(row, col).toLowerCase()}`;
   }
 
+  function buildThicknessResult(points) {
+    if (!points.length) return '<tr><td colspan="7" class="text-center text-muted py-4">No thickness appraisal result returned.</td></tr>';
+    return points.map((point) => `
+      <tr>
+        <td>${escapeHtml(point.inspection_point || "-")}</td>
+        <td>${escapeHtml(fmt(point.actual_thickness_mm))}</td>
+        <td>${escapeHtml(fmt(point.corrosion_rate_mm_year))}</td>
+        <td>${escapeHtml(fmt(point.remaining_life_years))}</td>
+        <td>${escapeHtml(fmt(point.hoop_stress_psi))}</td>
+        <td>${escapeHtml(fmt(point.maop_psi))}</td>
+        <td>${escapeHtml([point.thickness_status, point.maop_status].filter(Boolean).join(" / ") || "-")}</td>
+      </tr>
+    `).join("");
+  }
+
   function markResultStaleIfNeeded() {
     if (!currentResult) {
       updateSaveState();
@@ -365,7 +381,7 @@ $(function () {
   function calculationSignature(payload) {
     const clone = JSON.parse(JSON.stringify(payload));
     delete clone.assessment_by;
-    if (clone.rbi) delete clone.rbi.engineering_notes;
+    if (clone.RiskInput) delete clone.RiskInput.engineering_notes;
     return JSON.stringify(clone);
   }
 
@@ -524,9 +540,9 @@ $(function () {
       .replaceAll("outside_diameter_in must be greater than zero", "Outside diameter must be a valid number.")
       .replaceAll("nominal_wall_thickness_mm must be greater than zero", "Wall thickness must be a valid number.")
       .replaceAll("operating_pressure_psi cannot be negative", "Operating pressure cannot be negative.")
-      .replaceAll("rbi.flow_rate must be greater than zero", "Flow rate must be a valid number.")
-      .replaceAll("rbi.detection_time_hours must be greater than zero", "Leak detection time must be a valid number.")
-      .replaceAll("rbi.segment_length_between_valves_m must be greater than zero", "Segment length between isolation valves must be a valid number.");
+      .replaceAll("RiskInput.flow_rate must be greater than zero", "Flow rate must be a valid number.")
+      .replaceAll("RiskInput.detection_time_hours must be greater than zero", "Leak detection time must be a valid number.")
+      .replaceAll("RiskInput.segment_length_between_valves_m must be greater than zero", "Segment length between isolation valves must be a valid number.");
   }
 
   function numericOrString(value) {
@@ -583,3 +599,4 @@ $(function () {
     }[char]));
   }
 });
+

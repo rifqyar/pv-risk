@@ -28,7 +28,7 @@ func samplePipelineOilInput() PipelineOilInput {
 		DesignFactor:              0.72,
 		MaterialStressPsi:         20000,
 		AssessmentBy:              "Engineer",
-		RBI: PipelineOilRBIStructuralInput{
+		RiskInput: PipelineOilRiskInput{
 			GenericFailureFrequency: 0.00003,
 			ManagementSystemScore:   500,
 			DamageFactor:            12,
@@ -67,9 +67,9 @@ func samplePipelineGasWorkbookInput() PipelineOilInput {
 		{InspectionPoint: "IP-2", NominalThicknessMM: 10.31, RequiredThicknessMM: 7.01, ActualThicknessMM: 9.22, MeasuredYear: 2024},
 		{InspectionPoint: "IP-11", NominalThicknessMM: 10.31, RequiredThicknessMM: 7.01, ActualThicknessMM: 9.58, MeasuredYear: 2024},
 	}
-	in.RBI.ReleaseFluid = "Gas"
-	in.RBI.BuildingCountInsidePIR = 3
-	in.RBI.ClassLocation = "village"
+	in.RiskInput.ReleaseFluid = "Gas"
+	in.RiskInput.BuildingCountInsidePIR = 3
+	in.RiskInput.ClassLocation = "village"
 	return in
 }
 
@@ -106,9 +106,9 @@ func sampleRawGasPipingWorkbookInput() PipelineOilInput {
 		{InspectionPoint: "IP-15", NominalThicknessMM: 8.56, RequiredThicknessMM: 4.19, ActualThicknessMM: 8.4, MeasuredYear: 2025},
 		{InspectionPoint: "IP-22", NominalThicknessMM: 8.56, RequiredThicknessMM: 4.19, ActualThicknessMM: 8.44, MeasuredYear: 2025},
 	}
-	in.RBI.ReleaseFluid = "Gas"
-	in.RBI.BuildingCountInsidePIR = 0
-	in.RBI.ClassLocation = "remote"
+	in.RiskInput.ReleaseFluid = "Gas"
+	in.RiskInput.BuildingCountInsidePIR = 0
+	in.RiskInput.ClassLocation = "remote"
 	return in
 }
 
@@ -215,8 +215,8 @@ func TestCalculateRawGasPipingUsesASMEB313AppraisalFormula(t *testing.T) {
 func TestCalculatePipelineGasCoFUsesPIRAndBuildings(t *testing.T) {
 	in := samplePipelineOilInput()
 	in.Service = "Gas"
-	in.RBI.BuildingCountInsidePIR = 25
-	in.RBI.ClassLocation = "urban_dense"
+	in.RiskInput.BuildingCountInsidePIR = 25
+	in.RiskInput.ClassLocation = "urban_dense"
 
 	result, errs := CalculatePipelineOil(in)
 	if len(errs) > 0 {
@@ -280,3 +280,4 @@ func assertClose(t *testing.T, actual, expected, tolerance float64) {
 		t.Fatalf("expected %.12f got %.12f", expected, actual)
 	}
 }
+

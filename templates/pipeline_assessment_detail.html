@@ -141,19 +141,45 @@
             {{ if eq .Assessment.Input.Service "Gas" }}
             <ul class="list-group list-group-flush small">
               <li class="list-group-item d-flex justify-content-between px-0"><span>Potential Impact Radius (PIR)</span><strong>{{ .Assessment.Result.PIRFeet }} ft</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>Houses inside PIR</span><strong>{{ .Assessment.Input.RBI.BuildingCountInsidePIR }}</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>Class Location</span><strong>{{ .Assessment.Input.RBI.ClassLocation }}</strong></li>
+              <li class="list-group-item d-flex justify-content-between px-0"><span>Houses inside PIR</span><strong>{{ .Assessment.Input.RiskInput.BuildingCountInsidePIR }}</strong></li>
+              <li class="list-group-item d-flex justify-content-between px-0"><span>Class Location</span><strong>{{ .Assessment.Input.RiskInput.ClassLocation }}</strong></li>
               <li class="list-group-item d-flex justify-content-between px-0"><span>CoF Category</span><span class="badge bg-label-secondary">{{ .Assessment.Result.CoF }}</span></li>
             </ul>
             {{ else }}
             <ul class="list-group list-group-flush small">
               <li class="list-group-item d-flex justify-content-between px-0"><span>Spill Volume</span><strong>{{ .Assessment.Result.SpillVolume }}</strong></li>
               <li class="list-group-item d-flex justify-content-between px-0"><span>Adjusted Spill Volume</span><strong>{{ .Assessment.Result.AdjustedSpillVolume }}</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>Leak Detection Time</span><strong>{{ .Assessment.Input.RBI.DetectionTimeHours }} hr</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>Environmental Sensitivity</span><strong>{{ .Assessment.Input.RBI.EnvironmentalSensitivity }}</strong></li>
+              <li class="list-group-item d-flex justify-content-between px-0"><span>Leak Detection Time</span><strong>{{ .Assessment.Input.RiskInput.DetectionTimeHours }} hr</strong></li>
+              <li class="list-group-item d-flex justify-content-between px-0"><span>Environmental Sensitivity</span><strong>{{ .Assessment.Input.RiskInput.EnvironmentalSensitivity }}</strong></li>
               <li class="list-group-item d-flex justify-content-between px-0"><span>CoF Category</span><span class="badge bg-label-secondary">{{ .Assessment.Result.CoF }}</span></li>
             </ul>
             {{ end }}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-transparent border-bottom"><h6 class="fw-bold mb-0"><i class="mdi mdi-ruler-square me-2"></i>Thickness Appraisal Result</h6></div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0">
+                <thead class="table-light"><tr><th>Point</th><th>Actual (mm)</th><th>CR (mm/year)</th><th>Remaining Life</th><th>Hoop Stress</th><th>MAOP</th><th>Status</th></tr></thead>
+                <tbody>
+                  {{ range .Assessment.Result.PointResults }}
+                  <tr>
+                    <td>{{ .InspectionPoint }}</td>
+                    <td>{{ .ActualThicknessMM }}</td>
+                    <td>{{ .CorrosionRateMMYear }}</td>
+                    <td>{{ .RemainingLifeYears }}</td>
+                    <td>{{ .HoopStressPsi }}</td>
+                    <td>{{ .MAOPPsi }}</td>
+                    <td>{{ .ThicknessStatus }} / {{ .MAOPStatus }}</td>
+                  </tr>
+                  {{ end }}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -265,7 +291,7 @@
     <div class="pipeline-pdf-header d-flex justify-content-between align-items-end">
       <div style="width: 68%;">
         <div class="pipeline-pdf-title">PIPELINE RISK ASSESSMENT REPORT</div>
-        <div class="pipeline-pdf-subtitle">Pipeline integrity and RBI summary</div>
+        <div class="pipeline-pdf-subtitle">Pipeline integrity and RiskInput summary</div>
       </div>
       <div style="width: 32%; text-align: right; font-size: 9pt;">
         <strong>Tag No:</strong> {{ .Assessment.Input.ReportNo }}<br>
@@ -299,7 +325,7 @@
       <tr><th>PoF Value</th><td>{{ .Assessment.Result.PoFValue }}</td><th>Risk Value</th><td>{{ .Assessment.Result.RiskValue }}</td></tr>
       <tr><th>Governing Driver</th><td colspan="3">{{ .Assessment.Result.GoverningDamageMechanism }}</td></tr>
       {{ if eq .Assessment.Input.Service "Gas" }}
-      <tr><th>Potential Impact Radius</th><td>{{ .Assessment.Result.PIRFeet }} ft</td><th>Buildings inside PIR</th><td>{{ .Assessment.Input.RBI.BuildingCountInsidePIR }}</td></tr>
+      <tr><th>Potential Impact Radius</th><td>{{ .Assessment.Result.PIRFeet }} ft</td><th>Buildings inside PIR</th><td>{{ .Assessment.Input.RiskInput.BuildingCountInsidePIR }}</td></tr>
       {{ else }}
       <tr><th>Spill Volume</th><td>{{ .Assessment.Result.SpillVolume }}</td><th>Adjusted Spill Volume</th><td>{{ .Assessment.Result.AdjustedSpillVolume }}</td></tr>
       {{ end }}
@@ -325,7 +351,7 @@
     <table class="pipeline-pdf-table">
       <tr><td>{{ .Assessment.Result.Recommendation }}</td></tr>
       <tr><th>Engineering Notes</th></tr>
-      <tr><td>{{ .Assessment.Input.RBI.EngineeringNotes }}</td></tr>
+      <tr><td>{{ .Assessment.Input.RiskInput.EngineeringNotes }}</td></tr>
     </table>
 
     <div style="margin-top: 28px; display: flex; justify-content: space-between; font-size: 9pt;">
@@ -387,3 +413,4 @@ function generatePipelinePDF() {
 {{ end }}
 {{ end }}
 {{ template "layouts/master" . }}
+

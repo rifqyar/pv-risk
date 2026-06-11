@@ -32,7 +32,7 @@ var staticFS embed.FS
 
 func main() {
 
-	port := "8082"
+	port := "8080"
 	baseURL := "http://localhost:" + port
 
 	// ================= SINGLE INSTANCE =================
@@ -138,7 +138,7 @@ func main() {
 	r.GET("/api/assessment-detail/:id", controller.GetAssessmentByID)
 
 	// === DEV ===
-	r.Run(":8081")
+	r.Run(":8080")
 
 	// ================= SERVER =================
 	// srv := &http.Server{
