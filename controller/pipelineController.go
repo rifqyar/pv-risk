@@ -19,10 +19,21 @@ func PipelineController() *NewPipelineController {
 }
 
 func (ctrl *NewPipelineController) ShowForm(c *gin.Context) {
+	var db = config.DB
+	material, err := models.GetMaterial(db)
+
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error fetching pipeline material specs: %v", err)
+		return
+	}
+
 	c.HTML(http.StatusOK, "pipeline_assessment_form.html", gin.H{
-		"ActiveMenu": "pipeline-oil-form",
-		"Mode":       "create",
-		"Input":      pipelineOilDefaultInput(),
+		"ActiveMenu":                    "pipeline-oil-form",
+		"Mode":                          "create",
+		"Material":                      material,
+		"Input":                         pipelineOilDefaultInput(),
+		"PipelineDamageMechanismGroups": models.PipelineDamageMechanismGroups(),
+		"PipelineDamageMechanismSource": models.PipelineDamageMechanismSource,
 	})
 }
 
@@ -83,18 +94,33 @@ func (ctrl *NewPipelineController) EditAssessment(c *gin.Context) {
 		c.String(http.StatusBadRequest, "Invalid assessment id")
 		return
 	}
+	var db = config.DB
+	material, err := models.GetMaterial(db)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error fetching pipeline material specs: %v", err)
+		return
+	}
 	service := models.NewPipelineOilService(config.DB)
 	assessment, err := service.GetAssessmentDetail(id)
 	if err != nil {
 		c.String(http.StatusNotFound, "Pipeline assessment not found")
 		return
 	}
+	input := assessment.Input
+	if !models.IsValidPipelineDamageMechanism(input.RiskInput.DamageMechanism) {
+		input.RiskInput.DamageMechanism = "internal_corrosion"
+	} else {
+		input.RiskInput.DamageMechanism = models.NormalizePipelineDamageMechanism(input.RiskInput.DamageMechanism)
+	}
 	c.HTML(http.StatusOK, "pipeline_assessment_form.html", gin.H{
-		"ActiveMenu":   "pipeline-oil-form",
-		"Mode":         "edit",
-		"Assessment":   assessment,
-		"Input":        assessment.Input,
-		"AssessmentID": id,
+		"ActiveMenu":                    "pipeline-oil-form",
+		"Mode":                          "edit",
+		"Material":                      material,
+		"Assessment":                    assessment,
+		"Input":                         input,
+		"AssessmentID":                  id,
+		"PipelineDamageMechanismGroups": models.PipelineDamageMechanismGroups(),
+		"PipelineDamageMechanismSource": models.PipelineDamageMechanismSource,
 	})
 }
 
@@ -167,11 +193,20 @@ func (ctrl *NewPipelineController) PreviewAssessment(c *gin.Context) {
 }
 
 func (ctrl *NewPipelineController) ShowGasComingSoon(c *gin.Context) {
+	var db = config.DB
+	material, err := models.GetMaterial(db)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error fetching pipeline material specs: %v", err)
+		return
+	}
 	input := pipelineGasDefaultInput()
 	c.HTML(http.StatusOK, "pipeline_assessment_form.html", gin.H{
-		"ActiveMenu": "pipeline-oil-form",
-		"Mode":       "create",
-		"Input":      input,
+		"ActiveMenu":                    "pipeline-oil-form",
+		"Mode":                          "create",
+		"Material":                      material,
+		"Input":                         input,
+		"PipelineDamageMechanismGroups": models.PipelineDamageMechanismGroups(),
+		"PipelineDamageMechanismSource": models.PipelineDamageMechanismSource,
 	})
 }
 
@@ -185,8 +220,8 @@ func pipelineGasDefaultInput() models.PipelineOilInput {
 		Location:                  "Betara, Tanjung Jabung Barat, Jambi",
 		LineIdentification:        "NPS 12 Main Gas Trunkline from Pig Launcher SB#1 Station to Pig Receiver WB PPF",
 		YearBuilt:                 2017,
-		YearUsed:                  2017,
-		Service:                   "Gas",
+		YearUsed:                  "2017",
+		Service:                   "Natural gas",
 		PipeSize:                  "323,85 mm (OD) x 10,31 mm (T) x 9966 m (L)",
 		PipeLengthM:               9966,
 		MaterialSpecification:     "API 5L X52",
@@ -203,7 +238,6 @@ func pipelineGasDefaultInput() models.PipelineOilInput {
 		SafetyDevice:              "3 Unit Ball Valve, 4 Unit Gate Valve, 2 Unit Check Valve, & 1 Unit PSV",
 		AreaClassification:        "2",
 		InspectionPeriod:          "March 2025",
-		InspectionResult:          "ACCEPTABLE",
 		ApplicableCode:            "ASME B31.8",
 		OutsideDiameterIn:         12.75,
 		OperatingPressurePsi:      650,
@@ -214,18 +248,18 @@ func pipelineGasDefaultInput() models.PipelineOilInput {
 		QualityFactor:             1,
 		WeldJointStrengthFactor:   1,
 		DesignFactor:              0.6,
-		MaterialStressPsi:         20000,
+		MaterialStressPsi:         52000,
 		PreviousSKPP:              "MIT-2021.1557-03072-PL",
 		TemperatureDeratingFactor: 1,
 		AssessmentBy:              "Engineer",
 		InspectionPoints: []models.PipelineOilInspectionPoint{
-			{InspectionPoint: "IP-2", InstallationType: "Underground", NominalThicknessMM: 10.31, RequiredThicknessMM: 7.01, ActualThicknessMM: 9.22, MeasuredYear: 2024},
-			{InspectionPoint: "IP-11", InstallationType: "Underground", NominalThicknessMM: 10.31, RequiredThicknessMM: 7.01, ActualThicknessMM: 9.58, MeasuredYear: 2024},
+			{InspectionPoint: "IP-2", InstallationType: "Underground", NominalThicknessMM: 10.31, RequiredThicknessMM: 7.01, ActualThicknessMM: 9.22, MeasuredYear: "2024"},
+			{InspectionPoint: "IP-11", InstallationType: "Underground", NominalThicknessMM: 10.31, RequiredThicknessMM: 7.01, ActualThicknessMM: 9.58, MeasuredYear: "2024"},
 		},
 		RiskInput: models.PipelineOilRiskInput{
-			DamageMechanism:             "Pipeline MVP Index Risk",
+			DamageMechanism:             "internal_corrosion",
 			InspectionEffectivity:       "Representative",
-			ReleaseFluid:                "Gas",
+			ReleaseFluid:                "Natural gas",
 			GenericFailureFrequency:     0.00003,
 			ManagementSystemScore:       500,
 			BaseTPDRate:                 1,
@@ -269,7 +303,7 @@ func pipelineOilDefaultInput() models.PipelineOilInput {
 		Location:                  "Tanjung Jabung Barat, Jambi",
 		LineIdentification:        "NPS 8 Main Oil Trunkline from KP-01 (Jembatan Kembar) to Pig Receiver (202-VR-100) WB PPF",
 		YearBuilt:                 2017,
-		YearUsed:                  2017,
+		YearUsed:                  "2017",
 		Service:                   "Oil",
 		PipeSize:                  "219,08 mm (OD) x 8,18 mm (T) x 9966 m (L)",
 		PipeLengthM:               9966,
@@ -287,7 +321,6 @@ func pipelineOilDefaultInput() models.PipelineOilInput {
 		SafetyDevice:              "1 Unit Ball Valve & 3 Unit Check Valve",
 		AreaClassification:        "-",
 		InspectionPeriod:          "March 2025",
-		InspectionResult:          "ACCEPTABLE",
 		ApplicableCode:            "ASME B31.4",
 		OutsideDiameterIn:         8.625,
 		OperatingPressurePsi:      17.65,
@@ -298,17 +331,17 @@ func pipelineOilDefaultInput() models.PipelineOilInput {
 		QualityFactor:             1,
 		WeldJointStrengthFactor:   1,
 		DesignFactor:              0.72,
-		MaterialStressPsi:         20000,
+		MaterialStressPsi:         35000,
 		PreviousSKPP:              "MIT-2021.1557-03072-PL",
 		TemperatureDeratingFactor: 1,
 		AssessmentBy:              "Engineer",
 		InspectionPoints: []models.PipelineOilInspectionPoint{
-			{InspectionPoint: "IP-82", InstallationType: "Above Ground", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 7.98, MeasuredYear: 2025},
-			{InspectionPoint: "IP-8 A", InstallationType: "Above Ground", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 6.12, MeasuredYear: 2025},
-			{InspectionPoint: "IP-8 C", InstallationType: "Above Ground", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 6.21, MeasuredYear: 2025},
+			{InspectionPoint: "IP-82", InstallationType: "Above Ground", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 7.98, MeasuredYear: "2025"},
+			{InspectionPoint: "IP-8 A", InstallationType: "Above Ground", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 6.12, MeasuredYear: "2025"},
+			{InspectionPoint: "IP-8 C", InstallationType: "Above Ground", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 6.21, MeasuredYear: "2025"},
 		},
 		RiskInput: models.PipelineOilRiskInput{
-			DamageMechanism:             "Pipeline MVP Index Risk",
+			DamageMechanism:             "internal_corrosion",
 			InspectionEffectivity:       "Representative",
 			ReleaseFluid:                "Oil",
 			GenericFailureFrequency:     0.00003,
@@ -356,4 +389,3 @@ func statusFromPipelineError(err error) int {
 	}
 	return http.StatusInternalServerError
 }
-

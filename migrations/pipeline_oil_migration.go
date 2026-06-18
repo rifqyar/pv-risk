@@ -37,3 +37,18 @@ func PipelineOilAssessmentTables(db *sql.DB) {
 
 	log.Println("Pipeline Oil assessment tables migrated successfully")
 }
+
+func PipelineMaterialTables(db *sql.DB) {
+	query := `
+	CREATE TABLE IF NOT EXISTS pipeline_materials (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL UNIQUE,
+		smys REAL NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);`
+	if _, err := db.Exec(query); err != nil {
+		log.Fatalf("Error creating pipeline_materials table: %v", err)
+	}
+
+	log.Println("Pipeline Material tables migrated successfully")
+}

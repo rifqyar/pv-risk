@@ -8,72 +8,76 @@
   .pipeline-risk-matrix .risk-high { background: #ffe5df; color: #c93314; }
   .pipeline-risk-matrix .risk-critical { background: #eceef1; color: #233446; }
   .pipeline-risk-matrix .active-cell { outline: 3px solid #000; transform: scale(1.08); box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+  .content-wrapper .card .table-responsive { border: 1px solid #edf0f5; border-radius: 6px; }
+  .content-wrapper .card .table:not(.pipeline-pdf-table) { font-size: .78rem; }
+  .content-wrapper .card .table:not(.pipeline-pdf-table) > :not(caption) > * > * { padding: .36rem .48rem; vertical-align: middle; }
+  .content-wrapper .card .table:not(.pipeline-pdf-table) thead th { font-size: .72rem; font-weight: 700; letter-spacing: 0; white-space: nowrap; color: #566a7f; }
+  .content-wrapper .card .table:not(.pipeline-pdf-table) tbody td { color: #384551; }
+  .content-wrapper .card .table:not(.pipeline-pdf-table) tbody tr:hover { background: #fbfcff; }
+  .content-wrapper .card .table:not(.pipeline-pdf-table) .badge { font-size: .7rem; padding: .25rem .5rem; }
+  .content-wrapper .pipeline-risk-matrix td { padding: 6px 5px; font-size: .72rem; }
   #pipeline-pdf-report { display: none; font-family: 'Times New Roman', Times, serif; background: #fff; color: #000; }
-  .pipeline-pdf-page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 0 auto; background: #fff; }
-  .pipeline-pdf-header { border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 18px; }
+  .pipeline-pdf-page { width: 210mm; min-height: 297mm; padding: 12mm; margin: 0 auto; background: #fff; }
+  .pipeline-pdf-header { border-bottom: 3px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
   .pipeline-pdf-title { font-size: 16pt; font-weight: bold; color: #003366; }
   .pipeline-pdf-subtitle { font-size: 10pt; color: #555; }
-  .pipeline-pdf-section { font-size: 11pt; font-weight: bold; background: #d9d9d9; padding: 5px 10px; margin: 16px 0 8px; border: 1px solid #000; }
-  .pipeline-pdf-table { width: 100%; border-collapse: collapse; font-size: 8.7pt; margin-bottom: 10px; }
-  .pipeline-pdf-table th, .pipeline-pdf-table td { border: 1px solid #000; padding: 5px 7px; vertical-align: top; }
+  .pipeline-pdf-section { font-size: 10.5pt; font-weight: bold; background: #d9d9d9; padding: 4px 8px; margin: 11px 0 6px; border: 1px solid #000; }
+  .pipeline-pdf-table { width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 7px; }
+  .pipeline-pdf-table th, .pipeline-pdf-table td { border: 1px solid #000; padding: 4px 5px; vertical-align: top; }
   .pipeline-pdf-table th { background: #f2f2f2; text-align: left; }
 </style>
 
 <div class="content-wrapper">
   <div class="container-xxl flex-grow-1 container-p-y">
-    <h4 class="py-3 mb-4">
-      <span class="text-muted fw-light">Risk Assessment / Pipeline /</span>
-      Result Detail
-    </h4>
-
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
       <div>
-        <h4 class="fw-bold mb-1">{{ .Assessment.Input.ReportNo }} - {{ .Assessment.Input.LineIdentification }}</h4>
-        <div class="text-muted small">
-          Record #{{ .Assessment.ID }} | {{ .Assessment.Status }} | Assessment Date: {{ .Assessment.UpdatedAt }}
-        </div>
+        <h4 class="fw-bold mb-1">Pipeline Assessment Dashboard: <span class="text-primary">{{ .Assessment.Input.ReportNo }}</span></h4>
+        <p class="text-muted mb-0 small">Record ID: #{{ .Assessment.ID }} | {{ .Assessment.Status }} | Date: {{ .Assessment.UpdatedAt }}</p>
       </div>
-      <div class="d-flex flex-wrap gap-2">
-        <a href="/assessment-pipeline/list" class="btn btn-outline-secondary"><i class="mdi mdi-arrow-left me-1"></i> Back to Pipeline List</a>
-        <a href="/assessment-pipeline/edit/{{ .Assessment.ID }}" class="btn btn-primary"><i class="mdi mdi-pencil-outline me-1"></i> Edit Assessment</a>
-        {{ if .Assessment.Result }}<button type="button" class="btn btn-danger" onclick="generatePipelinePDF()"><i class="mdi mdi-file-pdf-box me-1"></i> Export PDF</button>{{ end }}
+      <div class="mt-3 mt-md-0 d-flex flex-wrap gap-2">
+        <a href="/assessment-pipeline/list" class="btn btn-outline-secondary"><i class="mdi mdi-arrow-left me-1"></i> Back</a>
+        <a href="/assessment-pipeline/edit/{{ .Assessment.ID }}" class="btn btn-primary"><i class="mdi mdi-pencil-outline me-1"></i> Edit</a>
+        {{ if .Assessment.Result }}<button type="button" class="btn btn-danger shadow-sm" onclick="generatePipelinePDF()"><i class="mdi mdi-file-pdf-box me-1"></i> Generate Full Report (PDF)</button>{{ end }}
       </div>
     </div>
 
-    <div class="row g-4">
-      <div class="col-12">
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <div class="row g-3 align-items-center">
-              <div class="col-lg-3">
-                <div class="text-muted small">Tag Number</div>
-                <div class="fw-bold">{{ .Assessment.Input.ReportNo }}</div>
-              </div>
-              <div class="col-lg-4">
-                <div class="text-muted small">Pipeline Name</div>
-                <div class="fw-bold">{{ .Assessment.Input.LineIdentification }}</div>
-              </div>
-              <div class="col-lg-2">
-                <div class="text-muted small">Fluid Type</div>
-                {{ if eq .Assessment.Input.Service "Gas" }}<span class="badge rounded-pill bg-label-info">GAS</span>{{ else }}<span class="badge rounded-pill bg-label-primary">{{ .Assessment.Input.Service }}</span>{{ end }}
-              </div>
-              <div class="col-lg-3">
-                <div class="text-muted small">Location</div>
-                <div class="fw-semibold">{{ .Assessment.Input.Location }}</div>
-              </div>
+    <div id="pipeline-ui-view">
+      <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body">
+          <div class="row g-3 align-items-center">
+            <div class="col-lg-3 col-md-6">
+              <div class="text-muted small">Pipeline Name</div>
+              <div class="fw-bold text-truncate">{{ .Assessment.Input.LineIdentification }}</div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <div class="text-muted small">Location</div>
+              <div class="fw-semibold text-truncate">{{ .Assessment.Input.Location }}</div>
+            </div>
+            <div class="col-lg-2 col-md-4">
+              <div class="text-muted small">Fluid Type</div>
+              {{ if isPipelineGasService .Assessment.Input.Service }}<span class="badge rounded-pill bg-label-info">{{ .Assessment.Input.Service }}</span>{{ else }}<span class="badge rounded-pill bg-label-primary">{{ .Assessment.Input.Service }}</span>{{ end }}
+            </div>
+            <div class="col-lg-2 col-md-4">
+              <div class="text-muted small">Applicable Code</div>
+              <div class="fw-semibold">{{ .Assessment.Input.ApplicableCode }}</div>
+            </div>
+            <div class="col-lg-2 col-md-4">
+              <div class="text-muted small">Assessor</div>
+              <div class="fw-semibold">{{ .Assessment.Input.AssessmentBy }}</div>
             </div>
           </div>
         </div>
       </div>
 
+      <div class="row g-4">
       {{ if .Assessment.Result }}
       <div class="col-lg-5">
-        <div class="card h-100 shadow-sm border-0 overflow-hidden">
-          <div class="card-body p-4 text-center position-relative">
-            <div class="position-absolute top-0 start-0 w-100 h-100 bg-primary" style="opacity:.08;"></div>
+        <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
+          <div class="card-body p-4 d-flex flex-column justify-content-center text-center position-relative">
+            <div class="position-absolute top-0 start-0 w-100 h-100 bg-primary" style="opacity: .1;"></div>
             <div class="position-relative">
-              <h6 class="text-muted mb-2">Overall Pipeline Risk</h6>
-              <div class="display-4 fw-bolder text-primary mb-2">{{ .Assessment.Result.FinalRiskCode }}</div>
+              <h5 class="fw-bold text-muted mb-1">Overall Pipeline Risk</h5>
+              <h1 class="display-3 fw-bolder text-primary mb-2">{{ .Assessment.Result.FinalRiskCode }}</h1>
               {{ if eq .Assessment.Result.FinalRiskLevel "Critical Risk" }}
               <span class="badge rounded-pill bg-label-dark px-3 py-2">CRITICAL RISK</span>
               {{ else if eq .Assessment.Result.FinalRiskLevel "High Risk" }}
@@ -83,99 +87,124 @@
               {{ else }}
               <span class="badge rounded-pill bg-label-success px-3 py-2">LOW RISK</span>
               {{ end }}
-              <p class="text-muted small mt-3 mb-0">Risk code combines Probability of Failure ({{ .Assessment.Result.PoF }}) and Consequence of Failure ({{ .Assessment.Result.CoF }}).</p>
+              <div class="bg-label-warning rounded-3 p-3 my-3 mx-auto text-start shadow-sm" style="width: 100%; max-width: 340px; border: 1px solid #ffab00;">
+                <div class="mb-2 text-dark"><i class="mdi mdi-alert-decagram-outline text-warning me-2 fs-5 align-middle"></i><span class="small">Main Driver:</span> <strong>{{ .Assessment.Result.GoverningDamageMechanism }}</strong></div>
+                <div class="text-dark"><i class="mdi mdi-clipboard-search-outline text-warning me-2 fs-5 align-middle"></i><span class="small">Inspection Result:</span> <strong>{{ .Assessment.Result.InspectionResult }}</strong></div>
+              </div>
+              <div class="d-flex justify-content-center gap-2">
+                <div class="bg-white px-3 py-2 rounded-3 shadow-sm border flex-fill">
+                  <span class="d-block text-muted small">PoF</span>
+                  <span class="fw-bold text-primary">{{ .Assessment.Result.PoF }}</span>
+                </div>
+                <div class="bg-white px-3 py-2 rounded-3 shadow-sm border flex-fill">
+                  <span class="d-block text-muted small">CoF</span>
+                  <span class="fw-bold text-danger">{{ .Assessment.Result.CoF }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <div class="col-lg-7">
-        <div class="card h-100 shadow-sm border-0">
-          <div class="card-header bg-transparent border-bottom"><h6 class="fw-bold mb-0"><i class="mdi mdi-grid me-2"></i>Risk Matrix Coordinate</h6></div>
+        <div class="card h-100 shadow-sm border-0 rounded-4">
           <div class="card-body">
-            <table class="pipeline-risk-matrix">
-              <tr><td rowspan="5" class="rm-label" style="writing-mode: vertical-lr; transform: rotate(180deg);">PoF</td><td class="rm-label">5</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "5A" }}active-cell{{ end }}">5A</td><td class="risk-high {{ if eq .Assessment.Result.FinalRiskCode "5B" }}active-cell{{ end }}">5B</td><td class="risk-high {{ if eq .Assessment.Result.FinalRiskCode "5C" }}active-cell{{ end }}">5C</td><td class="risk-critical {{ if eq .Assessment.Result.FinalRiskCode "5D" }}active-cell{{ end }}">5D</td><td class="risk-critical {{ if eq .Assessment.Result.FinalRiskCode "5E" }}active-cell{{ end }}">5E</td></tr>
-              <tr><td class="rm-label">4</td><td class="risk-low {{ if eq .Assessment.Result.FinalRiskCode "4A" }}active-cell{{ end }}">4A</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "4B" }}active-cell{{ end }}">4B</td><td class="risk-high {{ if eq .Assessment.Result.FinalRiskCode "4C" }}active-cell{{ end }}">4C</td><td class="risk-high {{ if eq .Assessment.Result.FinalRiskCode "4D" }}active-cell{{ end }}">4D</td><td class="risk-critical {{ if eq .Assessment.Result.FinalRiskCode "4E" }}active-cell{{ end }}">4E</td></tr>
-              <tr><td class="rm-label">3</td><td class="risk-low {{ if eq .Assessment.Result.FinalRiskCode "3A" }}active-cell{{ end }}">3A</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "3B" }}active-cell{{ end }}">3B</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "3C" }}active-cell{{ end }}">3C</td><td class="risk-high {{ if eq .Assessment.Result.FinalRiskCode "3D" }}active-cell{{ end }}">3D</td><td class="risk-high {{ if eq .Assessment.Result.FinalRiskCode "3E" }}active-cell{{ end }}">3E</td></tr>
-              <tr><td class="rm-label">2</td><td class="risk-low {{ if eq .Assessment.Result.FinalRiskCode "2A" }}active-cell{{ end }}">2A</td><td class="risk-low {{ if eq .Assessment.Result.FinalRiskCode "2B" }}active-cell{{ end }}">2B</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "2C" }}active-cell{{ end }}">2C</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "2D" }}active-cell{{ end }}">2D</td><td class="risk-high {{ if eq .Assessment.Result.FinalRiskCode "2E" }}active-cell{{ end }}">2E</td></tr>
-              <tr><td class="rm-label">1</td><td class="risk-low {{ if eq .Assessment.Result.FinalRiskCode "1A" }}active-cell{{ end }}">1A</td><td class="risk-low {{ if eq .Assessment.Result.FinalRiskCode "1B" }}active-cell{{ end }}">1B</td><td class="risk-low {{ if eq .Assessment.Result.FinalRiskCode "1C" }}active-cell{{ end }}">1C</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "1D" }}active-cell{{ end }}">1D</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "1E" }}active-cell{{ end }}">1E</td></tr>
-              <tr><td class="border-0"></td><td class="border-0"></td><td class="rm-label">A</td><td class="rm-label">B</td><td class="rm-label">C</td><td class="rm-label">D</td><td class="rm-label">E</td></tr>
-              <tr><td colspan="7" class="border-0 text-muted small">Consequence of Failure (CoF)</td></tr>
-            </table>
+            <h6 class="fw-bold mb-3 d-flex align-items-center"><i class="mdi mdi-grid bg-label-primary p-1 rounded me-2 fs-5"></i> Risk Matrix Coordinate</h6>
+            <div class="table-responsive border-0">
+              <table class="pipeline-risk-matrix">
+                <tr><td rowspan="5" class="rm-label" style="writing-mode: vertical-lr; transform: rotate(180deg);">PoF</td><td class="rm-label">5</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "5A" }}active-cell{{ end }}">5A</td><td class="risk-high {{ if eq .Assessment.Result.FinalRiskCode "5B" }}active-cell{{ end }}">5B</td><td class="risk-high {{ if eq .Assessment.Result.FinalRiskCode "5C" }}active-cell{{ end }}">5C</td><td class="risk-critical {{ if eq .Assessment.Result.FinalRiskCode "5D" }}active-cell{{ end }}">5D</td><td class="risk-critical {{ if eq .Assessment.Result.FinalRiskCode "5E" }}active-cell{{ end }}">5E</td></tr>
+                <tr><td class="rm-label">4</td><td class="risk-low {{ if eq .Assessment.Result.FinalRiskCode "4A" }}active-cell{{ end }}">4A</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "4B" }}active-cell{{ end }}">4B</td><td class="risk-high {{ if eq .Assessment.Result.FinalRiskCode "4C" }}active-cell{{ end }}">4C</td><td class="risk-high {{ if eq .Assessment.Result.FinalRiskCode "4D" }}active-cell{{ end }}">4D</td><td class="risk-critical {{ if eq .Assessment.Result.FinalRiskCode "4E" }}active-cell{{ end }}">4E</td></tr>
+                <tr><td class="rm-label">3</td><td class="risk-low {{ if eq .Assessment.Result.FinalRiskCode "3A" }}active-cell{{ end }}">3A</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "3B" }}active-cell{{ end }}">3B</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "3C" }}active-cell{{ end }}">3C</td><td class="risk-high {{ if eq .Assessment.Result.FinalRiskCode "3D" }}active-cell{{ end }}">3D</td><td class="risk-high {{ if eq .Assessment.Result.FinalRiskCode "3E" }}active-cell{{ end }}">3E</td></tr>
+                <tr><td class="rm-label">2</td><td class="risk-low {{ if eq .Assessment.Result.FinalRiskCode "2A" }}active-cell{{ end }}">2A</td><td class="risk-low {{ if eq .Assessment.Result.FinalRiskCode "2B" }}active-cell{{ end }}">2B</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "2C" }}active-cell{{ end }}">2C</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "2D" }}active-cell{{ end }}">2D</td><td class="risk-high {{ if eq .Assessment.Result.FinalRiskCode "2E" }}active-cell{{ end }}">2E</td></tr>
+                <tr><td class="rm-label">1</td><td class="risk-low {{ if eq .Assessment.Result.FinalRiskCode "1A" }}active-cell{{ end }}">1A</td><td class="risk-low {{ if eq .Assessment.Result.FinalRiskCode "1B" }}active-cell{{ end }}">1B</td><td class="risk-low {{ if eq .Assessment.Result.FinalRiskCode "1C" }}active-cell{{ end }}">1C</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "1D" }}active-cell{{ end }}">1D</td><td class="risk-medium {{ if eq .Assessment.Result.FinalRiskCode "1E" }}active-cell{{ end }}">1E</td></tr>
+                <tr><td class="border-0"></td><td class="border-0"></td><td class="rm-label">A</td><td class="rm-label">B</td><td class="rm-label">C</td><td class="rm-label">D</td><td class="rm-label">E</td></tr>
+                <tr><td colspan="7" class="border-0 text-muted small">Consequence of Failure (CoF)</td></tr>
+              </table>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="col-lg-4">
-        <div class="card h-100 shadow-sm border-0">
-          <div class="card-header bg-transparent border-bottom"><h6 class="fw-bold mb-0 text-warning"><i class="mdi mdi-alert-decagram-outline me-2"></i>Main Failure Driver</h6></div>
-          <div class="card-body">
-            <h5 class="fw-bold mb-2">{{ .Assessment.Result.GoverningDamageMechanism }}</h5>
-            <p class="text-muted small mb-3">This is the highest damage factor and controls the Probability of Failure.</p>
-            <div class="d-flex justify-content-between border rounded p-2 mb-2"><span>Third-Party Damage</span><strong>{{ .Assessment.Result.ThirdPartyDamageFactor }}</strong></div>
-            <div class="d-flex justify-content-between border rounded p-2 mb-2"><span>External Corrosion</span><strong>{{ .Assessment.Result.ExternalCorrosionFactor }}</strong></div>
-            <div class="d-flex justify-content-between border rounded p-2"><span>Internal Corrosion</span><strong>{{ .Assessment.Result.InternalCorrosionFactor }}</strong></div>
-          </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+          <div class="card-header bg-transparent border-bottom pt-3 pb-2"><h6 class="fw-bold mb-0 text-primary"><i class="mdi mdi-ruler-square me-2"></i>Mechanical Summary</h6></div>
+          <ul class="list-group list-group-flush small">
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Required Thickness</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.SummaryRequiredThicknessMM }} mm</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Minimum Actual Thickness</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.MinimumActualThicknessMM }} mm</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Corrosion Rate</span><span class="fw-bold text-danger text-end">{{ fmtNum .Assessment.Result.HighestCorrosionRateMMYear }} mm/year</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Remaining Life</span><span class="fw-bold text-success text-end">{{ fmtNum .Assessment.Result.RemainingLifeYears }} years</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Lowest MAOP</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.LowestMAOPPsi }} psi</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Highest Hoop Stress</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.HighestHoopStressPsi }} psi</span></li>
+          </ul>
         </div>
       </div>
 
-      <div class="col-lg-4">
-        <div class="card h-100 shadow-sm border-0">
-          <div class="card-header bg-transparent border-bottom"><h6 class="fw-bold mb-0 text-primary"><i class="mdi mdi-chart-bell-curve-cumulative me-2"></i>Probability of Failure (PoF)</h6></div>
-          <div class="card-body">
-            <ul class="list-group list-group-flush small">
-              <li class="list-group-item d-flex justify-content-between px-0"><span>GFF</span><strong>{{ .Assessment.Result.GenericFailureFrequency }}</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>FMS</span><strong>{{ .Assessment.Result.ManagementSystemFactor }}</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>Governing DF</span><strong>{{ .Assessment.Result.GoverningDamageFactor }}</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>Final PoF</span><strong>{{ .Assessment.Result.PoFValue }}</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>PoF Category</span><span class="badge bg-label-secondary">{{ .Assessment.Result.PoF }}</span></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg-4">
-        <div class="card h-100 shadow-sm border-0">
-          <div class="card-header bg-transparent border-bottom"><h6 class="fw-bold mb-0 text-danger"><i class="mdi mdi-shield-alert-outline me-2"></i>Consequence of Failure (CoF)</h6></div>
-          <div class="card-body">
-            {{ if eq .Assessment.Input.Service "Gas" }}
-            <ul class="list-group list-group-flush small">
-              <li class="list-group-item d-flex justify-content-between px-0"><span>Potential Impact Radius (PIR)</span><strong>{{ .Assessment.Result.PIRFeet }} ft</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>Houses inside PIR</span><strong>{{ .Assessment.Input.RiskInput.BuildingCountInsidePIR }}</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>Class Location</span><strong>{{ .Assessment.Input.RiskInput.ClassLocation }}</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>CoF Category</span><span class="badge bg-label-secondary">{{ .Assessment.Result.CoF }}</span></li>
-            </ul>
+      <div class="col-lg-4 col-md-6">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+          <div class="card-header bg-transparent border-bottom pt-3 pb-2"><h6 class="fw-bold mb-0 text-warning"><i class="mdi mdi-chart-bell-curve-cumulative me-2"></i>Risk Breakdown</h6></div>
+          <ul class="list-group list-group-flush small">
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">GFF</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.GenericFailureFrequency }}</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">FMS</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.ManagementSystemFactor }}</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Governing DF</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.GoverningDamageFactor }}</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Final PoF</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.PoFValue }}</span></li>
+            {{ if isPipelineGasService .Assessment.Input.Service }}
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">PIR</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.PIRFeet }} ft</span></li>
             {{ else }}
-            <ul class="list-group list-group-flush small">
-              <li class="list-group-item d-flex justify-content-between px-0"><span>Spill Volume</span><strong>{{ .Assessment.Result.SpillVolume }}</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>Adjusted Spill Volume</span><strong>{{ .Assessment.Result.AdjustedSpillVolume }}</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>Leak Detection Time</span><strong>{{ .Assessment.Input.RiskInput.DetectionTimeHours }} hr</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>Environmental Sensitivity</span><strong>{{ .Assessment.Input.RiskInput.EnvironmentalSensitivity }}</strong></li>
-              <li class="list-group-item d-flex justify-content-between px-0"><span>CoF Category</span><span class="badge bg-label-secondary">{{ .Assessment.Result.CoF }}</span></li>
-            </ul>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Adjusted Spill</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.AdjustedSpillVolume }} bbl</span></li>
             {{ end }}
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-md-12">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+          <div class="card-header bg-transparent border-bottom pt-3 pb-2"><h6 class="fw-bold mb-0 text-success"><i class="mdi mdi-shield-check-outline me-2"></i>Design Snapshot</h6></div>
+          <ul class="list-group list-group-flush small">
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">OD / WT</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Input.OutsideDiameterIn }} in / {{ fmtNum .Assessment.Input.NominalWallThicknessMM }} mm</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Design / Operating Pressure</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Input.InternalDesignPressurePsi }} / {{ fmtNum .Assessment.Input.OperatingPressurePsi }} psi</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Material</span><span class="fw-bold text-end">{{ .Assessment.Input.MaterialSpecification }}</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Coating</span><span class="fw-bold text-end">{{ .Assessment.Input.CoatingType }}</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Inspection Period</span><span class="fw-bold text-end">{{ .Assessment.Input.InspectionPeriod }}</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Installation</span><span class="fw-bold text-end">{{ .Assessment.Input.TypeOfInstallation }}</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card shadow-sm border-0 rounded-4">
+          <div class="card-header bg-transparent border-bottom pt-3 pb-2 d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0 text-warning"><i class="mdi mdi-alert-decagram-outline me-2"></i>Damage Mechanism Screening</h6>
+            <span class="badge bg-dark">Driver: {{ .Assessment.Result.GoverningDamageMechanism }}</span>
+          </div>
+          <div class="card-body">
+            <div class="d-flex flex-wrap gap-2 justify-content-center">
+              {{ range .Assessment.Result.DamageMechanismResults }}
+              <span class="badge bg-label-secondary text-dark px-3 py-2 border">{{ .Label }}: <b>{{ .Severity }}</b></span>
+              {{ end }}
+            </div>
           </div>
         </div>
       </div>
 
       <div class="col-12">
-        <div class="card shadow-sm border-0">
-          <div class="card-header bg-transparent border-bottom"><h6 class="fw-bold mb-0"><i class="mdi mdi-ruler-square me-2"></i>Thickness Appraisal Result</h6></div>
+        <div class="card shadow-sm border-0 rounded-4">
+          <div class="card-header bg-transparent border-bottom pt-3 pb-2"><h6 class="fw-bold mb-0 text-primary"><i class="mdi mdi-clipboard-text-search-outline me-2"></i>Detailed Inspection Plan</h6></div>
           <div class="card-body p-0">
             <div class="table-responsive">
-              <table class="table table-sm align-middle mb-0">
-                <thead class="table-light"><tr><th>Point</th><th>Actual (mm)</th><th>CR (mm/year)</th><th>Remaining Life</th><th>Hoop Stress</th><th>MAOP</th><th>Status</th></tr></thead>
+              <table class="table table-sm table-striped table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th class="ps-4" style="width: 28%;">Damage Mechanism</th><th style="width: 12%;">Severity</th><th>Recommended Scope, Method and Interval</th></tr></thead>
                 <tbody>
-                  {{ range .Assessment.Result.PointResults }}
+                  {{ range .Assessment.Result.InspectionPlanResults }}
                   <tr>
-                    <td>{{ .InspectionPoint }}</td>
-                    <td>{{ .ActualThicknessMM }}</td>
-                    <td>{{ .CorrosionRateMMYear }}</td>
-                    <td>{{ .RemainingLifeYears }}</td>
-                    <td>{{ .HoopStressPsi }}</td>
-                    <td>{{ .MAOPPsi }}</td>
-                    <td>{{ .ThicknessStatus }} / {{ .MAOPStatus }}</td>
+                    <td class="fw-bold text-muted ps-4">{{ .Label }}</td>
+                    <td><span class="badge bg-label-secondary">{{ .Severity }}</span></td>
+                    <td>
+                      <div><strong>Non intrusive:</strong> {{ .NonIntrusiveMethod }} every {{ .NonIntrusiveIntervalMonths }} months <span class="text-muted small">({{ .NonIntrusiveEffectivity }})</span></div>
+                      <div><strong>Intrusive:</strong> {{ .IntrusiveMethod }} every {{ .IntrusiveIntervalMonths }} months <span class="text-muted small">({{ .IntrusiveEffectivity }})</span></div>
+                    </td>
                   </tr>
+                  {{ else }}
+                  <tr><td colspan="3" class="text-center text-muted py-3">No inspection plan data available.</td></tr>
                   {{ end }}
                 </tbody>
               </table>
@@ -185,89 +214,40 @@
       </div>
 
       <div class="col-12">
-        <div class="card shadow-sm border-0">
-          <div class="card-header bg-transparent border-bottom"><h6 class="fw-bold mb-0"><i class="mdi mdi-clipboard-check-outline me-2"></i>Recommended Action Items</h6></div>
+        <div class="card shadow-sm border-0 rounded-4">
+          <div class="card-header bg-transparent border-bottom pt-3 pb-2"><h6 class="fw-bold mb-0 text-success"><i class="mdi mdi-clipboard-check-outline me-2"></i>Engineering Advisory / Suggested Actions</h6></div>
           <div class="card-body">
             <div class="row g-4">
               <div class="col-lg-4">
                 <h6 class="fw-bold text-danger">Immediate Actions</h6>
                 <ul class="mb-0">
-                  {{ if eq .Assessment.Result.GoverningDamageMechanism "Third-Party Damage" }}<li>Improve route markers and warning signs.</li><li>Strengthen excavation permit control.</li>{{ end }}
-                  {{ if eq .Assessment.Result.GoverningDamageMechanism "External Corrosion" }}<li>Verify cathodic protection performance.</li><li>Prioritize coating defect checks.</li>{{ end }}
-                  {{ if eq .Assessment.Result.GoverningDamageMechanism "Internal Corrosion" }}<li>Review corrosion inhibitor condition.</li><li>Check fluid corrosivity and water handling.</li>{{ end }}
-                  {{ if eq .Assessment.Result.FinalRiskLevel "Critical Risk" }}<li>Escalate to engineering review before continued operation.</li>{{ end }}
-                  {{ if eq .Assessment.Result.FinalRiskLevel "High Risk" }}<li>Assign mitigation owner and target date.</li>{{ end }}
+                  {{ range .Assessment.Result.RecommendationGroups.ImmediateActions }}<li>{{ . }}</li>{{ end }}
                 </ul>
               </div>
               <div class="col-lg-4">
                 <h6 class="fw-bold text-warning">Inspection / Monitoring</h6>
                 <ul class="mb-0">
-                  {{ if eq .Assessment.Result.GoverningDamageMechanism "Third-Party Damage" }}<li>Increase ROW patrol frequency.</li>{{ end }}
-                  {{ if eq .Assessment.Result.GoverningDamageMechanism "External Corrosion" }}<li>Plan CIPS/DCVG survey and soil monitoring.</li>{{ end }}
-                  {{ if eq .Assessment.Result.GoverningDamageMechanism "Internal Corrosion" }}<li>Schedule pigging, fluid sampling, and wall thickness inspection.</li>{{ end }}
-                  <li>Keep the formula trace with the assessment record.</li>
+                  {{ range .Assessment.Result.RecommendationGroups.InspectionMonitor }}<li>{{ . }}</li>{{ end }}
                 </ul>
               </div>
               <div class="col-lg-4">
                 <h6 class="fw-bold text-success">Long-Term Mitigation</h6>
                 <ul class="mb-0">
-                  {{ if eq .Assessment.Input.Service "Gas" }}<li>Review class location, public awareness, emergency response, and populated-area protection.</li>{{ else }}<li>Improve leak detection, isolation time, spill containment, and drainage/river protection.</li>{{ end }}
-                  <li>Update the assessment after mitigation or inspection results are available.</li>
+                  {{ range .Assessment.Result.RecommendationGroups.LongTermMitigation }}<li>{{ . }}</li>{{ end }}
                 </ul>
               </div>
             </div>
-            <div class="alert alert-secondary mt-4 mb-0 small"><strong>Generated recommendation:</strong> {{ .Assessment.Result.Recommendation }}</div>
           </div>
         </div>
       </div>
 
-      <!-- <div class="col-12">
-        <div class="accordion" id="pipelineDetailAccordion">
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="pipelineCalcHeading">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pipelineCalcCollapse" aria-expanded="false" aria-controls="pipelineCalcCollapse">
-                <i class="mdi mdi-calculator-variant-outline me-2"></i> View calculation details
-              </button>
-            </h2>
-            <div id="pipelineCalcCollapse" class="accordion-collapse collapse" aria-labelledby="pipelineCalcHeading" data-bs-parent="#pipelineDetailAccordion">
-              <div class="accordion-body p-0">
-                <div class="table-responsive">
-                  <table class="table table-sm mb-0">
-                    <thead class="table-light"><tr><th>Name</th><th>Reference</th><th>Formula / Assumption</th><th>Output</th></tr></thead>
-                    <tbody>{{ range .Assessment.Result.FormulaTrace }}<tr><td>{{ .FormulaName }}</td><td>{{ .ExcelRef }}</td><td class="text-wrap" style="min-width: 320px;">{{ .Expression }}</td><td>{{ .Output }}</td></tr>{{ end }}</tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="pipelineThicknessHeading">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pipelineThicknessCollapse" aria-expanded="false" aria-controls="pipelineThicknessCollapse">
-                <i class="mdi mdi-ruler-square me-2"></i> View thickness appraisal details
-              </button>
-            </h2>
-            <div id="pipelineThicknessCollapse" class="accordion-collapse collapse" aria-labelledby="pipelineThicknessHeading" data-bs-parent="#pipelineDetailAccordion">
-              <div class="accordion-body p-0">
-                <div class="table-responsive">
-                  <table class="table table-sm align-middle mb-0">
-                    <thead class="table-light"><tr><th>Point</th><th>Required (in)</th><th>Actual (mm)</th><th>CR (mm/year)</th><th>Remaining Life</th><th>Hoop Stress</th><th>MAOP</th><th>Status</th></tr></thead>
-                    <tbody>{{ range .Assessment.Result.PointResults }}<tr><td>{{ .InspectionPoint }}</td><td>{{ .AppraisalThicknessIn }}</td><td>{{ .ActualThicknessMM }}</td><td>{{ .CorrosionRateMMYear }}</td><td>{{ .RemainingLifeYears }} years</td><td>{{ .HoopStressPsi }}</td><td>{{ .MAOPPsi }}</td><td>{{ .ThicknessStatus }} / {{ .HoopStressStatus }} / {{ .MAOPStatus }}</td></tr>{{ end }}</tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> -->
-
       {{ if .Assessment.Result.TODOEngineeringConfirmation }}
-      <div class="col-12">
+      <!-- <div class="col-12">
         <div class="card border-warning">
           <div class="card-header"><h5 class="mb-0">Engineering Confirmation Notes</h5></div>
           <div class="card-body"><ul class="mb-0">{{ range .Assessment.Result.TODOEngineeringConfirmation }}<li>{{ . }}</li>{{ end }}</ul></div>
         </div>
-      </div>
+      </div> -->
       {{ end }}
       {{ else }}
       <div class="col-12">
@@ -281,6 +261,7 @@
         </div>
       </div>
       {{ end }}
+    </div>
     </div>
   </div>
 </div>
@@ -303,53 +284,107 @@
     <div class="pipeline-pdf-section">I. GENERAL INFORMATION</div>
     <table class="pipeline-pdf-table">
       <tr><th width="20%">Tag Number</th><td width="30%">{{ .Assessment.Input.ReportNo }}</td><th width="20%">Fluid Type</th><td width="30%">{{ .Assessment.Input.Service }}</td></tr>
+      <tr><th>Place / Date Issued</th><td>{{ .Assessment.Input.PlaceIssued }} / {{ .Assessment.Input.DateIssued }}</td><th>Contractor</th><td>{{ .Assessment.Input.Contractor }}</td></tr>
       <tr><th>Pipeline Name</th><td colspan="3">{{ .Assessment.Input.LineIdentification }}</td></tr>
       <tr><th>Location</th><td>{{ .Assessment.Input.Location }}</td><th>Owner / User</th><td>{{ .Assessment.Input.OwnerUser }}</td></tr>
       <tr><th>Year Built / Used</th><td>{{ .Assessment.Input.YearBuilt }} / {{ .Assessment.Input.YearUsed }}</td><th>Applicable Code</th><td>{{ .Assessment.Input.ApplicableCode }}</td></tr>
       <tr><th>Material</th><td>{{ .Assessment.Input.MaterialSpecification }}</td><th>Installation</th><td>{{ .Assessment.Input.TypeOfInstallation }}</td></tr>
+      <tr><th>Pipe Size</th><td>{{ .Assessment.Input.PipeSize }}</td><th>Previous SKPP / Expiry</th><td>{{ .Assessment.Input.PreviousSKPP }} / {{ .Assessment.Input.ExpirationDate }}</td></tr>
     </table>
 
     <div class="pipeline-pdf-section">II. DESIGN AND OPERATING DATA</div>
     <table class="pipeline-pdf-table">
-      <tr><th>Outside Diameter</th><td>{{ .Assessment.Input.OutsideDiameterIn }} in</td><th>Nominal Thickness</th><td>{{ .Assessment.Input.NominalWallThicknessMM }} mm</td></tr>
-      <tr><th>Actual Thickness</th><td>{{ .Assessment.Input.ActualWallThicknessMM }} mm</td><th>Pipe Length</th><td>{{ .Assessment.Input.PipeLengthM }} m</td></tr>
-      <tr><th>Design Pressure</th><td>{{ .Assessment.Input.InternalDesignPressurePsi }} psig</td><th>Operating Pressure</th><td>{{ .Assessment.Input.OperatingPressurePsi }} psig</td></tr>
-      <tr><th>SMYS</th><td>{{ .Assessment.Input.SMYSPsi }} psi</td><th>Material Stress</th><td>{{ .Assessment.Input.MaterialStressPsi }} psi</td></tr>
-      <tr><th>Design Factor / Y</th><td>{{ .Assessment.Input.DesignFactor }}</td><th>Quality / Weld Factor</th><td>{{ .Assessment.Input.QualityFactor }} / {{ .Assessment.Input.WeldJointStrengthFactor }}</td></tr>
-    </table>
-
-    <div class="pipeline-pdf-section">III. RISK RESULT</div>
-    <table class="pipeline-pdf-table">
-      <tr><th>Risk Code</th><td>{{ .Assessment.Result.FinalRiskCode }}</td><th>Risk Level</th><td>{{ .Assessment.Result.FinalRiskLevel }}</td></tr>
-      <tr><th>PoF Category</th><td>{{ .Assessment.Result.PoF }}</td><th>CoF Category</th><td>{{ .Assessment.Result.CoF }}</td></tr>
-      <tr><th>PoF Value</th><td>{{ .Assessment.Result.PoFValue }}</td><th>Risk Value</th><td>{{ .Assessment.Result.RiskValue }}</td></tr>
-      <tr><th>Governing Driver</th><td colspan="3">{{ .Assessment.Result.GoverningDamageMechanism }}</td></tr>
-      {{ if eq .Assessment.Input.Service "Gas" }}
-      <tr><th>Potential Impact Radius</th><td>{{ .Assessment.Result.PIRFeet }} ft</td><th>Buildings inside PIR</th><td>{{ .Assessment.Input.RiskInput.BuildingCountInsidePIR }}</td></tr>
-      {{ else }}
-      <tr><th>Spill Volume</th><td>{{ .Assessment.Result.SpillVolume }}</td><th>Adjusted Spill Volume</th><td>{{ .Assessment.Result.AdjustedSpillVolume }}</td></tr>
-      {{ end }}
-    </table>
-
-    <div class="pipeline-pdf-section">IV. MECHANICAL APPRAISAL</div>
-    <table class="pipeline-pdf-table">
-      <tr><th>Required Thickness</th><td>{{ .Assessment.Result.SummaryRequiredThicknessMM }} mm</td><th>Remaining Life</th><td>{{ .Assessment.Result.RemainingLifeYears }} years</td></tr>
-      <tr><th>Highest Hoop Stress</th><td>{{ .Assessment.Result.HighestHoopStressPsi }} psig</td><th>Lowest MAOP</th><td>{{ .Assessment.Result.LowestMAOPPsi }} psig</td></tr>
-      <tr><th>Thickness Status</th><td>{{ .Assessment.Result.RequiredThicknessStatus }}</td><th>MAOP Status</th><td>{{ .Assessment.Result.MAOPStatus }}</td></tr>
+      <tr><th>Outside Diameter</th><td>{{ fmtNum .Assessment.Input.OutsideDiameterIn }} in</td><th>Nominal Thickness</th><td>{{ fmtNum .Assessment.Input.NominalWallThicknessMM }} mm</td></tr>
+      <tr><th>Actual Thickness</th><td>{{ fmtNum .Assessment.Input.ActualWallThicknessMM }} mm</td><th>Pipe Length</th><td>{{ fmtNum .Assessment.Input.PipeLengthM }} m</td></tr>
+      <tr><th>Design Pressure</th><td>{{ fmtNum .Assessment.Input.InternalDesignPressurePsi }} psig</td><th>Operating Pressure</th><td>{{ fmtNum .Assessment.Input.OperatingPressurePsi }} psig</td></tr>
+      <tr><th>Test Pressure</th><td>{{ fmtNum .Assessment.Input.TestPressurePsi }} psig</td><th>Design Temperature</th><td>{{ fmtNum .Assessment.Input.DesignTemperatureF }} F</td></tr>
+      <tr><th>SMYS</th><td>{{ fmtNum .Assessment.Input.SMYSPsi }} psi</td><th>Material Stress</th><td>{{ fmtNum .Assessment.Input.MaterialStressPsi }} psi</td></tr>
+      <tr><th>Design Factor / Y</th><td>{{ fmtNum .Assessment.Input.DesignFactor }}</td><th>Quality / Weld Factor</th><td>{{ fmtNum .Assessment.Input.QualityFactor }} / {{ fmtNum .Assessment.Input.WeldJointStrengthFactor }}</td></tr>
+      <tr><th>Method of Joining / Joint Efficiency</th><td>{{ .Assessment.Input.MethodOfJoining }} / {{ fmtNum .Assessment.Input.JointEfficiency }}</td><th>Flange Material Spec</th><td>{{ .Assessment.Input.FlangeMaterialSpec }}</td></tr>
+      <tr><th>Coating Type</th><td>{{ .Assessment.Input.CoatingType }}</td><th>Corrosion Control</th><td>{{ .Assessment.Input.CorrosionControl }}</td></tr>
+      <tr><th>Corrosion Allowance</th><td>{{ fmtNum .Assessment.Input.AllowanceIn }} in</td><th>RT Percentage</th><td>{{ fmtNum .Assessment.Input.RadiographicPercent }}%</td></tr>
+      <tr><th>ROW Width</th><td>{{ .Assessment.Input.RightOfWay }}</td><th>Area Classification</th><td>{{ .Assessment.Input.AreaClassification }}</td></tr>
+      <tr><th>Safety Devices</th><td>{{ .Assessment.Input.SafetyDevice }}</td><th>Inspection Period</th><td>{{ .Assessment.Input.InspectionPeriod }}</td></tr>
     </table>
 
     <table class="pipeline-pdf-table">
-      <thead><tr><th>Point</th><th>Actual (mm)</th><th>CR (mm/year)</th><th>Remaining Life</th><th>Hoop Stress</th><th>MAOP</th><th>Status</th></tr></thead>
+      <thead><tr><th>Inspection Point</th><th>Location Class</th><th>Installation</th><th>Nominal WT</th><th>Required WT</th><th>Actual WT</th><th>Measured Year</th></tr></thead>
       <tbody>
-        {{ range .Assessment.Result.PointResults }}
-        <tr><td>{{ .InspectionPoint }}</td><td>{{ .ActualThicknessMM }}</td><td>{{ .CorrosionRateMMYear }}</td><td>{{ .RemainingLifeYears }}</td><td>{{ .HoopStressPsi }}</td><td>{{ .MAOPPsi }}</td><td>{{ .ThicknessStatus }} / {{ .MAOPStatus }}</td></tr>
+        {{ range .Assessment.Input.InspectionPoints }}
+        <tr><td>{{ .InspectionPoint }}</td><td>{{ .LocationClass }}</td><td>{{ .InstallationType }}</td><td>{{ fmtNum .NominalThicknessMM }} mm</td><td>{{ fmtNum .RequiredThicknessMM }} mm</td><td>{{ fmtNum .ActualThicknessMM }} mm</td><td>{{ .MeasuredYear }}</td></tr>
         {{ end }}
       </tbody>
     </table>
 
-    <div class="pipeline-pdf-section">V. RECOMMENDATION</div>
+    <div class="pipeline-pdf-section">III. SAVED RISK INPUTS</div>
+    <table class="pipeline-pdf-table">
+      <tr><th>GFF</th><td>{{ fmtNum .Assessment.Input.RiskInput.GenericFailureFrequency }}</td><th>Management Score</th><td>{{ fmtNum .Assessment.Input.RiskInput.ManagementSystemScore }}</td></tr>
+      <tr><th>Stored Damage Mechanism</th><td>{{ .Assessment.Input.RiskInput.DamageMechanism }}</td><th>Release Fluid</th><td>{{ .Assessment.Input.RiskInput.ReleaseFluid }}</td></tr>
+      <tr><th>Base TPD / External / Internal</th><td>{{ fmtNum .Assessment.Input.RiskInput.BaseTPDRate }} / {{ fmtNum .Assessment.Input.RiskInput.BaseExternalCorrRate }} / {{ fmtNum .Assessment.Input.RiskInput.BaseInternalCorrRate }}</td><th>Inspection Effectivity</th><td>{{ .Assessment.Input.RiskInput.InspectionEffectivity }}</td></tr>
+      <tr><th>Cover / Patrol / ROW</th><td>{{ .Assessment.Input.RiskInput.DepthOfCover }} / {{ .Assessment.Input.RiskInput.PatrolFrequency }} / {{ .Assessment.Input.RiskInput.ROWCondition }}</td><th>Soil / Coating / CP</th><td>{{ .Assessment.Input.RiskInput.SoilResistivity }} / {{ .Assessment.Input.RiskInput.CoatingCondition }} / {{ .Assessment.Input.RiskInput.CPStatus }}</td></tr>
+      <tr><th>CP Potential</th><td>{{ fmtNum .Assessment.Input.RiskInput.CPPotentialMV }} mV</td><th>Fluid / Water / CO2-H2S / MIC</th><td>{{ .Assessment.Input.RiskInput.FluidCorrosivity }} / {{ .Assessment.Input.RiskInput.WaterContent }} / {{ .Assessment.Input.RiskInput.CO2H2SPresence }} / {{ .Assessment.Input.RiskInput.MICRisk }}</td></tr>
+      <tr><th>Wall Thickness Condition</th><td>{{ .Assessment.Input.RiskInput.WallThicknessCondition }}</td><th>Gas Inputs</th><td>Buildings {{ .Assessment.Input.RiskInput.BuildingCountInsidePIR }}, Class {{ .Assessment.Input.RiskInput.ClassLocation }}, Emergency {{ .Assessment.Input.RiskInput.EmergencyResponse }}</td></tr>
+      <tr><th>Oil/Liquid Inputs</th><td>Flow {{ fmtNum .Assessment.Input.RiskInput.FlowRate }} bbl/hr, Detection {{ fmtNum .Assessment.Input.RiskInput.DetectionTimeHours }} hr</td><th>Segment / Environment</th><td>{{ fmtNum .Assessment.Input.RiskInput.SegmentLengthBetweenValvesM }} m / {{ .Assessment.Input.RiskInput.EnvironmentalSensitivity }}</td></tr>
+      <tr><th>Sensitive Receptor / Isolation Valve</th><td>{{ .Assessment.Input.RiskInput.NearbySensitiveReceptor }} / {{ .Assessment.Input.RiskInput.IsolationValveAvailable }}</td><th>Assessment By</th><td>{{ .Assessment.Input.AssessmentBy }}</td></tr>
+    </table>
+
+    <div class="pipeline-pdf-section">IV. RISK RESULT</div>
+    <table class="pipeline-pdf-table">
+      <tr><th>Risk Code</th><td>{{ .Assessment.Result.FinalRiskCode }}</td><th>Risk Level</th><td>{{ .Assessment.Result.FinalRiskLevel }}</td></tr>
+      <tr><th>PoF Category</th><td>{{ .Assessment.Result.PoF }}</td><th>CoF Category</th><td>{{ .Assessment.Result.CoF }}</td></tr>
+      <tr><th>PoF Value</th><td>{{ fmtNum .Assessment.Result.PoFValue }}</td><th>Risk Value</th><td>{{ fmtNum .Assessment.Result.RiskValue }}</td></tr>
+      <tr><th>Governing Driver</th><td colspan="3">{{ .Assessment.Result.GoverningDamageMechanism }}</td></tr>
+      {{ if isPipelineGasService .Assessment.Input.Service }}
+      <tr><th>Potential Impact Radius</th><td>{{ fmtNum .Assessment.Result.PIRFeet }} ft</td><th>Buildings inside PIR</th><td>{{ .Assessment.Input.RiskInput.BuildingCountInsidePIR }}</td></tr>
+      {{ else }}
+      <tr><th>Spill Volume</th><td>{{ fmtNum .Assessment.Result.SpillVolume }}</td><th>Adjusted Spill Volume</th><td>{{ fmtNum .Assessment.Result.AdjustedSpillVolume }}</td></tr>
+      {{ end }}
+    </table>
+
+    <div class="pipeline-pdf-section">V. MECHANICAL APPRAISAL</div>
+    <table class="pipeline-pdf-table">
+      <tr><th>Required Thickness</th><td>{{ fmtNum .Assessment.Result.SummaryRequiredThicknessMM }} mm</td><th>Remaining Life</th><td>{{ fmtNum .Assessment.Result.RemainingLifeYears }} years</td></tr>
+      <tr><th>Highest Hoop Stress</th><td>{{ fmtNum .Assessment.Result.HighestHoopStressPsi }} psig</td><th>Lowest MAOP</th><td>{{ fmtNum .Assessment.Result.LowestMAOPPsi }} psig</td></tr>
+      <tr><th>Inspection Result</th><td>{{ .Assessment.Result.InspectionResult }}</td><th>MAOP Status</th><td>{{ .Assessment.Result.MAOPStatus }}</td></tr>
+      <tr><th>Thickness Status</th><td>{{ .Assessment.Result.RequiredThicknessStatus }}</td><th>Hoop Stress Status</th><td>{{ .Assessment.Result.HoopStressStatus }}</td></tr>
+    </table>
+
+    <table class="pipeline-pdf-table">
+      <thead><tr><th>Point</th><th>Nominal</th><th>Actual</th><th>CR</th><th>Remaining Life</th><th>Hoop Stress</th><th>MAOP</th><th>Status</th></tr></thead>
+      <tbody>
+        {{ range .Assessment.Result.PointResults }}
+        <tr><td>{{ .InspectionPoint }}</td><td>{{ fmtNum .NominalThicknessMM }}</td><td>{{ fmtNum .ActualThicknessMM }}</td><td>{{ fmtNum .CorrosionRateMMYear }}</td><td>{{ fmtNum .RemainingLifeYears }}</td><td>{{ fmtNum .HoopStressPsi }}</td><td>{{ fmtNum .MAOPPsi }}</td><td>
+          <span {{ if eq .ThicknessStatus "UNACCEPTABLE" }}style="color: red; font-weight: bold;"{{ end }}>{{ .ThicknessStatus }}</span> /
+          <span {{ if eq .MAOPStatus "UNACCEPTABLE" }}style="color: red; font-weight: bold;"{{ end }}>{{ .MAOPStatus }}</span>
+        </td></tr>
+        {{ end }}
+      </tbody>
+    </table>
+
+    <div class="pipeline-pdf-section">VI. DAMAGE MECHANISM AND INSPECTION PLAN</div>
+    <table class="pipeline-pdf-table">
+      <thead><tr><th>Category</th><th>Damage Mechanism</th><th>Severity</th><th>Effectivity</th></tr></thead>
+      <tbody>
+        {{ range .Assessment.Result.DamageMechanismResults }}
+        <tr><td>{{ .Category }}</td><td>{{ .Label }}</td><td>{{ .Severity }}</td><td>{{ .InspectionEffectivity }}</td></tr>
+        {{ end }}
+      </tbody>
+    </table>
+
+    <table class="pipeline-pdf-table">
+      <thead><tr><th>Damage Mechanism</th><th>Recommended Method</th><th>Interval</th></tr></thead>
+      <tbody>
+        {{ range .Assessment.Result.InspectionPlanResults }}
+        <tr><td>{{ .Label }}</td><td>{{ .NonIntrusiveMethod }}</td><td>{{ .NonIntrusiveIntervalMonths }} months</td></tr>
+        {{ end }}
+      </tbody>
+    </table>
+
+    <div class="pipeline-pdf-section">VII. ENGINEERING ADVISORY / SUGGESTED ACTIONS</div>
     <table class="pipeline-pdf-table">
       <tr><td>{{ .Assessment.Result.Recommendation }}</td></tr>
+      <tr><th>Source</th></tr>
+      <tr><td>{{ .Assessment.Result.RecommendationSource }} | {{ .Assessment.Result.RecommendationRuleName }}</td></tr>
       <tr><th>Engineering Notes</th></tr>
       <tr><td>{{ .Assessment.Input.RiskInput.EngineeringNotes }}</td></tr>
     </table>
@@ -413,4 +448,3 @@ function generatePipelinePDF() {
 {{ end }}
 {{ end }}
 {{ template "layouts/master" . }}
-

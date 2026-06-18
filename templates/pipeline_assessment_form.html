@@ -8,6 +8,100 @@
   .pipeline-risk-matrix .risk-high { background: #ffe5df; color: #c93314; }
   .pipeline-risk-matrix .risk-critical { background: #eceef1; color: #233446; }
   .pipeline-risk-matrix .active-cell { outline: 3px solid #000; transform: scale(1.08); box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+  #pipelineOilForm .table-responsive { border: 1px solid #edf0f5; border-radius: 6px; }
+  #pipelineOilForm .table { font-size: .78rem; }
+  #pipelineOilForm .table > :not(caption) > * > * { padding: .36rem .48rem; vertical-align: middle; }
+  #pipelineOilForm .table thead th { font-size: .72rem; font-weight: 700; letter-spacing: 0; white-space: nowrap; color: #566a7f; }
+  #pipelineOilForm .table tbody td { color: #384551; }
+  #pipelineOilForm .table tbody tr:hover { background: #fbfcff; }
+  #pipelineOilForm .table .form-control,
+  #pipelineOilForm .table .form-select {
+    min-height: 30px;
+    padding: .22rem .45rem;
+    font-size: .78rem;
+    border-radius: 5px;
+  }
+  #pipelineOilForm .table .input-group-text { padding: .22rem .45rem; font-size: .76rem; }
+  #pipelineOilForm .table .btn-icon { width: 30px; height: 30px; }
+  #pipelineOilForm .table .badge { font-size: .7rem; padding: .25rem .5rem; }
+  #pipelineOilForm .pipeline-summary-tile {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 106px;
+    padding: .75rem .85rem !important;
+    overflow: hidden;
+  }
+  #pipelineOilForm .pipeline-summary-tile .h4 {
+    font-size: 1rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  #pipelineOilForm .pipeline-summary-tile .small,
+  #pipelineOilForm .pipeline-summary-tile .text-uppercase {
+    line-height: 1.2;
+  }
+  #wizard-pipeline-assessment,
+  #wizard-pipeline-assessment .bs-stepper-content,
+  #wizard-pipeline-assessment .content,
+  #pipelineOilForm,
+  #pipelineOilForm .row,
+  #pipelineOilForm [class*="col-"] {
+    min-width: 0;
+    max-width: 100%;
+  }
+  #pipelineOilForm .pipeline-mechanical-card {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  #pipelineOilForm .pipeline-mechanical-card .card-body {
+    min-width: 0;
+    max-width: 100%;
+  }
+  #pipelineOilForm .pipeline-table-scroll {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  #pipelineOilForm #pipelinePointsTable {
+    width: max-content;
+    min-width: 760px;
+    max-width: none;
+    table-layout: fixed;
+  }
+  #pipelineOilForm .pipeline-calculation-table {
+    width: max-content;
+    min-width: 920px;
+    max-width: none;
+    table-layout: fixed;
+  }
+  #pipelineOilForm #pipelinePointsTable th:nth-child(1),
+  #pipelineOilForm #pipelinePointsTable td:nth-child(1) { width: 150px; }
+  #pipelineOilForm #pipelinePointsTable th:nth-child(2),
+  #pipelineOilForm #pipelinePointsTable td:nth-child(2) { width: 150px; }
+  #pipelineOilForm #pipelinePointsTable th:nth-child(3),
+  #pipelineOilForm #pipelinePointsTable td:nth-child(3) { width: 170px; }
+  #pipelineOilForm #pipelinePointsTable th:nth-child(4),
+  #pipelineOilForm #pipelinePointsTable td:nth-child(4),
+  #pipelineOilForm #pipelinePointsTable th:nth-child(5),
+  #pipelineOilForm #pipelinePointsTable td:nth-child(5),
+  #pipelineOilForm #pipelinePointsTable th:nth-child(6),
+  #pipelineOilForm #pipelinePointsTable td:nth-child(6) { width: 120px; }
+  #pipelineOilForm #pipelinePointsTable th:nth-child(7),
+  #pipelineOilForm #pipelinePointsTable td:nth-child(7) { width: 52px; }
+  #pipelineOilForm .pipeline-risk-matrix td { padding: 6px 5px; font-size: .72rem; }
+  @media (max-width: 767.98px) {
+    #pipelineOilForm .table { font-size: .74rem; }
+    #pipelineOilForm .table > :not(caption) > * > * { padding: .32rem .4rem; }
+    #pipelineOilForm .table .form-control,
+    #pipelineOilForm .table .form-select { min-width: 150px; }
+  }
 </style>
 <div class="content-wrapper">
   <div class="container-xxl flex-grow-1 container-p-y">
@@ -40,8 +134,8 @@
                 <span class="bs-stepper-label">
                   <span class="bs-stepper-number">02</span>
                   <span class="d-flex flex-column gap-1 ms-2 text-start">
-                    <span class="bs-stepper-title">Failure Probability</span>
-                    <span class="bs-stepper-subtitle">Damage factor inputs</span>
+                    <span class="bs-stepper-title">Calculation</span>
+                    <span class="bs-stepper-subtitle">Remaining life, CR, MAOP</span>
                   </span>
                 </span>
               </button>
@@ -54,8 +148,8 @@
                 <span class="bs-stepper-label">
                   <span class="bs-stepper-number">03</span>
                   <span class="d-flex flex-column gap-1 ms-2 text-start">
-                    <span class="bs-stepper-title">Consequence Inputs</span>
-                    <span class="bs-stepper-subtitle">Gas or liquid impact</span>
+                    <span class="bs-stepper-title">Damage Mechanism</span>
+                    <span class="bs-stepper-subtitle">Pipeline screening</span>
                   </span>
                 </span>
               </button>
@@ -68,8 +162,8 @@
                 <span class="bs-stepper-label">
                   <span class="bs-stepper-number">04</span>
                   <span class="d-flex flex-column gap-1 ms-2 text-start">
-                    <span class="bs-stepper-title">Review & Calculate</span>
-                    <span class="bs-stepper-subtitle">Check and save</span>
+                    <span class="bs-stepper-title">Inspection & Risk</span>
+                    <span class="bs-stepper-subtitle">Effectivity, CoF, save</span>
                   </span>
                 </span>
               </button>
@@ -79,6 +173,7 @@
           <div class="bs-stepper-content">
             <form id="pipelineOilForm" data-mode="{{ .Mode }}" data-assessment-id="{{ .AssessmentID }}" onsubmit="return false;">
               <script type="application/json" id="pipelineSavedResult">{{ toJSON .Assessment.Result }}</script>
+              <script type="application/json" id="pipelineMaterialData">{{ toJSON .Material }}</script>
               <input type="hidden" name="previous_skpp" value="{{ .Input.PreviousSKPP }}">
               <input type="hidden" name="expiration_date" value="{{ .Input.ExpirationDate }}">
 
@@ -116,12 +211,24 @@
                           <div class="accordion-body">
                             <div class="row g-3">
                               <div class="col-md-8"><label class="form-label">Line Identification <span class="text-danger">*</span></label><input class="form-control" name="line_identification" value="{{ .Input.LineIdentification }}" placeholder="NPS 12 Main Gas Trunkline..." required data-required-msg="Please enter the pipeline name."></div>
-                              <div class="col-md-4"><label class="form-label">Service / Fluid Type <span class="text-danger">*</span></label><select class="form-select" name="service" required><option value="Oil" {{ if eq .Input.Service "Oil" }}selected{{ end }}>Oil</option><option value="Liquid" {{ if eq .Input.Service "Liquid" }}selected{{ end }}>Liquid</option><option value="Gas" {{ if eq .Input.Service "Gas" }}selected{{ end }}>Gas</option></select></div>
+                              <div class="col-md-4"><label class="form-label">Service / Fluid Type <span class="text-danger">*</span></label><select class="form-select" name="service" required><option value="Natural gas" {{ if or (eq .Input.Service "Natural gas") (eq .Input.Service "Gas") }}selected{{ end }}>Natural gas</option><option value="Dwr gas" {{ if eq .Input.Service "Dwr gas" }}selected{{ end }}>Dwr gas</option><option value="Wet gas" {{ if eq .Input.Service "Wet gas" }}selected{{ end }}>Wet gas</option><option value="Oil" {{ if eq .Input.Service "Oil" }}selected{{ end }}>Oil</option><option value="Produce water" {{ if eq .Input.Service "Produce water" }}selected{{ end }}>Produce water</option><option value="Liquid hydrocarbon" {{ if or (eq .Input.Service "Liquid hydrocarbon") (eq .Input.Service "Liquid") }}selected{{ end }}>Liquid hydrocarbon</option><option value="Chemical" {{ if eq .Input.Service "Chemical" }}selected{{ end }}>Chemical</option></select></div>
                               <div class="col-md-3"><label class="form-label">Year Built</label><input type="number" class="form-control" name="year_built" value="{{ .Input.YearBuilt }}" placeholder="2017"></div>
-                              <div class="col-md-3"><label class="form-label">Year Used</label><input type="number" class="form-control" name="year_used" value="{{ .Input.YearUsed }}" placeholder="2017"></div>
-                              <div class="col-md-6"><label class="form-label">Pipe Size Description</label><input class="form-control" name="pipe_size" value="{{ .Input.PipeSize }}" placeholder="323.85 mm OD x 10.31 mm T x 9966 m L"></div>
-                              <div class="col-md-4"><label class="form-label">Pipe Length</label><div class="input-group"><input type="number" step="any" class="form-control" name="pipe_length_m" value="{{ .Input.PipeLengthM }}" placeholder="9966" data-required-msg="Please enter the pipeline segment length."><span class="input-group-text">m</span></div></div>
-                              <div class="col-md-4"><label class="form-label">Material Specification</label><input class="form-control" name="material_specification" value="{{ .Input.MaterialSpecification }}" placeholder="API 5L X52"></div>
+                              <div class="col-md-3"><label class="form-label">Year Used</label><input type="month" class="form-control" name="year_used" value="{{ .Input.YearUsed }}"></div>
+                              <div class="col-md-6"><label class="form-label">Pipe Size Description</label><input class="form-control" name="pipe_size" value="{{ .Input.PipeSize }}" placeholder="323,85 mm OD x 10,31 mm T x 9966 m L"></div>
+                              <div class="col-md-4"><label class="form-label">Pipe Length</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="pipe_length_m" value="{{ .Input.PipeLengthM }}" placeholder="9966" data-required-msg="Please enter the pipeline segment length."><span class="input-group-text">m</span></div></div>
+                              <div class="col-md-4">
+                                <label class="form-label">Material Specification</label>
+                                <select class="form-select" name="material_specification" id="materialSpecSelect">
+                                  <option value="">-- Select or type manually --</option>
+                                  {{ range $.Material }}
+                                  <option value="{{ .Name }}" data-smys="{{ .SMYS }}" {{ if eq $.Input.MaterialSpecification .Name }}selected{{ end }}>{{ .Name }}</option>
+                                  {{ end }}
+                                  {{ if .Input.MaterialSpecification }}
+                                  {{/* If saved value doesn't match any Material option, show it as a selected custom entry */}}
+                                  {{ end }}
+                                </select>
+                                <div class="form-text">Selecting a material auto-fills SMYS.</div>
+                              </div>
                               <div class="col-md-4"><label class="form-label">Flange Material Specification</label><input class="form-control" name="flange_material_spec" value="{{ .Input.FlangeMaterialSpec }}" placeholder="-"></div>
                             </div>
                           </div>
@@ -137,31 +244,31 @@
                         <div id="pipelineDesignCollapse" class="accordion-collapse collapse" aria-labelledby="pipelineDesignHeading" data-bs-parent="#pipelineExcelAccordion">
                           <div class="accordion-body">
                             <div class="row g-3">
-                              <div class="col-md-4"><label class="form-label">Applicable Code</label><input class="form-control" name="applicable_code" value="{{ .Input.ApplicableCode }}" placeholder="ASME B31.8"></div>
-                              <div class="col-md-4"><label class="form-label">Outside Diameter</label><div class="input-group"><input type="number" step="any" class="form-control" name="outside_diameter_in" value="{{ .Input.OutsideDiameterIn }}" placeholder="12.75" data-required-msg="Please enter the pipeline outside diameter."><span class="input-group-text">in</span></div></div>
-                              <div class="col-md-4"><label class="form-label">Nominal Wall Thickness</label><div class="input-group"><input type="number" step="any" class="form-control" name="nominal_wall_thickness_mm" value="{{ .Input.NominalWallThicknessMM }}" placeholder="10.31" data-required-msg="Please enter the pipeline wall thickness."><span class="input-group-text">mm</span></div></div>
-                              <div class="col-md-4"><label class="form-label">Actual Wall Thickness</label><div class="input-group"><input type="number" step="any" class="form-control" name="actual_wall_thickness_mm" value="{{ .Input.ActualWallThicknessMM }}" placeholder="9.22"><span class="input-group-text">mm</span></div></div>
-                              <div class="col-md-4"><label class="form-label">Internal Design Pressure</label><div class="input-group"><input type="number" step="any" class="form-control" name="internal_design_pressure_psi" value="{{ .Input.InternalDesignPressurePsi }}" placeholder="1350"><span class="input-group-text">psi</span></div></div>
-                              <div class="col-md-4"><label class="form-label">Operating Pressure</label><div class="input-group"><input type="number" step="any" class="form-control" name="operating_pressure_psi" value="{{ .Input.OperatingPressurePsi }}" placeholder="650" data-required-msg="Please enter the operating pressure."><span class="input-group-text">psi</span></div></div>
-                              <div class="col-md-4"><label class="form-label">Design Temperature</label><div class="input-group"><input type="number" step="any" class="form-control" name="design_temperature_f" value="{{ .Input.DesignTemperatureF }}" placeholder="200"><span class="input-group-text">F</span></div></div>
-                              <div class="col-md-4"><label class="form-label">Test Pressure</label><div class="input-group"><input type="number" step="any" class="form-control" name="test_pressure_psi" value="{{ .Input.TestPressurePsi }}" placeholder="0"><span class="input-group-text">psi</span></div></div>
-                              <div class="col-md-4"><label class="form-label">SMYS</label><div class="input-group"><input type="number" step="any" class="form-control" name="smys_psi" value="{{ .Input.SMYSPsi }}" placeholder="52000"><span class="input-group-text">psi</span></div></div>
-                              <div class="col-md-4"><label class="form-label">Material Stress</label><div class="input-group"><input type="number" step="any" class="form-control" name="material_stress_psi" value="{{ .Input.MaterialStressPsi }}" placeholder="20000"><span class="input-group-text">psi</span></div></div>
-                              <div class="col-md-4"><label class="form-label">Quality Factor</label><input type="number" step="any" class="form-control" name="quality_factor" value="{{ .Input.QualityFactor }}" placeholder="1"></div>
-                              <div class="col-md-4"><label class="form-label">Design Factor / Coefficient Y</label><input type="number" step="any" class="form-control" name="design_factor" value="{{ .Input.DesignFactor }}" placeholder="0.6"></div>
-                              <div class="col-md-4"><label class="form-label">Weld Joint Strength Factor</label><input type="number" step="any" class="form-control" name="weld_joint_strength_factor" value="{{ .Input.WeldJointStrengthFactor }}" placeholder="1"></div>
-                              <div class="col-md-4"><label class="form-label">Corrosion Allowance</label><div class="input-group"><input type="number" step="any" class="form-control" name="allowance_in" value="{{ .Input.AllowanceIn }}" placeholder="0"><span class="input-group-text">in</span></div></div>
+                              <div class="col-md-4"><label class="form-label">Applicable Code</label><select class="form-select" name="applicable_code"><option value="ASME B31.4" {{ if eq .Input.ApplicableCode "ASME B31.4" }}selected{{ end }}>ASME B31.4</option><option value="ASME B31.3" {{ if eq .Input.ApplicableCode "ASME B31.3" }}selected{{ end }}>ASME B31.3</option><option value="ASME B31.8" {{ if eq .Input.ApplicableCode "ASME B31.8" }}selected{{ end }}>ASME B31.8</option></select><div class="form-text">Defaults from service: gas B31.8, oil B31.4, other liquids B31.3.</div></div>
+                              <div class="col-md-4"><label class="form-label">Outside Diameter</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="outside_diameter_in" value="{{ .Input.OutsideDiameterIn }}" placeholder="12,75" data-required-msg="Please enter the pipeline outside diameter."><span class="input-group-text">in</span></div></div>
+                              <div class="col-md-4"><label class="form-label">Nominal Wall Thickness</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="nominal_wall_thickness_mm" value="{{ .Input.NominalWallThicknessMM }}" placeholder="10,31" data-required-msg="Please enter the pipeline wall thickness."><span class="input-group-text">mm</span></div></div>
+                              <div class="col-md-4"><label class="form-label">Actual Wall Thickness</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="actual_wall_thickness_mm" value="{{ .Input.ActualWallThicknessMM }}" placeholder="9,22"><span class="input-group-text">mm</span></div></div>
+                              <div class="col-md-4"><label class="form-label">Internal Design Pressure</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="internal_design_pressure_psi" value="{{ .Input.InternalDesignPressurePsi }}" placeholder="1350"><span class="input-group-text">psi</span></div></div>
+                              <div class="col-md-4"><label class="form-label">Operating Pressure</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="operating_pressure_psi" value="{{ .Input.OperatingPressurePsi }}" placeholder="650" data-required-msg="Please enter the operating pressure."><span class="input-group-text">psi</span></div></div>
+                              <div class="col-md-4"><label class="form-label">Design Temperature</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="design_temperature_f" value="{{ .Input.DesignTemperatureF }}" placeholder="200"><span class="input-group-text">F</span></div></div>
+                              <div class="col-md-4"><label class="form-label">Operating Temperature</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="operating_temperature_f" value="{{ .Input.OperatingTemperatureF }}" placeholder="200"><span class="input-group-text">F</span></div></div>
+                              <div class="col-md-4"><label class="form-label">Test Pressure</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="test_pressure_psi" value="{{ .Input.TestPressurePsi }}" placeholder="0"><span class="input-group-text">psi</span></div></div>
+                              <div class="col-md-4"><label class="form-label">SMYS</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="smys_psi" value="{{ .Input.SMYSPsi }}" placeholder="52000"><span class="input-group-text">psi</span></div></div>
+                              <div class="col-md-4"><label class="form-label">Material Stress</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="material_stress_psi" value="{{ .Input.MaterialStressPsi }}" placeholder="Derived" readonly><span class="input-group-text">psi</span></div><div class="form-text" id="pipelineMaterialStressSource">Derived from applicable code and SMYS.</div></div>
+                              <div class="col-md-4"><label class="form-label">Quality Factor</label><input type="text" inputmode="decimal" class="form-control" name="quality_factor" value="{{ .Input.QualityFactor }}" placeholder="1"></div>
+                              <div class="col-md-4"><label class="form-label">Design Factor / Coefficient Y</label><input type="text" inputmode="decimal" class="form-control" name="design_factor" value="{{ .Input.DesignFactor }}" placeholder="0,6"></div>
+                              <div class="col-md-4"><label class="form-label">Weld Joint Strength Factor</label><input type="text" inputmode="decimal" class="form-control" name="weld_joint_strength_factor" value="{{ .Input.WeldJointStrengthFactor }}" placeholder="1"></div>
+                              <div class="col-md-4"><label class="form-label">Corrosion Allowance</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="allowance_in" value="{{ .Input.AllowanceIn }}" placeholder="0"><span class="input-group-text">in</span></div></div>
                               <div class="col-md-4"><label class="form-label">Method of Joining</label><input class="form-control" name="method_of_joining" value="{{ .Input.MethodOfJoining }}" placeholder="Welding"></div>
-                              <div class="col-md-4"><label class="form-label">Joint Efficiency</label><input type="number" step="any" class="form-control" name="joint_efficiency" value="{{ .Input.JointEfficiency }}" placeholder="1"></div>
+                              <div class="col-md-4"><label class="form-label">Joint Efficiency</label><input type="text" inputmode="decimal" class="form-control" name="joint_efficiency" value="{{ .Input.JointEfficiency }}" placeholder="1"></div>
                               <div class="col-md-4"><label class="form-label">Coating Type</label><input class="form-control" name="coating_type" value="{{ .Input.CoatingType }}" placeholder="3 LPE & Painting"></div>
                               <div class="col-md-4"><label class="form-label">Corrosion Control Method</label><input class="form-control" name="corrosion_control" value="{{ .Input.CorrosionControl }}" placeholder="SACP / N/A"></div>
                               <div class="col-md-4"><label class="form-label">Right of Way Width</label><input class="form-control" name="right_of_way" value="{{ .Input.RightOfWay }}" placeholder="6 - 9 m"></div>
                               <div class="col-md-4"><label class="form-label">Safety Devices</label><input class="form-control" name="safety_device" value="{{ .Input.SafetyDevice }}" placeholder="Valves, PSV, ESD"></div>
                               <div class="col-md-4"><label class="form-label">Area Classification</label><input class="form-control" name="area_classification" value="{{ .Input.AreaClassification }}" placeholder="2 / 1 Div.2"></div>
                               <div class="col-md-4"><label class="form-label">Inspection Period</label><input class="form-control" name="inspection_period" value="{{ .Input.InspectionPeriod }}" placeholder="March 2025"></div>
-                              <div class="col-md-4"><label class="form-label">Inspection Result</label><input class="form-control" name="inspection_result" value="{{ .Input.InspectionResult }}" placeholder="ACCEPTABLE"></div>
-                              <div class="col-md-4"><label class="form-label">Radiographic Percentage</label><div class="input-group"><input type="number" step="any" class="form-control" name="radiographic_percent" value="{{ .Input.RadiographicPercent }}" placeholder="100"><span class="input-group-text">%</span></div></div>
-                              <div class="col-md-4"><label class="form-label">Installation Type</label><input class="form-control" name="type_of_installation" value="{{ .Input.TypeOfInstallation }}" placeholder="Underground"></div>
+                              <div class="col-md-4"><label class="form-label">Radiographic Percentage</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="radiographic_percent" value="{{ .Input.RadiographicPercent }}" placeholder="100"><span class="input-group-text">%</span></div></div>
+                              <div class="col-md-4"><label class="form-label">Installation Type</label><select class="form-select" name="type_of_installation"><option value="Underground" {{ if eq .Input.TypeOfInstallation "Underground" }}selected{{ end }}>Underground</option><option value="Aboveground" {{ if eq .Input.TypeOfInstallation "Aboveground" }}selected{{ end }}>Aboveground</option></select></div>
                             </div>
                           </div>
                         </div>
@@ -177,64 +284,132 @@
 
               <div id="pipeline-step-2" class="content">
                 <div class="row g-4">
-                  <div class="col-lg-4">
-                    <div class="card border shadow-none h-100">
-                      <div class="card-header bg-transparent pb-2"><h5 class="mb-1">Risk Screening - Third-Party Damage</h5></div>
+                  <div class="col-12">
+                    <div class="card border shadow-none pipeline-mechanical-card">
+                      <div class="card-header bg-transparent pb-2"><h5 class="mb-1">Thickness Readings and Mechanical Calculation</h5></div>
                       <div class="card-body">
-                        <label class="form-label">Buried Pipe Cover Depth</label>
-                        <select class="form-select mb-3" name="depth_of_cover"><option value="<1m" {{ if eq .Input.RiskInput.DepthOfCover "<1m" }}selected{{ end }}>Less than 1 m</option><option value="1-2m" {{ if eq .Input.RiskInput.DepthOfCover "1-2m" }}selected{{ end }}>1 to 2 m</option><option value=">2m" {{ if eq .Input.RiskInput.DepthOfCover ">2m" }}selected{{ end }}>More than 2 m</option></select>
-                        <label class="form-label">Route Patrol Schedule</label>
-                        <select class="form-select mb-3" name="patrol_frequency"><option value="rare" {{ if eq .Input.RiskInput.PatrolFrequency "rare" }}selected{{ end }}>Rare / never</option><option value="monthly" {{ if eq .Input.RiskInput.PatrolFrequency "monthly" }}selected{{ end }}>Monthly</option><option value="weekly_daily" {{ if eq .Input.RiskInput.PatrolFrequency "weekly_daily" }}selected{{ end }}>Weekly / daily</option></select>
-                        <label class="form-label">Route Access and Marker Condition</label>
-                        <select class="form-select" name="row_condition"><option value="poor" {{ if eq .Input.RiskInput.ROWCondition "poor" }}selected{{ end }}>Poor - unclear or uncontrolled</option><option value="fair" {{ if eq .Input.RiskInput.ROWCondition "fair" }}selected{{ end }}>Fair - mostly controlled</option><option value="good" {{ if eq .Input.RiskInput.ROWCondition "good" }}selected{{ end }}>Good - clear and controlled</option></select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="col-lg-4">
-                    <div class="card border shadow-none h-100">
-                      <div class="card-header bg-transparent pb-2"><h5 class="mb-1">Risk Screening - External Corrosion</h5></div>
-                      <div class="card-body">
-                        <label class="form-label">Soil Corrosivity Level</label>
-                        <select class="form-select mb-3" name="soil_resistivity"><option value="<1000" {{ if eq .Input.RiskInput.SoilResistivity "<1000" }}selected{{ end }}>High corrosivity (&lt;1000 ohm-cm)</option><option value="1000-5000" {{ if eq .Input.RiskInput.SoilResistivity "1000-5000" }}selected{{ end }}>Medium (1000-5000 ohm-cm)</option><option value=">5000" {{ if eq .Input.RiskInput.SoilResistivity ">5000" }}selected{{ end }}>Low corrosivity (&gt;5000 ohm-cm)</option></select>
-                        <label class="form-label">External Coating Condition</label>
-                        <select class="form-select mb-3" name="coating_condition"><option value="poor" {{ if eq .Input.RiskInput.CoatingCondition "poor" }}selected{{ end }}>Poor / failed</option><option value="fair" {{ if eq .Input.RiskInput.CoatingCondition "fair" }}selected{{ end }}>Fair</option><option value="good" {{ if eq .Input.RiskInput.CoatingCondition "good" }}selected{{ end }}>Good</option></select>
-                        <label class="form-label">Cathodic Protection Status</label>
-                        <select class="form-select mb-3" name="cp_status"><option value="failed" {{ if eq .Input.RiskInput.CPStatus "failed" }}selected{{ end }}>Failed / off</option><option value="borderline" {{ if eq .Input.RiskInput.CPStatus "borderline" }}selected{{ end }}>Borderline</option><option value="normal" {{ if eq .Input.RiskInput.CPStatus "normal" }}selected{{ end }}>Normal / compliant</option></select>
-                        <label class="form-label">Cathodic Protection Potential</label>
-                        <div class="input-group"><input type="number" step="any" class="form-control" name="cp_potential_mv" value="{{ .Input.RiskInput.CPPotentialMV }}" placeholder="-850"><span class="input-group-text">mV</span></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="col-lg-4">
-                    <div class="card border shadow-none h-100">
-                      <div class="card-header bg-transparent pb-2"><h5 class="mb-1">Risk Screening - Internal Corrosion</h5></div>
-                      <div class="card-body">
-                        <label class="form-label">Fluid Corrosivity Level</label>
-                        <select class="form-select mb-3" name="fluid_corrosivity"><option value="low" {{ if eq .Input.RiskInput.FluidCorrosivity "low" }}selected{{ end }}>Low</option><option value="medium" {{ if eq .Input.RiskInput.FluidCorrosivity "medium" }}selected{{ end }}>Medium</option><option value="high" {{ if eq .Input.RiskInput.FluidCorrosivity "high" }}selected{{ end }}>High</option></select>
-                        <label class="form-label">Water Content Level</label>
-                        <select class="form-select mb-3" name="water_content"><option value="low" {{ if eq .Input.RiskInput.WaterContent "low" }}selected{{ end }}>Low</option><option value="medium" {{ if eq .Input.RiskInput.WaterContent "medium" }}selected{{ end }}>Medium</option><option value="high" {{ if eq .Input.RiskInput.WaterContent "high" }}selected{{ end }}>High</option></select>
-                        <label class="form-label">CO2 / H2S Condition</label>
-                        <select class="form-select mb-3" name="co2_h2s_presence"><option value="none" {{ if eq .Input.RiskInput.CO2H2SPresence "none" }}selected{{ end }}>None</option><option value="present" {{ if eq .Input.RiskInput.CO2H2SPresence "present" }}selected{{ end }}>Present</option><option value="high" {{ if eq .Input.RiskInput.CO2H2SPresence "high" }}selected{{ end }}>High</option></select>
-                        <label class="form-label">MIC Condition</label>
-                        <select class="form-select mb-3" name="mic_risk"><option value="low" {{ if eq .Input.RiskInput.MICRisk "low" }}selected{{ end }}>Low</option><option value="medium" {{ if eq .Input.RiskInput.MICRisk "medium" }}selected{{ end }}>Medium</option><option value="high" {{ if eq .Input.RiskInput.MICRisk "high" }}selected{{ end }}>High</option></select>
-                        <label class="form-label">Wall Thickness Condition</label>
-                        <select class="form-select" name="wall_thickness_condition"><option value="healthy" {{ if eq .Input.RiskInput.WallThicknessCondition "healthy" }}selected{{ end }}>Healthy</option><option value="warning" {{ if eq .Input.RiskInput.WallThicknessCondition "warning" }}selected{{ end }}>Warning</option><option value="critical" {{ if eq .Input.RiskInput.WallThicknessCondition "critical" }}selected{{ end }}>Critical</option></select>
+                        <div class="d-flex justify-content-end mb-3">
+                          <button type="button" class="btn btn-sm btn-outline-primary" id="addPipelinePoint"><i class="mdi mdi-plus me-1"></i> Add Point</button>
+                        </div>
+                        <div class="table-responsive pipeline-table-scroll mb-4">
+                          <table class="table table-sm align-middle mb-0" id="pipelinePointsTable">
+                            <thead class="table-light"><tr><th>Point</th><th>Location Class</th><th>Installation</th><th>Nominal (mm)</th><th>Actual (mm)</th><th>Measured Year</th><th></th></tr></thead>
+                            <tbody>
+                              {{ range .Input.InspectionPoints }}
+                              <tr>
+                                <td><input class="form-control" name="inspection_point" value="{{ .InspectionPoint }}"></td>
+                                <td><input class="form-control" name="location_class" value="{{ .LocationClass }}"></td>
+                                <td><input class="form-control" name="installation_type" value="{{ .InstallationType }}"></td>
+                                <td><input type="text" inputmode="decimal" class="form-control" name="point_nominal_thickness_mm" value="{{ .NominalThicknessMM }}"></td>
+                                <td><input type="text" inputmode="decimal" class="form-control" name="point_actual_thickness_mm" value="{{ .ActualThicknessMM }}"></td>
+                                <td><input type="month" class="form-control" name="measured_year" value="{{ .MeasuredYear }}"></td>
+                                <td><button type="button" class="btn btn-sm btn-icon btn-outline-danger remove-point"><i class="mdi mdi-trash-can-outline"></i></button></td>
+                              </tr>
+                              {{ end }}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div class="row g-3 mb-4">
+                          <div class="col-md-6 col-xl-3">
+                            <div class="border rounded h-100 bg-warning-subtle pipeline-summary-tile">
+                              <div class="text-muted small text-uppercase fw-bold">Governing Remaining Life</div>
+                              <div class="h4 fw-bold text-primary mb-0" id="pipelineSummaryRemainingLife">-</div>
+                              <div class="small text-muted" id="pipelineSummaryRemainingPoint">Point: -</div>
+                            </div>
+                          </div>
+                          <div class="col-md-6 col-xl-3">
+                            <div class="border rounded h-100 pipeline-summary-tile">
+                              <div class="text-muted small text-uppercase fw-bold">Minimum Actual Thickness</div>
+                              <div class="h4 fw-bold mb-0" id="pipelineSummaryMinActual">-</div>
+                              <div class="small text-muted">Across inspection points</div>
+                            </div>
+                          </div>
+                          <div class="col-md-6 col-xl-3">
+                            <div class="border rounded h-100 pipeline-summary-tile">
+                              <div class="text-muted small text-uppercase fw-bold">Highest Hoop Stress</div>
+                              <div class="h4 fw-bold mb-0" id="pipelineSummaryHoopStress">-</div>
+                              <div class="small text-muted">Based on operating/design pressure</div>
+                            </div>
+                          </div>
+                          <div class="col-md-6 col-xl-3">
+                            <div class="border rounded h-100 pipeline-summary-tile">
+                              <div class="text-muted small text-uppercase fw-bold">Lowest MAOP</div>
+                              <div class="h4 fw-bold mb-0" id="pipelineSummaryLowestMAOP">-</div>
+                              <div class="small text-muted">Based on remaining thickness</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="table-responsive pipeline-table-scroll">
+                          <table class="table table-sm table-hover table-bordered text-center align-middle mb-0 pipeline-calculation-table">
+                            <thead class="table-light">
+                              <tr>
+                                <th rowspan="2" class="bg-primary-subtle text-primary">Point</th>
+                                <th colspan="5">Thickness (mm)</th>
+                                <th rowspan="2">CR<br><span class="small text-muted">mm/year</span></th>
+                                <th rowspan="2" class="text-danger">Remaining Life<br><span class="small text-muted">years</span></th>
+                                <th rowspan="2">Hoop Stress<br><span class="small text-muted">psi</span></th>
+                                <th rowspan="2">MAOP<br><span class="small text-muted">psi</span></th>
+                                <th rowspan="2">Status</th>
+                              </tr>
+                              <tr>
+                                <th>Nominal</th>
+                                <th>Required</th>
+                                <th>Min.</th>
+                                <th>Actual</th>
+                                <th>Remaining</th>
+                              </tr>
+                            </thead>
+                            <tbody id="pipelineRealtimeThicknessResult"><tr><td colspan="11" class="text-center text-muted py-3">Enter thickness readings to see realtime calculation.</td></tr></tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   <div class="col-12">
                     <div class="card border shadow-none">
-                      <div class="card-header bg-transparent pb-2"><h5 class="mb-1">Risk Calculation Basis</h5></div>
+                      <div class="card-header bg-transparent pb-2"><h5 class="mb-1">Probability Factor Inputs</h5></div>
                       <div class="card-body">
-                        <div class="row g-3 align-items-start">
-                          <div class="col-md-6"><label class="form-label">Generic Failure Frequency</label><input type="number" step="any" class="form-control" name="generic_failure_frequency" value="{{ .Input.RiskInput.GenericFailureFrequency }}"></div>
-                          <div class="col-md-6"><label class="form-label">Management System Score</label><input type="number" step="any" class="form-control" name="management_system_score" value="{{ .Input.RiskInput.ManagementSystemScore }}"></div>
-                          <div class="col-md-4"><label class="form-label">Third-Party Base Factor</label><input type="number" step="any" class="form-control" name="base_tpd_rate" value="{{ .Input.RiskInput.BaseTPDRate }}"></div>
-                          <div class="col-md-4"><label class="form-label">External Corrosion Base Factor</label><input type="number" step="any" class="form-control" name="base_external_corr_rate" value="{{ .Input.RiskInput.BaseExternalCorrRate }}"></div>
-                          <div class="col-md-4"><label class="form-label">Internal Corrosion Base Factor</label><input type="number" step="any" class="form-control" name="base_internal_corr_rate" value="{{ .Input.RiskInput.BaseInternalCorrRate }}"></div>
+                        <div class="alert alert-secondary small mb-4">These inputs feed all Pipeline damage mechanism screening cards in the next step.</div>
+                        <div class="row g-4">
+                          <div class="col-lg-4">
+                            <h6 class="fw-bold text-primary">Third-Party Damage</h6>
+                            <label class="form-label">Buried Pipe Cover Depth</label>
+                            <select class="form-select mb-3" name="depth_of_cover"><option value="<1m" {{ if eq .Input.RiskInput.DepthOfCover "<1m" }}selected{{ end }}>Less than 1 m</option><option value="1-2m" {{ if eq .Input.RiskInput.DepthOfCover "1-2m" }}selected{{ end }}>1 to 2 m</option><option value=">2m" {{ if eq .Input.RiskInput.DepthOfCover ">2m" }}selected{{ end }}>More than 2 m</option></select>
+                            <label class="form-label">Route Patrol Schedule</label>
+                            <select class="form-select mb-3" name="patrol_frequency"><option value="rare" {{ if eq .Input.RiskInput.PatrolFrequency "rare" }}selected{{ end }}>Rare / never</option><option value="monthly" {{ if eq .Input.RiskInput.PatrolFrequency "monthly" }}selected{{ end }}>Monthly</option><option value="weekly_daily" {{ if eq .Input.RiskInput.PatrolFrequency "weekly_daily" }}selected{{ end }}>Weekly / daily</option></select>
+                            <label class="form-label">Route Access and Marker Condition</label>
+                            <select class="form-select" name="row_condition"><option value="poor" {{ if eq .Input.RiskInput.ROWCondition "poor" }}selected{{ end }}>Poor - unclear or uncontrolled</option><option value="fair" {{ if eq .Input.RiskInput.ROWCondition "fair" }}selected{{ end }}>Fair - mostly controlled</option><option value="good" {{ if eq .Input.RiskInput.ROWCondition "good" }}selected{{ end }}>Good - clear and controlled</option></select>
+                          </div>
+                          <div class="col-lg-4">
+                            <h6 class="fw-bold text-primary">External Corrosion</h6>
+                            <label class="form-label">Soil Corrosivity Level</label>
+                            <select class="form-select mb-3" name="soil_resistivity"><option value="<1000" {{ if eq .Input.RiskInput.SoilResistivity "<1000" }}selected{{ end }}>High corrosivity (&lt;1000 ohm-cm)</option><option value="1000-5000" {{ if eq .Input.RiskInput.SoilResistivity "1000-5000" }}selected{{ end }}>Medium (1000-5000 ohm-cm)</option><option value=">5000" {{ if eq .Input.RiskInput.SoilResistivity ">5000" }}selected{{ end }}>Low corrosivity (&gt;5000 ohm-cm)</option></select>
+                            <label class="form-label">External Coating Condition</label>
+                            <select class="form-select mb-3" name="coating_condition"><option value="poor" {{ if eq .Input.RiskInput.CoatingCondition "poor" }}selected{{ end }}>Poor / failed</option><option value="fair" {{ if eq .Input.RiskInput.CoatingCondition "fair" }}selected{{ end }}>Fair</option><option value="good" {{ if eq .Input.RiskInput.CoatingCondition "good" }}selected{{ end }}>Good</option></select>
+                            <label class="form-label">Cathodic Protection Status</label>
+                            <select class="form-select mb-3" name="cp_status"><option value="failed" {{ if eq .Input.RiskInput.CPStatus "failed" }}selected{{ end }}>Failed / off</option><option value="borderline" {{ if eq .Input.RiskInput.CPStatus "borderline" }}selected{{ end }}>Borderline</option><option value="normal" {{ if eq .Input.RiskInput.CPStatus "normal" }}selected{{ end }}>Normal / compliant</option></select>
+                            <label class="form-label">Cathodic Protection Potential</label>
+                            <div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="cp_potential_mv" value="{{ .Input.RiskInput.CPPotentialMV }}" placeholder="-850"><span class="input-group-text">mV</span></div>
+                          </div>
+                          <div class="col-lg-4">
+                            <h6 class="fw-bold text-primary">Internal Corrosion</h6>
+                            <label class="form-label">Fluid Corrosivity Level</label>
+                            <select class="form-select mb-3" name="fluid_corrosivity"><option value="low" {{ if eq .Input.RiskInput.FluidCorrosivity "low" }}selected{{ end }}>Low</option><option value="medium" {{ if eq .Input.RiskInput.FluidCorrosivity "medium" }}selected{{ end }}>Medium</option><option value="high" {{ if eq .Input.RiskInput.FluidCorrosivity "high" }}selected{{ end }}>High</option></select>
+                            <label class="form-label">Water Content Level</label>
+                            <select class="form-select mb-3" name="water_content"><option value="low" {{ if eq .Input.RiskInput.WaterContent "low" }}selected{{ end }}>Low</option><option value="medium" {{ if eq .Input.RiskInput.WaterContent "medium" }}selected{{ end }}>Medium</option><option value="high" {{ if eq .Input.RiskInput.WaterContent "high" }}selected{{ end }}>High</option></select>
+                            <label class="form-label">CO2 / H2S Condition</label>
+                            <select class="form-select mb-3" name="co2_h2s_presence"><option value="none" {{ if eq .Input.RiskInput.CO2H2SPresence "none" }}selected{{ end }}>None</option><option value="present" {{ if eq .Input.RiskInput.CO2H2SPresence "present" }}selected{{ end }}>Present</option><option value="high" {{ if eq .Input.RiskInput.CO2H2SPresence "high" }}selected{{ end }}>High</option></select>
+                            <label class="form-label">MIC Condition</label>
+                            <select class="form-select mb-3" name="mic_risk"><option value="low" {{ if eq .Input.RiskInput.MICRisk "low" }}selected{{ end }}>Low</option><option value="medium" {{ if eq .Input.RiskInput.MICRisk "medium" }}selected{{ end }}>Medium</option><option value="high" {{ if eq .Input.RiskInput.MICRisk "high" }}selected{{ end }}>High</option></select>
+                            <label class="form-label">Wall Thickness Condition</label>
+                            <select class="form-select" name="wall_thickness_condition"><option value="healthy" {{ if eq .Input.RiskInput.WallThicknessCondition "healthy" }}selected{{ end }}>Healthy</option><option value="warning" {{ if eq .Input.RiskInput.WallThicknessCondition "warning" }}selected{{ end }}>Warning</option><option value="critical" {{ if eq .Input.RiskInput.WallThicknessCondition "critical" }}selected{{ end }}>Critical</option></select>
+                          </div>
+                          <div class="col-md-6"><label class="form-label">Generic Failure Frequency</label><input type="text" inputmode="decimal" class="form-control" name="generic_failure_frequency" value="{{ .Input.RiskInput.GenericFailureFrequency }}"></div>
+                          <div class="col-md-6"><label class="form-label">Management System Score</label><input type="text" inputmode="decimal" class="form-control" name="management_system_score" value="{{ .Input.RiskInput.ManagementSystemScore }}"></div>
+                          <div class="col-md-4"><label class="form-label">Third-Party Base Factor</label><input type="text" inputmode="decimal" class="form-control" name="base_tpd_rate" value="{{ .Input.RiskInput.BaseTPDRate }}"></div>
+                          <div class="col-md-4"><label class="form-label">External Corrosion Base Factor</label><input type="text" inputmode="decimal" class="form-control" name="base_external_corr_rate" value="{{ .Input.RiskInput.BaseExternalCorrRate }}"></div>
+                          <div class="col-md-4"><label class="form-label">Internal Corrosion Base Factor</label><input type="text" inputmode="decimal" class="form-control" name="base_internal_corr_rate" value="{{ .Input.RiskInput.BaseInternalCorrRate }}"></div>
                         </div>
                       </div>
                     </div>
@@ -248,12 +423,100 @@
 
               <div id="pipeline-step-3" class="content">
                 <div class="row g-4">
+                  <div class="col-12">
+                    <div class="card border shadow-none">
+                      <div class="card-header bg-transparent pb-2">
+                        <h5 class="mb-1">Pipeline Damage Mechanism Screening</h5>
+                        <p class="text-muted small mb-0">All mechanisms are calculated from Pipeline inputs and shown as NOT, Low, Moderate, or High.</p>
+                      </div>
+                      <div class="card-body">
+                        <!-- <div class="alert alert-primary d-flex align-items-center mb-4" role="alert">
+                          <i class="mdi mdi-information fs-4 me-3"></i>
+                          <div>Source: {{ .PipelineDamageMechanismSource }}</div>
+                        </div> -->
+                        <div class="row g-4 mb-4">
+                          {{ range .PipelineDamageMechanismGroups }}
+                          <div class="col-md-4">
+                            <div class="card h-100 border shadow-none">
+                              <div class="card-header bg-label-{{ .Style }} py-3 border-bottom d-flex align-items-center">
+                                <div class="avatar avatar-sm me-2">
+                                  <span class="avatar-initial rounded-circle bg-{{ .Style }}"><i class="mdi {{ .Icon }} {{ if eq .Style "warning" }}text-dark{{ else }}text-white{{ end }}"></i></span>
+                                </div>
+                                <h6 class="fw-bold mb-0 text-dark">{{ .Name }}</h6>
+                              </div>
+                              <ul class="list-group list-group-flush">
+                                {{ range .Options }}
+                                <li class="list-group-item py-3">
+                                  <div class="d-flex justify-content-between align-items-start gap-3">
+                                    <div>
+                                      <div class="fw-medium text-dark">{{ .Label }}</div>
+                                      <!-- <div class="small text-muted">{{ .Description }}</div> -->
+                                    </div>
+                                    <span class="badge bg-label-secondary rounded-pill px-3 pipeline-dm-badge" data-dm-code="{{ .Code }}">Evaluating...</span>
+                                  </div>
+                                </li>
+                                {{ end }}
+                              </ul>
+                            </div>
+                          </div>
+                          {{ end }}
+                        </div>
+
+                        <div class="card border shadow-none">
+                          <div class="card-header bg-info-subtle pb-2"><h6 class="fw-bold mb-0">Inspection Scope, Interval and Method</h6></div>
+                          <div class="card-body p-0">
+                            <div class="table-responsive">
+                              <table class="table table-sm table-bordered align-middle mb-0">
+                                <thead class="table-light text-center">
+                                  <tr>
+                                    <th style="width: 24%;" class="bg-primary-subtle text-primary">Damage Mechanism</th>
+                                    <th style="width: 76%;">Recommended Methods</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {{ range .PipelineDamageMechanismGroups }}
+                                    {{ range .Options }}
+                                    <tr>
+                                      <td class="fw-bold">{{ .Label }}<div class="small text-muted"><span class="badge bg-label-secondary pipeline-dm-effectivity-badge" data-dm-code="{{ .Code }}">Evaluating...</span></div></td>
+                                      <td>
+                                        <select class="form-select form-select-sm mb-2 pipeline-inspection-method" name="inspection_nonintrusive_{{ .Code }}" data-dm-code="{{ .Code }}" data-scope="nonintrusive">
+                                          <option value="Visual + CP / Coating Survey">Visual + CP / Coating Survey</option>
+                                          <option value="ROW Patrol + Visual Survey">ROW Patrol + Visual Survey</option>
+                                          <option value="Wall Thickness measurement by UT">Wall Thickness measurement by UT</option>
+                                          <option value="Shear Wave Ultrasonic Testing">Shear Wave Ultrasonic Testing</option>
+                                          <option value="Radiographic Testing">Radiographic Testing</option>
+                                          <option value="None">None</option>
+                                        </select>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                          <span class="small text-danger">Next Inspection period:</span>
+                                          <span class="small fw-bold text-danger pipeline-inspection-period" data-dm-code="{{ .Code }}" data-scope="nonintrusive">-</span>
+                                        </div>
+                                        <div class="text-end small pipeline-inspection-effectivity" data-dm-code="{{ .Code }}" data-scope="nonintrusive">Effectivity: -</div>
+                                      </td>
+                                    </tr>
+                                    {{ end }}
+                                  {{ end }}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div class="col-lg-12 pipeline-gas-fields">
                     <div class="card border shadow-none h-100">
                       <div class="card-header bg-transparent pb-2"><h5 class="mb-1">Gas Consequence Screening</h5></div>
                       <div class="card-body">
                         <label class="form-label">Buildings Inside Gas Impact Radius</label>
                         <input type="number" class="form-control mb-3" name="building_count_inside_pir" value="{{ .Input.RiskInput.BuildingCountInsidePIR }}" placeholder="Example: 3">
+                        <label class="form-label">Class Location</label>
+                        <select class="form-select mb-3" name="class_location">
+                          <option value="remote" {{ if eq .Input.RiskInput.ClassLocation "remote" }}selected{{ end }}>Remote / low occupancy</option>
+                          <option value="village" {{ if eq .Input.RiskInput.ClassLocation "village" }}selected{{ end }}>Village / populated area</option>
+                          <option value="urban_dense" {{ if eq .Input.RiskInput.ClassLocation "urban_dense" }}selected{{ end }}>Urban / dense occupancy</option>
+                        </select>
                         <label class="form-label">Emergency Response Access</label>
                         <select class="form-select" name="emergency_response"><option value="available" {{ if eq .Input.RiskInput.EmergencyResponse "available" }}selected{{ end }}>Available nearby</option><option value="limited" {{ if eq .Input.RiskInput.EmergencyResponse "limited" }}selected{{ end }}>Limited / delayed</option><option value="remote" {{ if eq .Input.RiskInput.EmergencyResponse "remote" }}selected{{ end }}>Remote area</option></select>
                       </div>
@@ -265,9 +528,9 @@
                       <div class="card-header bg-transparent pb-2"><h5 class="mb-1">Oil / Liquid Consequence Screening</h5></div>
                       <div class="card-body">
                         <div class="row g-3">
-                          <div class="col-md-4"><label class="form-label">Release Flow Rate</label><div class="input-group"><input type="number" step="any" class="form-control" name="flow_rate" value="{{ .Input.RiskInput.FlowRate }}" placeholder="100"><span class="input-group-text">bbl/hr</span></div></div>
-                          <div class="col-md-4"><label class="form-label">Leak Detection Time</label><div class="input-group"><input type="number" step="any" class="form-control" name="detection_time_hours" value="{{ .Input.RiskInput.DetectionTimeHours }}" placeholder="1"><span class="input-group-text">hr</span></div></div>
-                          <div class="col-md-4"><label class="form-label">Valve Isolation Segment Length</label><div class="input-group"><input type="number" step="any" class="form-control" name="segment_length_between_valves_m" value="{{ .Input.RiskInput.SegmentLengthBetweenValvesM }}" placeholder="1000"><span class="input-group-text">m</span></div></div>
+                          <div class="col-md-4"><label class="form-label">Release Flow Rate</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="flow_rate" value="{{ .Input.RiskInput.FlowRate }}" placeholder="100"><span class="input-group-text">bbl/hr</span></div></div>
+                          <div class="col-md-4"><label class="form-label">Leak Detection Time</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="detection_time_hours" value="{{ .Input.RiskInput.DetectionTimeHours }}" placeholder="1"><span class="input-group-text">hr</span></div></div>
+                          <div class="col-md-4"><label class="form-label">Valve Isolation Segment Length</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="segment_length_between_valves_m" value="{{ .Input.RiskInput.SegmentLengthBetweenValvesM }}" placeholder="1000"><span class="input-group-text">m</span></div></div>
                           <div class="col-md-6"><label class="form-label">Environmental Sensitivity</label><select class="form-select" name="environmental_sensitivity"><option value="low" {{ if eq .Input.RiskInput.EnvironmentalSensitivity "low" }}selected{{ end }}>Low</option><option value="medium" {{ if eq .Input.RiskInput.EnvironmentalSensitivity "medium" }}selected{{ end }}>Medium</option><option value="high" {{ if eq .Input.RiskInput.EnvironmentalSensitivity "high" }}selected{{ end }}>High</option></select></div>
                           <div class="col-md-6 d-flex align-items-end">
                             <div>
@@ -298,43 +561,6 @@
                   </div>
 
                   <div class="col-12">
-                    <div class="accordion" id="pipelineAdvancedAccordion">
-                      <div class="accordion-item">
-                        <h2 class="accordion-header" id="pipelineThicknessHeading">
-                          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#pipelineThicknessCollapse" aria-expanded="true" aria-controls="pipelineThicknessCollapse">
-                            Thickness Readings for Appraisal
-                          </button>
-                        </h2>
-                        <div id="pipelineThicknessCollapse" class="accordion-collapse collapse show" aria-labelledby="pipelineThicknessHeading" data-bs-parent="#pipelineAdvancedAccordion">
-                          <div class="accordion-body">
-                            <div class="d-flex justify-content-end mb-3">
-                              <button type="button" class="btn btn-sm btn-outline-primary" id="addPipelinePoint"><i class="mdi mdi-plus me-1"></i> Add Point</button>
-                            </div>
-                            <div class="table-responsive">
-                              <table class="table table-sm align-middle mb-0" id="pipelinePointsTable">
-                                <thead class="table-light"><tr><th>Point</th><th>Location Class</th><th>Installation</th><th>Nominal (mm)</th><th>Actual (mm)</th><th>Measured Year</th><th></th></tr></thead>
-                                <tbody>
-                                  {{ range .Input.InspectionPoints }}
-                                  <tr>
-                                    <td><input class="form-control" name="inspection_point" value="{{ .InspectionPoint }}"></td>
-                                    <td><input class="form-control" name="location_class" value="{{ .LocationClass }}"></td>
-                                    <td><input class="form-control" name="installation_type" value="{{ .InstallationType }}"></td>
-                                    <td><input type="number" step="any" class="form-control" name="point_nominal_thickness_mm" value="{{ .NominalThicknessMM }}"></td>
-                                    <td><input type="number" step="any" class="form-control" name="point_actual_thickness_mm" value="{{ .ActualThicknessMM }}"></td>
-                                    <td><input type="number" class="form-control" name="measured_year" value="{{ .MeasuredYear }}"></td>
-                                    <td><button type="button" class="btn btn-sm btn-icon btn-outline-danger remove-point"><i class="mdi mdi-trash-can-outline"></i></button></td>
-                                  </tr>
-                                  {{ end }}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="col-12">
                     <div class="alert alert-warning d-none mb-0" id="pipelineResultStaleNotice">
                       <i class="mdi mdi-alert-outline me-1"></i>
                       Some input values changed. Please recalculate the risk result before saving.
@@ -345,7 +571,7 @@
                     </div>
                   </div>
 
-                  <div class="col-lg-5 pipeline-result-section d-none">
+                  <div class="col-12 col-xl-5 pipeline-result-section d-none">
                     <div class="card h-100 border shadow-none overflow-hidden">
                       <div class="card-body p-4 text-center position-relative">
                         <div class="position-absolute top-0 start-0 w-100 h-100 bg-primary" style="opacity:.08;"></div>
@@ -359,10 +585,10 @@
                     </div>
                   </div>
 
-                  <div class="col-lg-7 pipeline-result-section d-none">
+                  <div class="col-12 col-xl-7 pipeline-result-section d-none">
                     <div class="card h-100 border shadow-none">
                       <div class="card-header bg-transparent border-bottom"><h6 class="fw-bold mb-0"><i class="mdi mdi-grid me-2"></i>5x5 Risk Matrix</h6></div>
-                      <div class="card-body" id="pipelineRiskMatrix"></div>
+                      <div class="card-body table-responsive" id="pipelineRiskMatrix"></div>
                     </div>
                   </div>
 
@@ -371,8 +597,19 @@
                       <div class="card-header bg-transparent border-bottom"><h6 class="fw-bold mb-0"><i class="mdi mdi-ruler-square me-2"></i>Thickness Appraisal Result</h6></div>
                       <div class="card-body p-0">
                         <div class="table-responsive">
-                          <table class="table table-sm align-middle mb-0">
-                            <thead class="table-light"><tr><th>Point</th><th>Actual (mm)</th><th>CR (mm/year)</th><th>Remaining Life</th><th>Hoop Stress</th><th>MAOP</th><th>Status</th></tr></thead>
+                          <table class="table table-sm table-hover table-bordered text-center align-middle mb-0">
+                            <thead class="table-light">
+                              <tr>
+                                <th rowspan="2" class="bg-primary-subtle text-primary">Point</th>
+                                <th colspan="5">Thickness (mm)</th>
+                                <th rowspan="2">CR</th>
+                                <th rowspan="2" class="text-danger">Remaining Life</th>
+                                <th rowspan="2">Hoop Stress</th>
+                                <th rowspan="2">MAOP</th>
+                                <th rowspan="2">Status</th>
+                              </tr>
+                              <tr><th>Nominal</th><th>Required</th><th>Min.</th><th>Actual</th><th>Remaining</th></tr>
+                            </thead>
                             <tbody id="pipelineThicknessResult"></tbody>
                           </table>
                         </div>
@@ -380,7 +617,7 @@
                     </div>
                   </div>
 
-                  <div class="col-lg-4 pipeline-result-section d-none">
+                  <div class="col-12 col-md-6 col-xl-4 pipeline-result-section d-none">
                     <div class="card h-100 border shadow-none">
                       <div class="card-header bg-transparent border-bottom"><h6 class="fw-bold mb-0 text-warning"><i class="mdi mdi-alert-decagram-outline me-2"></i>PoF Breakdown</h6></div>
                       <div class="card-body">
@@ -389,7 +626,7 @@
                     </div>
                   </div>
 
-                  <div class="col-lg-4 pipeline-result-section d-none">
+                  <div class="col-12 col-md-6 col-xl-4 pipeline-result-section d-none">
                     <div class="card h-100 border shadow-none">
                       <div class="card-header bg-transparent border-bottom"><h6 class="fw-bold mb-0 text-danger"><i class="mdi mdi-shield-alert-outline me-2"></i>CoF Breakdown</h6></div>
                       <div class="card-body">
@@ -398,7 +635,7 @@
                     </div>
                   </div>
 
-                  <div class="col-lg-4 pipeline-result-section d-none">
+                  <div class="col-12 col-xl-4 pipeline-result-section d-none">
                     <div class="card h-100 border shadow-none">
                       <div class="card-header bg-transparent border-bottom"><h6 class="fw-bold mb-0 text-success"><i class="mdi mdi-clipboard-check-outline me-2"></i>Recommendation</h6></div>
                       <div class="card-body">
@@ -436,6 +673,8 @@
                       <div class="card-body">
                         <label class="form-label">Assessment By <span class="text-danger">*</span></label>
                         <input class="form-control mb-3" name="assessment_by" value="{{ .Input.AssessmentBy }}" required data-required-msg="Please enter the assessor name.">
+                        <label class="form-label">Manual Recommendation (Optional)</label>
+                        <textarea class="form-control mb-3" rows="3" name="manual_recommendation" placeholder="Overrides system recommendation if provided.">{{ .Input.ManualRecommendation }}</textarea>
                         <label class="form-label">Engineering Notes</label>
                         <textarea class="form-control" rows="4" name="engineering_notes" placeholder="Add optional notes for reviewers.">{{ .Input.RiskInput.EngineeringNotes }}</textarea>
                       </div>
@@ -462,7 +701,48 @@
 {{ end }}
 
 {{ define "pipeline_form_scripts" }}
+<script type="application/json" id="pipelineSavedInspectionPlan">{{ toJSON .Input.RiskInput.InspectionPlanByDM }}</script>
 <script src="/assets/js/pipeline_oil_assessment.js"></script>
+<script>
+(function () {
+  // Pipeline material → SMYS auto-fill
+  var materialDataEl = document.getElementById('pipelineMaterialData');
+  var materialSelect = document.getElementById('materialSpecSelect');
+  var smysInput = document.querySelector('[name="smys_psi"]');
+
+  if (!materialSelect || !smysInput) return;
+
+  // Restore saved value that may not be a known option
+  var savedSpec = {{ toJSON .Input.MaterialSpecification }};
+  if (savedSpec) {
+    var matched = false;
+    for (var i = 0; i < materialSelect.options.length; i++) {
+      if (materialSelect.options[i].value === savedSpec) {
+        materialSelect.selectedIndex = i;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      // Insert a custom option for the saved value
+      var customOpt = new Option(savedSpec + ' (custom)', savedSpec, true, true);
+      materialSelect.insertBefore(customOpt, materialSelect.options[1]);
+    }
+  }
+
+  function applyMaterialSMYS() {
+    var selected = materialSelect.options[materialSelect.selectedIndex];
+    var smys = selected ? selected.getAttribute('data-smys') : null;
+    if (smys) {
+      smysInput.value = smys;
+      smysInput.dispatchEvent(new Event('input', { bubbles: true }));
+      smysInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+
+  materialSelect.addEventListener('change', applyMaterialSMYS);
+  applyMaterialSMYS();
+})();
+</script>
 {{ end }}
 {{ template "layouts/master" . }}
-

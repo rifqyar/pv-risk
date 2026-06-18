@@ -48,8 +48,8 @@
                 <span class="fw-medium">{{ .Input.LineIdentification }}</span>
               </td>
               <td>
-                {{ if eq .Input.Service "Gas" }}
-                <span class="badge rounded-pill bg-label-info">GAS</span>
+                {{ if isPipelineGasService .Input.Service }}
+                <span class="badge rounded-pill bg-label-info">{{ .Input.Service }}</span>
                 {{ else }}
                 <span class="badge rounded-pill bg-label-primary">{{ .Input.Service }}</span>
                 {{ end }}

@@ -10,9 +10,9 @@ The storage pattern remains the existing `pipeline_oil_assessments` table with f
 
 - `controller/pipelineController.go`: route handlers, default sample data, draft/calculate flow.
 - `models/pipeline_oil.go`: DTOs, repository, service orchestration, validation, calculation functions, formula trace.
-- `templates/pipeline_assessment_form.html`: pipeline form with general data, PoF inputs, CoF inputs, and calculation actions.
-- `templates/pipeline_assessment_detail.html`: result summary, DF drivers, PoF/CoF/risk ranking, recommendation, and formula trace.
-- `assets/js/pipeline_oil_assessment.js`: form serialization into the existing JSON API payload.
+- `templates/pipeline_assessment_form.html`: pipeline form with general data, Step 2 mechanical calculation, damage mechanism screening, inspection effectivity, CoF inputs, and save actions.
+- `templates/pipeline_assessment_detail.html`: result summary, DF drivers, all damage mechanism results, PoF/CoF/risk ranking, recommendation, and formula trace.
+- `assets/js/pipeline_oil_assessment.js`: form serialization plus realtime browser preview of mechanical calculation, damage mechanism severity, CoF, and risk.
 - `models/pipeline_oil_test.go`: calculation and validation tests.
 
 ## Routes
@@ -46,7 +46,22 @@ Implemented helper functions:
 - `calculateGasCoF()`
 - `calculateLiquidCoF()`
 - `calculatePipelineRiskRanking()`
-- `generatePipelineRecommendation()`
+- `generatePipelineEngineeringAdvisory()`
+
+Pipeline damage mechanism screening is shown as grouped cards, matching the Pressure Vessel form pattern:
+
+- External Damage
+- Internal Thinning
+- Internal Cracking
+
+All configured mechanisms are calculated. The user does not choose one mechanism to calculate. Each result carries severity (`NOT`, `Low`, `Moderate`, or `High`), score, inspection effectivity, source, and formula note.
+
+The Pipeline form also stores inspection scope, interval, and method per damage mechanism in the existing Pipeline JSON payload:
+
+- Non intrusive method
+- Non intrusive effectivity and interval
+- Intrusive method
+- Intrusive effectivity and interval
 
 Gas CoF uses PIR:
 
@@ -69,7 +84,9 @@ The detail page shows:
 - Spill volume and adjusted spill volume for oil/liquid
 - CoF category
 - Final risk code and level
-- Recommendation based on the dominant damage mechanism and high CoF drivers
+- Damage mechanism screening result for all configured Pipeline mechanisms
+- Inspection scope, interval, and method result for all configured Pipeline mechanisms
+- Engineering advisory based on the dominant damage-factor driver, risk level, and CoF drivers, with source metadata
 - Formula trace for auditability
 
 ## Validation
@@ -80,12 +97,15 @@ The detail page shows:
 - Gas consequence validates building count.
 - Oil/liquid consequence validates flow rate, detection time, valve segment length, and environmental sensitivity.
 - Inspection point validation remains for the existing mechanical/thickness appraisal outputs.
+- Damage mechanism and inspection plan results are persisted in Pipeline input/result JSON; no schema migration is required.
 
 ## Manual QA Checklist
 
 - Open Pipeline list and create a draft from sample values.
-- Calculate an oil/liquid record and confirm spill volume, CoF, risk code, and recommendation.
-- Open `/assessment-pipeline/gas`, calculate a gas record, and confirm PIR, CoF, risk code, and recommendation.
-- Confirm formula trace includes the pipeline MVP formulas.
+- Calculate an oil/liquid record and confirm spill volume, CoF, risk code, and Engineering Advisory source.
+- Open `/assessment-pipeline/gas`, calculate a gas record, and confirm PIR, CoF, risk code, and Engineering Advisory source.
+- Confirm Step 2 mechanical calculation updates in realtime.
+- Confirm all Pipeline damage mechanism badges update in realtime.
+- Confirm formula trace includes the pipeline MVP formulas and damage mechanism screening source note.
 - Confirm Pressure Vessel list/form/detail still opens.
 

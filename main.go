@@ -9,6 +9,8 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"pv-risk/config"
@@ -49,26 +51,7 @@ func main() {
 	r := gin.Default()
 
 	// ================= TEMPLATE =================
-	tmpl := template.New("").Funcs(template.FuncMap{
-		"seq": func(start, end int) []int {
-			var result []int
-			for i := start; i <= end; i++ {
-				result = append(result, i)
-			}
-			return result
-		},
-		"mul": func(a, b int) int {
-			return a * b
-		},
-		"toJSON": func(v interface{}) template.JS {
-			b, err := json.Marshal(v)
-			if err != nil {
-				return template.JS("null")
-			}
-			return template.JS(b)
-		},
-	})
-
+	tmpl := template.New("").Funcs(appTemplateFuncs())
 	var err error
 	tmpl, err = tmpl.ParseFS(templateFS,
 		"templates/*.html",
@@ -167,6 +150,70 @@ func main() {
 	// }
 
 	// log.Println("app closed cleanly")
+}
+
+func appTemplateFuncs() template.FuncMap {
+	return template.FuncMap{
+		"seq": func(start, end int) []int {
+			var result []int
+			for i := start; i <= end; i++ {
+				result = append(result, i)
+			}
+			return result
+		},
+		"mul": func(a, b int) int {
+			return a * b
+		},
+		"toJSON": func(v interface{}) template.JS {
+			b, err := json.Marshal(v)
+			if err != nil {
+				return template.JS("null")
+			}
+			return template.JS(b)
+		},
+		"fmtNum": formatTemplateNumber,
+		"isPipelineGasService": isPipelineGasService,
+	}
+}
+
+func isPipelineGasService(service string) bool {
+	switch strings.ToLower(strings.TrimSpace(service)) {
+	case "gas", "natural gas", "dwr gas", "wet gas":
+		return true
+	default:
+		return false
+	}
+}
+
+func formatTemplateNumber(value interface{}) string {
+	var numeric float64
+	switch v := value.(type) {
+	case float64:
+		numeric = v
+	case float32:
+		numeric = float64(v)
+	case int:
+		return strconv.Itoa(v)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case int32:
+		return strconv.FormatInt(int64(v), 10)
+	case uint:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint64:
+		return strconv.FormatUint(v, 10)
+	case uint32:
+		return strconv.FormatUint(uint64(v), 10)
+	default:
+		return ""
+	}
+	formatted := strconv.FormatFloat(numeric, 'f', 4, 64)
+	formatted = strings.TrimRight(formatted, "0")
+	formatted = strings.TrimRight(formatted, ".")
+	if formatted == "-0" {
+		return "0"
+	}
+	return formatted
 }
 
 // ================= HELPER =================

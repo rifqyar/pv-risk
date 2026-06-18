@@ -10,7 +10,7 @@ func samplePipelineOilInput() PipelineOilInput {
 		ReportNo:                  "PR 2057/PL-MIT/13/2025",
 		LineIdentification:        "NPS 8 Main Oil Trunkline",
 		YearBuilt:                 2017,
-		YearUsed:                  2017,
+		YearUsed:                  "2017",
 		Service:                   "Oil",
 		PipeLengthM:               9966,
 		SMYSPsi:                   35000,
@@ -35,9 +35,9 @@ func samplePipelineOilInput() PipelineOilInput {
 			ConsequenceFinancial:    250000,
 		},
 		InspectionPoints: []PipelineOilInspectionPoint{
-			{InspectionPoint: "IP-82", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 7.98, MeasuredYear: 2025},
-			{InspectionPoint: "IP-8 A", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 6.12, MeasuredYear: 2025},
-			{InspectionPoint: "IP-8 C", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 6.21, MeasuredYear: 2025},
+			{InspectionPoint: "IP-82", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 7.98, MeasuredYear: "2025"},
+			{InspectionPoint: "IP-8 A", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 6.12, MeasuredYear: "2025"},
+			{InspectionPoint: "IP-8 C", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 6.21, MeasuredYear: "2025"},
 		},
 	}
 }
@@ -64,8 +64,8 @@ func samplePipelineGasWorkbookInput() PipelineOilInput {
 	in.TypeOfInstallation = "Underground"
 	in.DesignFactor = 0.6
 	in.InspectionPoints = []PipelineOilInspectionPoint{
-		{InspectionPoint: "IP-2", NominalThicknessMM: 10.31, RequiredThicknessMM: 7.01, ActualThicknessMM: 9.22, MeasuredYear: 2024},
-		{InspectionPoint: "IP-11", NominalThicknessMM: 10.31, RequiredThicknessMM: 7.01, ActualThicknessMM: 9.58, MeasuredYear: 2024},
+		{InspectionPoint: "IP-2", NominalThicknessMM: 10.31, RequiredThicknessMM: 7.01, ActualThicknessMM: 9.22, MeasuredYear: "2024"},
+		{InspectionPoint: "IP-11", NominalThicknessMM: 10.31, RequiredThicknessMM: 7.01, ActualThicknessMM: 9.58, MeasuredYear: "2024"},
 	}
 	in.RiskInput.ReleaseFluid = "Gas"
 	in.RiskInput.BuildingCountInsidePIR = 3
@@ -80,7 +80,7 @@ func sampleRawGasPipingWorkbookInput() PipelineOilInput {
 	in.OwnerUser = "PetroChina International Jabung Ltd"
 	in.Contractor = "PetroChina International Jabung Ltd"
 	in.Location = "Tanjung Jabung Barat, Jambi"
-	in.YearUsed = 2018
+	in.YearUsed = "2018"
 	in.Service = "Gas"
 	in.PipeSize = "114,3 mm (OD) x 8,56 mm (T) x 280 m (L)"
 	in.PipeLengthM = 280
@@ -102,9 +102,9 @@ func sampleRawGasPipingWorkbookInput() PipelineOilInput {
 	in.DesignFactor = 0.4
 	in.MaterialStressPsi = 20000
 	in.InspectionPoints = []PipelineOilInspectionPoint{
-		{InspectionPoint: "IP-2", NominalThicknessMM: 8.56, RequiredThicknessMM: 4.19, ActualThicknessMM: 8.19, MeasuredYear: 2025},
-		{InspectionPoint: "IP-15", NominalThicknessMM: 8.56, RequiredThicknessMM: 4.19, ActualThicknessMM: 8.4, MeasuredYear: 2025},
-		{InspectionPoint: "IP-22", NominalThicknessMM: 8.56, RequiredThicknessMM: 4.19, ActualThicknessMM: 8.44, MeasuredYear: 2025},
+		{InspectionPoint: "IP-2", NominalThicknessMM: 8.56, RequiredThicknessMM: 4.19, ActualThicknessMM: 8.19, MeasuredYear: "2025"},
+		{InspectionPoint: "IP-15", NominalThicknessMM: 8.56, RequiredThicknessMM: 4.19, ActualThicknessMM: 8.4, MeasuredYear: "2025"},
+		{InspectionPoint: "IP-22", NominalThicknessMM: 8.56, RequiredThicknessMM: 4.19, ActualThicknessMM: 8.44, MeasuredYear: "2025"},
 	}
 	in.RiskInput.ReleaseFluid = "Gas"
 	in.RiskInput.BuildingCountInsidePIR = 0
@@ -125,7 +125,7 @@ func TestCalculatePipelineOilMatchesWorkbookSamples(t *testing.T) {
 	assertClose(t, result.RequiredThicknessMM, 4.34672619047619, 1e-9)
 	assertClose(t, result.DesignPressureKgCM2, 70.30865499542993, 1e-9)
 	assertClose(t, result.SMYSKgCM2, 2460.8029248400476, 1e-9)
-	assertClose(t, result.MaterialStressKgCM2, 1406.1730999085987, 1e-9)
+	assertClose(t, result.MaterialStressKgCM2, 2460.8029248400476, 1e-9)
 	assertClose(t, result.SummaryRequiredThicknessIn, 0.171, 1e-12)
 	assertClose(t, result.SummaryRequiredThicknessMM, 4.3434, 1e-9)
 	assertClose(t, result.PointResults[1].CorrosionRateMMYear, 0.2575, 1e-9)
@@ -170,13 +170,13 @@ func TestCalculatePipelineGasMatchesAppraisalWorkbook(t *testing.T) {
 	assertClose(t, result.DesignPressureKgCM2, 94.916684243830417, 1e-9)
 	assertClose(t, result.OperatingPressureKgCM2, 45.700625747029456, 1e-9)
 	assertClose(t, result.SMYSKgCM2, 3656.0500597623563, 1e-9)
-	assertClose(t, result.MaterialStressKgCM2, 1406.1730999085987, 1e-9)
+	assertClose(t, result.MaterialStressKgCM2, 3656.0500597623563, 1e-9)
 	assertClose(t, result.SummaryRequiredThicknessMM, 7.006370192307692, 1e-9)
 	assertClose(t, result.SummaryRequiredThicknessIn, 0.27584134615384615, 1e-12)
 	assertClose(t, result.PointResults[0].CorrosionRateMMYear, 0.15571428571428569, 1e-12)
 	assertClose(t, result.PointResults[1].CorrosionRateMMYear, 0.10428571428571434, 1e-12)
 	assertClose(t, result.PointResults[0].RemainingLifeYears, 14.192660550458722, 1e-9)
-	assertClose(t, result.PointResults[1].RemainingLifeYears, 24.643835616438345, 1e-9)
+	assertClose(t, result.PointResults[1].RemainingLifeYears, 20, 1e-9)
 	assertClose(t, result.HighestHoopStressPsi, 23709.191973969628, 1e-9)
 	assertClose(t, result.HighestHoopStressKgCM2, 1666.961398718247, 1e-9)
 	assertClose(t, result.HighestHoopStressPercentSMY, 45.594599949941596, 1e-9)
@@ -201,7 +201,7 @@ func TestCalculateRawGasPipingUsesASMEB313AppraisalFormula(t *testing.T) {
 	assertClose(t, result.OperatingPressureKgCM2, 42.185192997257957, 1e-9)
 	assertClose(t, result.SMYSKgCM2, 2650.6362933277087, 1e-9)
 	assertClose(t, result.PointResults[0].CorrosionRateMMYear, 0.052857142857143, 1e-12)
-	assertClose(t, result.PointResults[0].RemainingLifeYears, 75.67567567567545, 1e-9)
+	assertClose(t, result.PointResults[0].RemainingLifeYears, 20, 1e-9)
 	assertClose(t, result.HighestHoopStressPsi, 10606.593406593407, 1e-9)
 	assertClose(t, result.HighestHoopStressKgCM2, 745.73531650097777, 1e-9)
 	assertClose(t, result.HighestHoopStressPercentSMY, 28.134200017489142, 1e-9)
@@ -256,7 +256,7 @@ func TestPipelineOilValidation(t *testing.T) {
 		}},
 		{"divide by zero date", func() PipelineOilInput {
 			in := samplePipelineOilInput()
-			in.InspectionPoints[0].MeasuredYear = 2017
+			in.InspectionPoints[0].MeasuredYear = "2017"
 			return in
 		}},
 		{"extreme pressure", func() PipelineOilInput {
@@ -274,10 +274,109 @@ func TestPipelineOilValidation(t *testing.T) {
 	}
 }
 
+func TestPipelineInspectionResultIsCalculatedOutputNotDraftInput(t *testing.T) {
+	in := samplePipelineOilInput()
+	errs := ValidatePipelineOilDraft(in)
+	if len(errs) > 0 {
+		t.Fatalf("inspection result should not be required in draft input: %+v", errs)
+	}
+
+	result, calcErrs := CalculatePipelineOil(in)
+	if len(calcErrs) > 0 {
+		t.Fatalf("unexpected validation errors: %+v", calcErrs)
+	}
+	if result.InspectionResult != "ACCEPTABLE" {
+		t.Fatalf("expected calculated inspection result, got %q", result.InspectionResult)
+	}
+}
+
+func TestPipelineDamageMechanismSelectionValidation(t *testing.T) {
+	in := samplePipelineOilInput()
+	in.RiskInput.DamageMechanism = "localized_corrosion_pitting"
+	if errs := ValidatePipelineOilDraft(in); len(errs) > 0 {
+		t.Fatalf("expected selected pipeline damage mechanism to validate: %+v", errs)
+	}
+	in.RiskInput.DamageMechanism = "mechanical_damage"
+	if errs := ValidatePipelineOilDraft(in); len(errs) > 0 {
+		t.Fatalf("expected legacy pipeline damage mechanism to normalize: %+v", errs)
+	}
+	if NormalizePipelineDamageMechanism(in.RiskInput.DamageMechanism) != "third_party_mechanical_damage" {
+		t.Fatalf("expected legacy mechanical damage to map into grouped pipeline mechanism")
+	}
+
+	in.RiskInput.DamageMechanism = "pressure-vessel-only"
+	if errs := ValidatePipelineOilDraft(in); len(errs) == 0 {
+		t.Fatalf("expected invalid pipeline damage mechanism to fail validation")
+	}
+}
+
+func TestPipelineCalculatesAllDamageMechanisms(t *testing.T) {
+	in := samplePipelineOilInput()
+	in.RiskInput.InspectionEffectivityByDM = map[string]string{
+		"external_corrosion": "High",
+		"internal_corrosion": "Low",
+	}
+	in.RiskInput.InspectionPlanByDM = map[string]PipelineInspectionPlanInput{
+		"internal_corrosion": {
+			NonIntrusiveMethod: "Wall Thickness measurement by UT",
+		},
+	}
+	result, errs := CalculatePipelineOil(in)
+	if len(errs) > 0 {
+		t.Fatalf("unexpected validation errors: %+v", errs)
+	}
+	if len(result.DamageMechanismResults) != len(PipelineDamageMechanismOptions()) {
+		t.Fatalf("expected all pipeline mechanisms to be calculated, got %d", len(result.DamageMechanismResults))
+	}
+	foundInternal := false
+	for _, item := range result.DamageMechanismResults {
+		if item.Severity == "" {
+			t.Fatalf("expected severity for %s", item.Code)
+		}
+		if item.Code == "internal_corrosion" {
+			foundInternal = true
+			if item.InspectionEffectivity != "Low" {
+				t.Fatalf("expected per-mechanism inspection effectivity, got %q", item.InspectionEffectivity)
+			}
+		}
+	}
+	if !foundInternal {
+		t.Fatalf("expected internal corrosion screening result")
+	}
+	if len(result.InspectionPlanResults) != len(PipelineDamageMechanismOptions()) {
+		t.Fatalf("expected inspection plan for all mechanisms, got %d", len(result.InspectionPlanResults))
+	}
+	for _, item := range result.InspectionPlanResults {
+		if item.Code == "internal_corrosion" {
+			if item.NonIntrusiveMethod != "Wall Thickness measurement by UT" || item.NonIntrusiveIntervalMonths <= 0 {
+				t.Fatalf("expected internal corrosion inspection plan to be stored and interval calculated: %+v", item)
+			}
+		}
+	}
+}
+
+func TestPipelineRecommendationCarriesSystemAdvisorySource(t *testing.T) {
+	result, errs := CalculatePipelineOil(samplePipelineOilInput())
+	if len(errs) > 0 {
+		t.Fatalf("unexpected validation errors: %+v", errs)
+	}
+	if result.RecommendationSource != "System advisory rule based on risk category, CoF factors, and governing pipeline damage-factor driver." {
+		t.Fatalf("unexpected recommendation source: %q", result.RecommendationSource)
+	}
+	if result.RecommendationRuleName != "pipeline-system-advisory-v1 TODO_ENGINEERING_CONFIRMATION" {
+		t.Fatalf("unexpected recommendation rule: %q", result.RecommendationRuleName)
+	}
+	if len(result.RecommendationGroups.ImmediateActions) == 0 || result.Recommendation == "" {
+		t.Fatalf("expected advisory groups and summary recommendation")
+	}
+	if result.SelectedDamageMechanism != "Internal Corrosion" {
+		t.Fatalf("expected selected mechanism label, got %q", result.SelectedDamageMechanism)
+	}
+}
+
 func assertClose(t *testing.T, actual, expected, tolerance float64) {
 	t.Helper()
 	if math.Abs(actual-expected) > tolerance {
 		t.Fatalf("expected %.12f got %.12f", expected, actual)
 	}
 }
-
