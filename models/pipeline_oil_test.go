@@ -1,8 +1,12 @@
 package models
 
 import (
+	"database/sql"
 	"math"
+	"pv-risk/migrations"
 	"testing"
+
+	_ "modernc.org/sqlite"
 )
 
 func samplePipelineOilInput() PipelineOilInput {
@@ -352,6 +356,153 @@ func TestPipelineCalculatesAllDamageMechanisms(t *testing.T) {
 				t.Fatalf("expected internal corrosion inspection plan to be stored and interval calculated: %+v", item)
 			}
 		}
+	}
+}
+
+func TestPipelineDamageMechanismsCarryStandardsMetadata(t *testing.T) {
+	result, errs := CalculatePipelineOil(samplePipelineOilInput())
+	if len(errs) > 0 {
+		t.Fatalf("unexpected validation errors: %+v", errs)
+	}
+
+	for _, item := range result.DamageMechanismResults {
+		if item.SourceStandard == "" || item.ConfidenceLevel == "" || item.RuleStatus == "" {
+			t.Fatalf("expected standards metadata for %s: %+v", item.Code, item)
+		}
+		if item.RuleStatus != PipelineRuleVerified &&
+			item.RuleStatus != PipelineRulePartiallyVerified &&
+			item.RuleStatus != PipelineRuleTODOEngineeringConfirmation {
+			t.Fatalf("unexpected rule status for %s: %q", item.Code, item.RuleStatus)
+		}
+	}
+}
+
+func TestPipelineFormulaTraceCarriesStandardsMetadata(t *testing.T) {
+	result, errs := CalculatePipelineOil(samplePipelineOilInput())
+	if len(errs) > 0 {
+		t.Fatalf("unexpected validation errors: %+v", errs)
+	}
+	if len(result.FormulaTrace) == 0 {
+		t.Fatalf("expected formula trace entries")
+	}
+
+	foundRequiredThickness := false
+	foundPipelinePoF := false
+	for _, item := range result.FormulaTrace {
+		if item.SourceStandard == "" || item.ConfidenceLevel == "" || item.RuleStatus == "" {
+			t.Fatalf("expected formula trace metadata for %s: %+v", item.FormulaName, item)
+		}
+		if item.FormulaName == "required_thickness" {
+			foundRequiredThickness = true
+			if item.RuleStatus != PipelineRuleVerified {
+				t.Fatalf("expected required thickness to be verified, got %q", item.RuleStatus)
+			}
+		}
+		if item.FormulaName == "pipeline_pof" {
+			foundPipelinePoF = true
+			if item.RuleStatus != PipelineRulePartiallyVerified {
+				t.Fatalf("expected pipeline PoF to be partially verified, got %q", item.RuleStatus)
+			}
+		}
+	}
+	if !foundRequiredThickness || !foundPipelinePoF {
+		t.Fatalf("expected required_thickness and pipeline_pof trace entries")
+	}
+}
+
+func TestPipelineAssessmentVersionsAndAuditTrail(t *testing.T) {
+	db, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	db.SetMaxOpenConns(1)
+	migrations.PipelineOilAssessmentTables(db)
+	migrations.PipelineOilReportingTables(db)
+
+	service := NewPipelineOilService(db)
+	input := samplePipelineOilInput()
+	id, err := service.CreateDraftAssessment(input)
+	if err != nil {
+		t.Fatalf("create draft: %v", err)
+	}
+	if _, err = service.CalculateAssessment(id, input); err != nil {
+		t.Fatalf("calculate assessment: %v", err)
+	}
+	if err = service.RecordApproval(id, "Lead Engineer", "Reviewed for issue"); err != nil {
+		t.Fatalf("record approval: %v", err)
+	}
+	if err = service.RecordExport(id, "Lead Engineer", "EXCEL"); err != nil {
+		t.Fatalf("record export: %v", err)
+	}
+
+	versions, err := service.GetAssessmentVersions(id)
+	if err != nil {
+		t.Fatalf("list versions: %v", err)
+	}
+	if len(versions) != 2 {
+		t.Fatalf("expected create and calculation versions, got %d", len(versions))
+	}
+	if versions[0].VersionNumber != 2 || versions[0].Result == nil {
+		t.Fatalf("expected latest version to contain calculated result: %+v", versions[0])
+	}
+
+	events, err := service.GetAssessmentAuditEvents(id)
+	if err != nil {
+		t.Fatalf("list audit events: %v", err)
+	}
+	if len(events) < 4 {
+		t.Fatalf("expected create, recalculated, approval, and export events, got %d", len(events))
+	}
+	seen := map[string]bool{}
+	for _, event := range events {
+		seen[event.Action] = true
+	}
+	for _, action := range []string{"CREATED", "RECALCULATED", "APPROVED", "EXPORTED_EXCEL"} {
+		if !seen[action] {
+			t.Fatalf("expected audit action %s in %+v", action, events)
+		}
+	}
+}
+
+func TestPipelineComparisonUsesLatestTwoVersions(t *testing.T) {
+	db, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	db.SetMaxOpenConns(1)
+	migrations.PipelineOilAssessmentTables(db)
+	migrations.PipelineOilReportingTables(db)
+
+	service := NewPipelineOilService(db)
+	input := samplePipelineOilInput()
+	id, err := service.CreateDraftAssessment(input)
+	if err != nil {
+		t.Fatalf("create draft: %v", err)
+	}
+	changed := input
+	changed.OperatingPressurePsi = 25
+	if _, err = service.CalculateAssessment(id, changed); err != nil {
+		t.Fatalf("calculate changed assessment: %v", err)
+	}
+
+	comparison, err := service.GetAssessmentComparison(id)
+	if err != nil {
+		t.Fatalf("compare versions: %v", err)
+	}
+	if comparison.CurrentVersion == nil || comparison.PreviousVersion == nil {
+		t.Fatalf("expected latest two versions in comparison")
+	}
+	foundPressureChange := false
+	for _, change := range comparison.Changes {
+		if change.Field == "input.operating_pressure_psi" {
+			foundPressureChange = true
+			break
+		}
+	}
+	if !foundPressureChange {
+		t.Fatalf("expected operating pressure change in comparison")
 	}
 }
 

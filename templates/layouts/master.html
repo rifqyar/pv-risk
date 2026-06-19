@@ -162,6 +162,12 @@
                 <div data-i18n="Pipeline Assessment Records">Assessment Records</div>
               </a>
             </li>
+            <li class="menu-item {{ if eq .ActiveMenu "pipeline-master-data" }}active{{ end }}">
+              <a href="/assessment-pipeline/master-data" class="menu-link">
+                <i class="menu-icon tf-icons mdi mdi-database-cog-outline"></i>
+                <div data-i18n="Pipeline Master Data">Master Data Pipeline</div>
+              </a>
+            </li>
           </ul>
         </aside>
         <!-- / Menu -->
@@ -202,6 +208,8 @@
                 {{ template "pipeline_list_content" . }}
               {{ else if eq .ActiveMenu "pipeline-oil-detail" }} 
                 {{ template "pipeline_detail_content" . }}
+              {{ else if eq .ActiveMenu "pipeline-master-data" }} 
+                {{ template "pipeline_master_data_content" . }}
               {{ else if eq .ActiveMenu "pipeline-gas" }} 
                 {{ template "pipeline_gas_content" . }}
               {{ else }}

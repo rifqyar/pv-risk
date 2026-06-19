@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -459,6 +460,7 @@ type PipelineOilResult struct {
 	Recommendation              string                          `json:"recommendation"`
 	RecommendationSource        string                          `json:"recommendation_source"`
 	RecommendationRuleName      string                          `json:"recommendation_rule_name"`
+	RecommendationConfidence    string                          `json:"recommendation_confidence"`
 	RecommendationGroups        PipelineAdvisoryGroups          `json:"recommendation_groups"`
 	PointResults                []PipelineOilPointResult        `json:"point_results"`
 	FormulaTrace                []PipelineOilFormulaTrace       `json:"formula_trace"`
@@ -479,12 +481,16 @@ type PipelineDamageMechanismResult struct {
 	Score                 float64                `json:"score"`
 	InspectionEffectivity string                 `json:"inspection_effectivity"`
 	Source                string                 `json:"source"`
+	SourceStandard        string                 `json:"source_standard"`
+	ConfidenceLevel       string                 `json:"confidence_level"`
+	RuleStatus            string                 `json:"rule_status"`
 	Formula               string                 `json:"formula"`
 	TriggerInputs         []PipelineTriggerInput `json:"trigger_inputs"`
 }
 
 type PipelineInspectionPlanInput struct {
 	NonIntrusiveMethod string `json:"non_intrusive_method"`
+	IntrusiveMethod    string `json:"intrusive_method"`
 }
 
 type PipelineInspectionPlanResult struct {
@@ -494,6 +500,9 @@ type PipelineInspectionPlanResult struct {
 	NonIntrusiveMethod         string `json:"non_intrusive_method"`
 	NonIntrusiveEffectivity    string `json:"non_intrusive_effectivity"`
 	NonIntrusiveIntervalMonths int    `json:"non_intrusive_interval_months"`
+	IntrusiveMethod            string `json:"intrusive_method"`
+	IntrusiveEffectivity       string `json:"intrusive_effectivity"`
+	IntrusiveIntervalMonths    int    `json:"intrusive_interval_months"`
 	Source                     string `json:"source"`
 }
 
@@ -519,12 +528,15 @@ type PipelineOilPointResult struct {
 }
 
 type PipelineOilFormulaTrace struct {
-	FormulaName string                 `json:"formula_name"`
-	ExcelRef    string                 `json:"excel_ref"`
-	Expression  string                 `json:"expression"`
-	Inputs      map[string]interface{} `json:"inputs"`
-	Output      interface{}            `json:"output"`
-	Note        string                 `json:"note"`
+	FormulaName     string                 `json:"formula_name"`
+	ExcelRef        string                 `json:"excel_ref"`
+	Expression      string                 `json:"expression"`
+	Inputs          map[string]interface{} `json:"inputs"`
+	Output          interface{}            `json:"output"`
+	Note            string                 `json:"note"`
+	SourceStandard  string                 `json:"source_standard"`
+	ConfidenceLevel string                 `json:"confidence_level"`
+	RuleStatus      string                 `json:"rule_status"`
 }
 
 type PipelineOilAssessment struct {
@@ -537,6 +549,46 @@ type PipelineOilAssessment struct {
 	UpdatedAt      string                      `json:"updated_at"`
 	CreatedBy      string                      `json:"created_by"`
 	UpdatedBy      string                      `json:"updated_by"`
+}
+
+type PipelineOilAssessmentVersion struct {
+	ID             int                         `json:"id"`
+	AssessmentID   int                         `json:"assessment_id"`
+	VersionNumber  int                         `json:"version_number"`
+	Status         PipelineOilAssessmentStatus `json:"status"`
+	FormulaVersion string                      `json:"formula_version"`
+	Input          PipelineOilInput            `json:"input"`
+	Result         *PipelineOilResult          `json:"result,omitempty"`
+	FormulaTrace   []PipelineOilFormulaTrace   `json:"formula_trace"`
+	SnapshotJSON   string                      `json:"snapshot_json"`
+	CreatedBy      string                      `json:"created_by"`
+	CreatedAt      string                      `json:"created_at"`
+}
+
+type PipelineOilAuditEvent struct {
+	ID             int                    `json:"id"`
+	AssessmentID   int                    `json:"assessment_id"`
+	VersionID      int                    `json:"version_id,omitempty"`
+	Action         string                 `json:"action"`
+	Actor          string                 `json:"actor"`
+	AffectedFields []string               `json:"affected_fields"`
+	OldValues      map[string]interface{} `json:"old_values"`
+	NewValues      map[string]interface{} `json:"new_values"`
+	Note           string                 `json:"note"`
+	CreatedAt      string                 `json:"created_at"`
+}
+
+type PipelineOilComparison struct {
+	AssessmentID    int                           `json:"assessment_id"`
+	PreviousVersion *PipelineOilAssessmentVersion `json:"previous_version,omitempty"`
+	CurrentVersion  *PipelineOilAssessmentVersion `json:"current_version,omitempty"`
+	Changes         []PipelineOilFieldChange      `json:"changes"`
+}
+
+type PipelineOilFieldChange struct {
+	Field    string      `json:"field"`
+	OldValue interface{} `json:"old_value"`
+	NewValue interface{} `json:"new_value"`
 }
 
 type PipelineOilValidationError struct {
@@ -605,12 +657,36 @@ func (s *PipelineOilService) GetAssessmentDetail(id int) (*PipelineOilAssessment
 	return s.repo.GetAssessment(id)
 }
 
+func (s *PipelineOilService) GetAssessmentVersions(id int) ([]PipelineOilAssessmentVersion, error) {
+	return s.repo.ListAssessmentVersions(id)
+}
+
+func (s *PipelineOilService) GetAssessmentAuditEvents(id int) ([]PipelineOilAuditEvent, error) {
+	return s.repo.ListAuditEvents(id)
+}
+
+func (s *PipelineOilService) GetAssessmentComparison(id int) (*PipelineOilComparison, error) {
+	return s.repo.CompareLatestVersions(id)
+}
+
 func (s *PipelineOilService) ListAssessments() ([]PipelineOilAssessment, error) {
 	return s.repo.ListAssessments()
 }
 
 func (s *PipelineOilService) ArchiveAssessment(id int) error {
 	return s.repo.ArchiveAssessment(id)
+}
+
+func (s *PipelineOilService) RecordApproval(id int, actor, note string) error {
+	return s.repo.RecordAuditEvent(id, 0, "APPROVED", actor, nil, nil, nil, note)
+}
+
+func (s *PipelineOilService) RecordExport(id int, actor, format string) error {
+	action := "EXPORTED_" + strings.ToUpper(strings.TrimSpace(format))
+	if action == "EXPORTED_" {
+		action = "EXPORTED"
+	}
+	return s.repo.RecordAuditEvent(id, 0, action, actor, []string{"export"}, nil, map[string]interface{}{"format": format}, "Assessment exported")
 }
 
 func (r *PipelineOilRepository) CreateAssessment(input PipelineOilInput, status PipelineOilAssessmentStatus, result *PipelineOilResult) (int, error) {
@@ -642,6 +718,13 @@ func (r *PipelineOilRepository) CreateAssessment(input PipelineOilInput, status 
 	if err != nil {
 		return 0, err
 	}
+	versionID, err := r.createAssessmentVersionTx(tx, int(id64), input, status, result, input.AssessmentBy)
+	if err != nil {
+		return 0, err
+	}
+	if err = r.recordAuditEventTx(tx, int(id64), versionID, "CREATED", input.AssessmentBy, []string{"assessment"}, nil, map[string]interface{}{"status": status}, "Pipeline assessment created"); err != nil {
+		return 0, err
+	}
 	if err = tx.Commit(); err != nil {
 		return 0, err
 	}
@@ -649,11 +732,21 @@ func (r *PipelineOilRepository) CreateAssessment(input PipelineOilInput, status 
 }
 
 func (r *PipelineOilRepository) UpdateAssessment(id int, input PipelineOilInput, status PipelineOilAssessmentStatus, result *PipelineOilResult) error {
+	current, err := r.GetAssessment(id)
+	if err != nil {
+		return err
+	}
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
 	inputJSON, resultJSON, traceJSON, snapshotJSON, err := pipelineOilJSONPayloads(input, result)
 	if err != nil {
 		return err
 	}
-	_, err = r.db.Exec(`
+	res, err := tx.Exec(`
 		UPDATE pipeline_oil_assessments
 		SET status=?, report_no=?, line_identification=?, owner_user=?, location=?, service=?,
 			assessment_by=?, formula_version=?, input_json=?, result_json=?, formula_trace_json=?,
@@ -663,10 +756,32 @@ func (r *PipelineOilRepository) UpdateAssessment(id int, input PipelineOilInput,
 		input.AssessmentBy, PipelineOilFormulaVersion, inputJSON, resultJSON, traceJSON, snapshotJSON,
 		input.AssessmentBy, id, PipelineOilStatusArchived,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return ErrPipelineFinalized
+	}
+	versionID, err := r.createAssessmentVersionTx(tx, id, input, status, result, input.AssessmentBy)
+	if err != nil {
+		return err
+	}
+	changes := pipelineOilChanges(current.Input, current.Result, input, result)
+	if err = r.recordAuditEventTx(tx, id, versionID, "MODIFIED", input.AssessmentBy, changeFieldNames(changes), changeOldValues(changes), changeNewValues(changes), "Pipeline assessment draft updated"); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (r *PipelineOilRepository) SaveCalculationResult(id int, input PipelineOilInput, result *PipelineOilResult) error {
+	current, err := r.GetAssessment(id)
+	if err != nil {
+		return err
+	}
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
@@ -695,6 +810,14 @@ func (r *PipelineOilRepository) SaveCalculationResult(id int, input PipelineOilI
 	}
 	if affected == 0 {
 		return ErrPipelineFinalized
+	}
+	versionID, err := r.createAssessmentVersionTx(tx, id, input, PipelineOilStatusCalculated, result, input.AssessmentBy)
+	if err != nil {
+		return err
+	}
+	changes := pipelineOilChanges(current.Input, current.Result, input, result)
+	if err = r.recordAuditEventTx(tx, id, versionID, "RECALCULATED", input.AssessmentBy, changeFieldNames(changes), changeOldValues(changes), changeNewValues(changes), "Pipeline assessment calculated"); err != nil {
+		return err
 	}
 	return tx.Commit()
 }
@@ -766,8 +889,297 @@ func (r *PipelineOilRepository) ListAssessments() ([]PipelineOilAssessment, erro
 }
 
 func (r *PipelineOilRepository) ArchiveAssessment(id int) error {
-	_, err := r.db.Exec(`UPDATE pipeline_oil_assessments SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`, PipelineOilStatusArchived, id)
+	current, err := r.GetAssessment(id)
+	if err != nil {
+		return err
+	}
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	res, err := tx.Exec(`UPDATE pipeline_oil_assessments SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`, PipelineOilStatusArchived, id)
+	if err != nil {
+		return err
+	}
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return sql.ErrNoRows
+	}
+	if err = r.recordAuditEventTx(tx, id, 0, "ARCHIVED", current.UpdatedBy, []string{"status"}, map[string]interface{}{"status": current.Status}, map[string]interface{}{"status": PipelineOilStatusArchived}, "Pipeline assessment archived"); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (r *PipelineOilRepository) ListAssessmentVersions(assessmentID int) ([]PipelineOilAssessmentVersion, error) {
+	rows, err := r.db.Query(`
+		SELECT id, assessment_id, version_number, status, formula_version, input_json,
+			result_json, formula_trace_json, snapshot_json, COALESCE(created_by, ''), created_at
+		FROM pipeline_oil_assessment_versions
+		WHERE assessment_id=?
+		ORDER BY version_number DESC`, assessmentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var versions []PipelineOilAssessmentVersion
+	for rows.Next() {
+		version, err := scanPipelineOilVersion(rows)
+		if err != nil {
+			return nil, err
+		}
+		versions = append(versions, version)
+	}
+	return versions, rows.Err()
+}
+
+func (r *PipelineOilRepository) ListAuditEvents(assessmentID int) ([]PipelineOilAuditEvent, error) {
+	rows, err := r.db.Query(`
+		SELECT id, assessment_id, COALESCE(version_id, 0), action, COALESCE(actor, ''),
+			COALESCE(affected_fields_json, '[]'), COALESCE(old_values_json, '{}'),
+			COALESCE(new_values_json, '{}'), COALESCE(note, ''), created_at
+		FROM pipeline_oil_audit_events
+		WHERE assessment_id=?
+		ORDER BY created_at DESC, id DESC`, assessmentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var events []PipelineOilAuditEvent
+	for rows.Next() {
+		var event PipelineOilAuditEvent
+		var affectedJSON, oldJSON, newJSON string
+		if err = rows.Scan(&event.ID, &event.AssessmentID, &event.VersionID, &event.Action, &event.Actor, &affectedJSON, &oldJSON, &newJSON, &event.Note, &event.CreatedAt); err != nil {
+			return nil, err
+		}
+		_ = json.Unmarshal([]byte(affectedJSON), &event.AffectedFields)
+		_ = json.Unmarshal([]byte(oldJSON), &event.OldValues)
+		_ = json.Unmarshal([]byte(newJSON), &event.NewValues)
+		events = append(events, event)
+	}
+	return events, rows.Err()
+}
+
+func (r *PipelineOilRepository) CompareLatestVersions(assessmentID int) (*PipelineOilComparison, error) {
+	versions, err := r.ListAssessmentVersions(assessmentID)
+	if err != nil {
+		return nil, err
+	}
+	comparison := &PipelineOilComparison{AssessmentID: assessmentID}
+	if len(versions) > 0 {
+		comparison.CurrentVersion = &versions[0]
+	}
+	if len(versions) > 1 {
+		comparison.PreviousVersion = &versions[1]
+		comparison.Changes = pipelineOilChanges(versions[1].Input, versions[1].Result, versions[0].Input, versions[0].Result)
+	}
+	return comparison, nil
+}
+
+func (r *PipelineOilRepository) RecordAuditEvent(assessmentID, versionID int, action, actor string, affectedFields []string, oldValues, newValues map[string]interface{}, note string) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if err = r.recordAuditEventTx(tx, assessmentID, versionID, action, actor, affectedFields, oldValues, newValues, note); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (r *PipelineOilRepository) createAssessmentVersionTx(tx *sql.Tx, assessmentID int, input PipelineOilInput, status PipelineOilAssessmentStatus, result *PipelineOilResult, actor string) (int, error) {
+	inputJSON, resultJSON, traceJSON, snapshotJSON, err := pipelineOilJSONPayloads(input, result)
+	if err != nil {
+		return 0, err
+	}
+	var versionNumber int
+	if err = tx.QueryRow(`SELECT COALESCE(MAX(version_number), 0) + 1 FROM pipeline_oil_assessment_versions WHERE assessment_id=?`, assessmentID).Scan(&versionNumber); err != nil {
+		return 0, err
+	}
+	res, err := tx.Exec(`
+		INSERT INTO pipeline_oil_assessment_versions (
+			assessment_id, version_number, status, formula_version, input_json,
+			result_json, formula_trace_json, snapshot_json, created_by
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		assessmentID, versionNumber, status, PipelineOilFormulaVersion, inputJSON,
+		resultJSON, traceJSON, snapshotJSON, actor,
+	)
+	if err != nil {
+		return 0, err
+	}
+	id64, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return int(id64), nil
+}
+
+func (r *PipelineOilRepository) recordAuditEventTx(tx *sql.Tx, assessmentID, versionID int, action, actor string, affectedFields []string, oldValues, newValues map[string]interface{}, note string) error {
+	if affectedFields == nil {
+		affectedFields = []string{}
+	}
+	if oldValues == nil {
+		oldValues = map[string]interface{}{}
+	}
+	if newValues == nil {
+		newValues = map[string]interface{}{}
+	}
+	affectedJSON, err := json.Marshal(affectedFields)
+	if err != nil {
+		return err
+	}
+	oldJSON, err := json.Marshal(oldValues)
+	if err != nil {
+		return err
+	}
+	newJSON, err := json.Marshal(newValues)
+	if err != nil {
+		return err
+	}
+	var versionArg interface{}
+	if versionID > 0 {
+		versionArg = versionID
+	}
+	_, err = tx.Exec(`
+		INSERT INTO pipeline_oil_audit_events (
+			assessment_id, version_id, action, actor, affected_fields_json,
+			old_values_json, new_values_json, note
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		assessmentID, versionArg, action, actor, string(affectedJSON), string(oldJSON), string(newJSON), note,
+	)
 	return err
+}
+
+func scanPipelineOilVersion(rows *sql.Rows) (PipelineOilAssessmentVersion, error) {
+	var version PipelineOilAssessmentVersion
+	var inputJSON, resultJSON, traceJSON string
+	var resultNullable, traceNullable sql.NullString
+	err := rows.Scan(
+		&version.ID, &version.AssessmentID, &version.VersionNumber, &version.Status,
+		&version.FormulaVersion, &inputJSON, &resultNullable, &traceNullable,
+		&version.SnapshotJSON, &version.CreatedBy, &version.CreatedAt,
+	)
+	if err != nil {
+		return version, err
+	}
+	if err = json.Unmarshal([]byte(inputJSON), &version.Input); err != nil {
+		return version, err
+	}
+	if resultNullable.Valid && resultNullable.String != "" {
+		var result PipelineOilResult
+		resultJSON = resultNullable.String
+		if err = json.Unmarshal([]byte(resultJSON), &result); err != nil {
+			return version, err
+		}
+		version.Result = &result
+	}
+	if traceNullable.Valid && traceNullable.String != "" {
+		traceJSON = traceNullable.String
+		_ = json.Unmarshal([]byte(traceJSON), &version.FormulaTrace)
+	}
+	return version, nil
+}
+
+func pipelineOilChanges(oldInput PipelineOilInput, oldResult *PipelineOilResult, newInput PipelineOilInput, newResult *PipelineOilResult) []PipelineOilFieldChange {
+	oldMap := flattenJSONMap("input", oldInput)
+	newMap := flattenJSONMap("input", newInput)
+	for k, v := range flattenJSONMap("result", oldResult) {
+		oldMap[k] = v
+	}
+	for k, v := range flattenJSONMap("result", newResult) {
+		newMap[k] = v
+	}
+	seen := map[string]bool{}
+	for k := range oldMap {
+		seen[k] = true
+	}
+	for k := range newMap {
+		seen[k] = true
+	}
+	keys := make([]string, 0, len(seen))
+	for k := range seen {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	changes := make([]PipelineOilFieldChange, 0)
+	for _, key := range keys {
+		oldVal, oldOK := oldMap[key]
+		newVal, newOK := newMap[key]
+		if !oldOK {
+			oldVal = nil
+		}
+		if !newOK {
+			newVal = nil
+		}
+		if fmt.Sprint(oldVal) == fmt.Sprint(newVal) {
+			continue
+		}
+		changes = append(changes, PipelineOilFieldChange{Field: key, OldValue: oldVal, NewValue: newVal})
+	}
+	return changes
+}
+
+func flattenJSONMap(prefix string, value interface{}) map[string]interface{} {
+	out := map[string]interface{}{}
+	if value == nil {
+		return out
+	}
+	bytes, err := json.Marshal(value)
+	if err != nil {
+		return out
+	}
+	var decoded interface{}
+	if err = json.Unmarshal(bytes, &decoded); err != nil {
+		return out
+	}
+	flattenJSONValue(out, prefix, decoded)
+	return out
+}
+
+func flattenJSONValue(out map[string]interface{}, prefix string, value interface{}) {
+	switch typed := value.(type) {
+	case map[string]interface{}:
+		for key, nested := range typed {
+			flattenJSONValue(out, prefix+"."+key, nested)
+		}
+	case []interface{}:
+		for i, nested := range typed {
+			flattenJSONValue(out, fmt.Sprintf("%s[%d]", prefix, i), nested)
+		}
+	default:
+		out[prefix] = typed
+	}
+}
+
+func changeFieldNames(changes []PipelineOilFieldChange) []string {
+	fields := make([]string, 0, len(changes))
+	for _, change := range changes {
+		fields = append(fields, change.Field)
+	}
+	return fields
+}
+
+func changeOldValues(changes []PipelineOilFieldChange) map[string]interface{} {
+	values := map[string]interface{}{}
+	for _, change := range changes {
+		values[change.Field] = change.OldValue
+	}
+	return values
+}
+
+func changeNewValues(changes []PipelineOilFieldChange) map[string]interface{} {
+	values := map[string]interface{}{}
+	for _, change := range changes {
+		values[change.Field] = change.NewValue
+	}
+	return values
 }
 
 func CalculatePipelineOil(input PipelineOilInput) (*PipelineOilResult, []PipelineOilValidationError) {
@@ -802,6 +1214,9 @@ func CalculatePipelineOil(input PipelineOilInput) (*PipelineOilResult, []Pipelin
 			"API 581 exact GFF tables, damage-factor tables, CoF category thresholds, and risk matrix thresholds require licensed engineering data.",
 		},
 	}
+	if isASMECode(input.ApplicableCode, "B31.3") {
+		result.TODOEngineeringConfirmation = append(result.TODOEngineeringConfirmation, "TODO_ENGINEERING_CONFIRMATION: ASME B31.3 allowable stress S is taken from Pipeline Material Master material_stress_psi; confirm value against the approved project stress table.")
+	}
 
 	applyPipelineIndexRisk(input, result)
 
@@ -826,7 +1241,7 @@ func CalculatePipelineOil(input PipelineOilInput) (*PipelineOilResult, []Pipelin
 		trace("design_pressure_kg_cm2", "7 Appraisal!N25", "design_pressure_psi/14.223", map[string]interface{}{"design_pressure_psi": input.InternalDesignPressurePsi}, result.DesignPressureKgCM2, ""),
 		trace("operating_pressure_kg_cm2", "7 Appraisal!N26", "operating_pressure_psi/14.223", map[string]interface{}{"operating_pressure_psi": input.OperatingPressurePsi}, result.OperatingPressureKgCM2, "Workbook cached value is #VALUE!, formula chain indicates psi to kg/cm2 conversion."),
 		trace("smys_kg_cm2", "7 Appraisal!N37", "smys_psi/14.223", map[string]interface{}{"smys_psi": input.SMYSPsi}, result.SMYSKgCM2, ""),
-		trace("material_stress_kg_cm2", "7 Appraisal!N38", "material_stress_psi/14.223", map[string]interface{}{"material_stress_psi": input.MaterialStressPsi}, result.MaterialStressKgCM2, ""),
+		trace("material_stress_kg_cm2", "7 Appraisal!N38", "material_stress_psi/14.223", map[string]interface{}{"material_stress_psi": input.MaterialStressPsi, "applicable_code": input.ApplicableCode}, result.MaterialStressKgCM2, "For ASME B31.3, allowable stress S equals material_stress_psi supplied from Pipeline Material Master where applicable."),
 	)
 
 	result.MinimumActualThicknessMM = math.MaxFloat64
@@ -973,13 +1388,22 @@ func applyPipelineIndexRisk(input PipelineOilInput, result *PipelineOilResult) {
 	result.RecommendationGroups = advisory.Groups
 	result.RecommendationSource = advisory.Source
 	result.RecommendationRuleName = advisory.RuleName
+	result.RecommendationConfidence = "Low"
 	result.FormulaTrace = append(result.FormulaTrace,
+		trace("co2_partial_pressure", "Pipeline DM Input", "pCO2 = (CO2 mole% / 100) * operating_pressure_psig", map[string]interface{}{"co2_content": input.RiskInput.CO2Content, "operating_pressure_psi": input.OperatingPressurePsi}, input.RiskInput.CO2PartialPressurePSIG, ""),
+		trace("h2s_partial_pressure", "Pipeline DM Input", "pH2S = (H2S mole% / 100) * operating_pressure_psig", map[string]interface{}{"h2s_content": input.RiskInput.H2SContent, "operating_pressure_psi": input.OperatingPressurePsi}, input.RiskInput.H2SPartialPressurePSIG, ""),
+		trace("wall_thickness_ratio", "Pipeline DM Input", "wall_thickness_ratio = min(actual_thickness_mm) / min(required_thickness_mm)", map[string]interface{}{"inspection_points": len(input.InspectionPoints)}, input.RiskInput.WallThicknessRatio, ""),
+		trace("smys_utilization", "Pipeline DM Input", "SMYS utilization = (P * OD) / (2 * actual_thickness_in * SMYS) * 100", map[string]interface{}{"operating_pressure_psi": input.OperatingPressurePsi, "outside_diameter_in": input.OutsideDiameterIn, "smys_psi": input.SMYSPsi}, input.RiskInput.SMYSUtilizationPct, ""),
+		trace("governing_dm_score", PipelineDamageMechanismSource, "governing_dm_score = max(damage_mechanism_scores)", map[string]interface{}{"governing_driver": governingDriver, "mechanism_count": len(result.DamageMechanismResults)}, governingDF, ""),
 		trace("pipeline_damage_mechanism_screening", PipelineDamageMechanismSource, "Each mechanism screened from Pipeline-specific factor inputs.", map[string]interface{}{"mechanism_count": len(result.DamageMechanismResults)}, result.DamageMechanismResults, ""),
 		trace("pipeline_inspection_scope_interval_method", PipelineDamageMechanismSource, "Inspection method and interval generated per damage mechanism from severity and effectivity.", map[string]interface{}{"mechanism_count": len(result.InspectionPlanResults)}, result.InspectionPlanResults, ""),
 		trace("pipeline_pof", "Pipeline PoF", "PoF = GFF Ã— governing DM score Ã— FMS", map[string]interface{}{"gff": input.RiskInput.GenericFailureFrequency, "governing_dm_score": governingDF, "fms": fms}, pofValue, ""),
 		trace("pipeline_risk_ranking", "Pipeline MVP", "Risk = PoF Category Ã— CoF Category", map[string]interface{}{"pof_category": result.PoF, "cof_category": result.CoF}, result.RiskRanking, ""),
 		trace("pipeline_damage_mechanism_metadata", PipelineDamageMechanismSource, "Selected pipeline damage mechanism stored as classification metadata.", map[string]interface{}{"selected_damage_mechanism": PipelineDamageMechanismLabel(input.RiskInput.DamageMechanism)}, PipelineDamageMechanismLabel(input.RiskInput.DamageMechanism), ""),
 		trace("pipeline_engineering_advisory", result.RecommendationSource, result.RecommendationRuleName, map[string]interface{}{"risk_level": result.FinalRiskLevel, "cof": result.CoF, "governing_driver": result.GoverningDamageMechanism, "selected_damage_mechanism": PipelineDamageMechanismLabel(input.RiskInput.DamageMechanism)}, result.Recommendation, "System-generated advisory."),
+	)
+	result.FormulaTrace = append(result.FormulaTrace,
+		trace("pipeline_cof", "Pipeline CoF", "CoF category/value selected from gas PIR or liquid spill consequence screening", map[string]interface{}{"service": input.Service, "cof_category": result.CoF}, result.CoFValue, ""),
 	)
 }
 
@@ -990,7 +1414,16 @@ func calculatePipelineInspectionPlanResults(input PipelineOilInput, mechanisms [
 		if strings.TrimSpace(plan.NonIntrusiveMethod) == "" {
 			plan.NonIntrusiveMethod = defaultPipelineNonIntrusiveMethod(mechanism.Code)
 		}
+		if strings.TrimSpace(plan.IntrusiveMethod) == "" {
+			plan.IntrusiveMethod = "None"
+		}
 		nonEff := pipelineMethodEffectivity(plan.NonIntrusiveMethod)
+		if input.RiskInput.InspectionEffectivityByDM != nil {
+			if configured := strings.TrimSpace(input.RiskInput.InspectionEffectivityByDM[mechanism.Code]); configured != "" {
+				nonEff = configured
+			}
+		}
+		intEff := pipelineMethodEffectivity(plan.IntrusiveMethod)
 		results = append(results, PipelineInspectionPlanResult{
 			Code:                       mechanism.Code,
 			Label:                      mechanism.Label,
@@ -998,6 +1431,9 @@ func calculatePipelineInspectionPlanResults(input PipelineOilInput, mechanisms [
 			NonIntrusiveMethod:         plan.NonIntrusiveMethod,
 			NonIntrusiveEffectivity:    nonEff,
 			NonIntrusiveIntervalMonths: pipelineInspectionIntervalMonths(mechanism.Severity, nonEff, false),
+			IntrusiveMethod:            plan.IntrusiveMethod,
+			IntrusiveEffectivity:       intEff,
+			IntrusiveIntervalMonths:    pipelineInspectionIntervalMonths(mechanism.Severity, intEff, true),
 			Source:                     PipelineDamageMechanismSource,
 		})
 	}
@@ -1095,6 +1531,7 @@ func calculatePipelineDamageMechanismResults(input PipelineOilInput) []PipelineD
 		if effectivity == "" {
 			effectivity = "Representative"
 		}
+		metadata := PipelineDamageMechanismMetadata(option.Code)
 		results = append(results, PipelineDamageMechanismResult{
 			Code:                  option.Code,
 			Label:                 option.Label,
@@ -1103,6 +1540,9 @@ func calculatePipelineDamageMechanismResults(input PipelineOilInput) []PipelineD
 			Score:                 dmResult.score,
 			InspectionEffectivity: effectivity,
 			Source:                PipelineDamageMechanismSource,
+			SourceStandard:        metadata.SourceStandard,
+			ConfidenceLevel:       metadata.ConfidenceLevel,
+			RuleStatus:            metadata.RuleStatus,
 			Formula:               dmResult.formula,
 			TriggerInputs:         dmResult.triggerInputs,
 		})
@@ -1497,7 +1937,8 @@ func scoreSCC(input PipelineOilInput) pipelineDMScore {
 
 	// Gate: stress > 30% SMYS AND (coating concern OR CP concern OR H2S present)
 	coatingConcern := coatingCond == "Damaged"
-	cpConcern := cpStatus == "Failed" || cpStatus == "Borderline"
+	cpStatusKey := strings.ToLower(strings.TrimSpace(cpStatus))
+	cpConcern := cpStatusKey == "failed" || cpStatusKey == "borderline"
 	h2sPresent := h2sContent > 0
 	stressConcern := smysPct >= 30.0
 
@@ -2058,6 +2499,7 @@ func ValidatePipelineOilDraft(input PipelineOilInput) []PipelineOilValidationErr
 
 func ValidatePipelineOilCalculation(input PipelineOilInput) []PipelineOilValidationError {
 	errs := ValidatePipelineOilDraft(input)
+	input.InspectionPoints = validPipelineInspectionPoints(input.InspectionPoints)
 	checkPositive := []struct {
 		field string
 		value float64
@@ -2088,6 +2530,9 @@ func ValidatePipelineOilCalculation(input PipelineOilInput) []PipelineOilValidat
 	}
 	if input.InternalDesignPressurePsi > 20000 {
 		errs = append(errs, PipelineOilValidationError{Field: "internal_design_pressure_psi", Message: "extreme pressure requires engineering confirmation"})
+	}
+	if _, ok := parsePipelineRightOfWayWidth(input.RightOfWay); input.RightOfWay != "" && !ok {
+		errs = append(errs, PipelineOilValidationError{Field: "right_of_way", Message: "must be a single positive numeric width in meters"})
 	}
 	if input.RiskInput.ManagementSystemScore < 0 || input.RiskInput.ManagementSystemScore > 1000 {
 		errs = append(errs, PipelineOilValidationError{Field: "RiskInput.management_system_score", Message: "must be between 0 and 1000"})
@@ -2199,6 +2644,7 @@ func ValidatePipelineOilCalculation(input PipelineOilInput) []PipelineOilValidat
 }
 
 func applyPipelineOilDefaults(input *PipelineOilInput) {
+	input.InspectionPoints = validPipelineInspectionPoints(input.InspectionPoints)
 	if input.Service == "" {
 		input.Service = "Oil"
 	}
@@ -2367,14 +2813,40 @@ func applyPipelineOilDefaults(input *PipelineOilInput) {
 		input.YearUsed = FlexibleYear(strconv.Itoa(input.YearBuilt))
 	}
 	input.MaterialStressPsi = derivePipelineMaterialStressPsi(*input)
-	for i := range input.InspectionPoints {
-		if input.InspectionPoints[i].NominalThicknessMM == 0 {
-			input.InspectionPoints[i].NominalThicknessMM = input.NominalWallThicknessMM
+}
+
+func validPipelineInspectionPoints(points []PipelineOilInspectionPoint) []PipelineOilInspectionPoint {
+	valid := make([]PipelineOilInspectionPoint, 0, len(points))
+	for _, point := range points {
+		point.InspectionPoint = strings.TrimSpace(point.InspectionPoint)
+		if point.InspectionPoint == "" && strings.TrimSpace(point.LocationClass) == "" && strings.TrimSpace(point.InstallationType) == "" && point.NominalThicknessMM <= 0 && point.ActualThicknessMM <= 0 && point.MeasuredYear.Float() <= 0 {
+			continue
 		}
-		if input.InspectionPoints[i].MeasuredYear.Float() == 0 {
-			input.InspectionPoints[i].MeasuredYear = FlexibleYear(strconv.Itoa(time.Now().Year()))
-		}
+		point.LocationClass = strings.TrimSpace(point.LocationClass)
+		point.InstallationType = normalizePipelinePointInstallation(point.InstallationType)
+		valid = append(valid, point)
 	}
+	return valid
+}
+
+func normalizePipelinePointInstallation(value string) string {
+	switch strings.ToLower(strings.ReplaceAll(strings.TrimSpace(value), "-", " ")) {
+	case "underground":
+		return "Underground"
+	case "above ground", "aboveground":
+		return "Above Ground"
+	default:
+		return ""
+	}
+}
+
+func parsePipelineRightOfWayWidth(value string) (float64, bool) {
+	value = strings.TrimSpace(strings.TrimSuffix(strings.ToLower(value), "m"))
+	if value == "" || strings.Contains(value, "-") {
+		return 0, false
+	}
+	width, err := strconv.ParseFloat(strings.ReplaceAll(value, ",", "."), 64)
+	return width, err == nil && width > 0
 }
 
 func pipelineApplicableCodeForService(service string) string {
@@ -2403,6 +2875,9 @@ func normalizePipelineApplicableCode(code string) string {
 }
 
 func derivePipelineMaterialStressPsi(input PipelineOilInput) float64 {
+	if isASMECode(input.ApplicableCode, "B31.3") && input.MaterialStressPsi > 0 {
+		return input.MaterialStressPsi
+	}
 	if input.SMYSPsi <= 0 {
 		return 0
 	}
@@ -2543,7 +3018,7 @@ func acceptable(ok bool) string {
 	if ok {
 		return "ACCEPTABLE"
 	}
-	return "UNACCEPTABLE"
+	return "NOT ACCEPTABLE"
 }
 
 func aggregateStatus(points []PipelineOilPointResult, pick func(PipelineOilPointResult) string) string {
@@ -2552,7 +3027,7 @@ func aggregateStatus(points []PipelineOilPointResult, pick func(PipelineOilPoint
 	}
 	for _, point := range points {
 		if pick(point) != "ACCEPTABLE" {
-			return "UNACCEPTABLE"
+			return "NOT ACCEPTABLE"
 		}
 	}
 	return "ACCEPTABLE"
@@ -2568,8 +3043,70 @@ func minPositive(current, candidate float64) float64 {
 	return current
 }
 
+var pipelineFormulaTraceMetadata = map[string]PipelineRuleMetadata{
+	"pipe_length_ft":                            {SourceStandard: "Engineering unit conversion", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"design_temperature_c":                      {SourceStandard: "Engineering unit conversion", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"outside_diameter_mm":                       {SourceStandard: "Engineering unit conversion", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"allowance_mm":                              {SourceStandard: "Engineering unit conversion", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"design_pressure_kg_cm2":                    {SourceStandard: "Engineering unit conversion", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"operating_pressure_kg_cm2":                 {SourceStandard: "Engineering unit conversion", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"smys_kg_cm2":                               {SourceStandard: "Engineering unit conversion", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"material_stress_kg_cm2":                    {SourceStandard: "Engineering unit conversion", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"required_thickness":                        {SourceStandard: "ASME B31.3 / ASME B31.4 / ASME B31.8", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"corrosion_rate":                            {SourceStandard: "API 570 inspection practice / workbook formula", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"remaining_life":                            {SourceStandard: "API 570 inspection practice / workbook formula", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"hoop_stress":                               {SourceStandard: "ASME B31 pressure design concept", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"maop":                                      {SourceStandard: "ASME B31.3 / ASME B31.4 / ASME B31.8", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"highest_hoop_stress":                       {SourceStandard: "Workbook aggregation", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"highest_hoop_stress_kg_cm2":                {SourceStandard: "Engineering unit conversion", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"highest_hoop_stress_percent_smys":          {SourceStandard: "ASME B31 stress utilization concept", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"lowest_maop":                               {SourceStandard: "Workbook aggregation", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"lowest_maop_kg_cm2":                        {SourceStandard: "Engineering unit conversion", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"summary_required_thickness":                {SourceStandard: "Workbook aggregation", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"summary_remaining_life":                    {SourceStandard: "API 570 inspection practice / workbook formula", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"co2_partial_pressure":                      {SourceStandard: "API 581 / API 571 concept", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"h2s_partial_pressure":                      {SourceStandard: "NACE MR0175 / ISO 15156 concept", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"wall_thickness_ratio":                      {SourceStandard: "API 570 inspection practice / workbook formula", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"smys_utilization":                          {SourceStandard: "ASME B31 stress utilization concept", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"governing_dm_score":                        {SourceStandard: "Pipeline DM screening v2", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"pipeline_damage_mechanism_screening":       {SourceStandard: "API 571 / API 581 / NACE MR0175 / AMPP SP0169", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"pipeline_inspection_scope_interval_method": {SourceStandard: "API 570 inspection planning concept / engineer-defined interval table", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+	"pipeline_pof":                              {SourceStandard: "API 581 public methodology adapted to pipeline DM score", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"pipeline_cof":                              {SourceStandard: "Pipeline consequence screening practice", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+	"pipeline_risk_ranking":                     {SourceStandard: "Pipeline MVP matrix pending licensed API 581 matrix confirmation", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+	"pipeline_damage_mechanism_metadata":        {SourceStandard: "Pipeline classification metadata", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"pipeline_engineering_advisory":             {SourceStandard: "System advisory rule", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+	"api581_management_system_factor":           {SourceStandard: "API 581 public methodology", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"api581_probability_of_failure":             {SourceStandard: "API 581 public methodology", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"api581_consequence_financial":              {SourceStandard: "API 581 public methodology", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+	"api581_consequence_area":                   {SourceStandard: "API 581 public methodology", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+	"api581_risk":                               {SourceStandard: "API 581 public methodology", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+}
+
+func pipelineFormulaMetadata(name string) PipelineRuleMetadata {
+	if metadata, ok := pipelineFormulaTraceMetadata[name]; ok {
+		return metadata
+	}
+	return PipelineRuleMetadata{
+		SourceStandard:  "Engineering review required",
+		ConfidenceLevel: "Low",
+		RuleStatus:      PipelineRuleTODOEngineeringConfirmation,
+	}
+}
+
 func trace(name, excelRef, expression string, inputs map[string]interface{}, output interface{}, note string) PipelineOilFormulaTrace {
-	return PipelineOilFormulaTrace{FormulaName: name, ExcelRef: excelRef, Expression: expression, Inputs: inputs, Output: output, Note: note}
+	metadata := pipelineFormulaMetadata(name)
+	return PipelineOilFormulaTrace{
+		FormulaName:     name,
+		ExcelRef:        excelRef,
+		Expression:      expression,
+		Inputs:          inputs,
+		Output:          output,
+		Note:            note,
+		SourceStandard:  metadata.SourceStandard,
+		ConfidenceLevel: metadata.ConfidenceLevel,
+		RuleStatus:      metadata.RuleStatus,
+	}
 }
 
 func formatEngineeringValue(value float64) string {
@@ -2688,16 +3225,36 @@ func pipelineOilJSONPayloads(input PipelineOilInput, result *PipelineOilResult) 
 		}
 	}
 	snapshot := map[string]interface{}{
-		"formula_version": PipelineOilFormulaVersion,
-		"input":           input,
-		"result":          result,
-		"snapshot_at":     time.Now(),
+		"formula_version":      PipelineOilFormulaVersion,
+		"input":                input,
+		"result":               result,
+		"standards_references": PipelineStandardsReferences(),
+		"snapshot_at":          time.Now(),
+	}
+	if result != nil {
+		snapshot["recommendation_source"] = result.RecommendationSource
+		snapshot["recommendation_rule_name"] = result.RecommendationRuleName
+		snapshot["recommendation_confidence"] = result.RecommendationConfidence
 	}
 	snapshotBytes, err := json.Marshal(snapshot)
 	if err != nil {
 		return "", "", "", "", err
 	}
 	return string(inputBytes), string(resultBytes), string(traceBytes), string(snapshotBytes), nil
+}
+
+func PipelineStandardsReferences() []string {
+	return []string{
+		"API 570",
+		"API RP 571",
+		"API RP 581 public methodology",
+		"ASME B31.3",
+		"ASME B31.4",
+		"ASME B31.8",
+		"NACE MR0175 / ISO 15156",
+		"AMPP SP0169",
+		"Pipeline DM screening v2",
+	}
 }
 
 func formatPipelineValidationErrors(errs []PipelineOilValidationError) string {
@@ -2709,13 +3266,27 @@ func formatPipelineValidationErrors(errs []PipelineOilValidationError) string {
 }
 
 type PipelineMaterial struct {
-	ID   int
-	Name string
-	SMYS int
+	ID                    int
+	Name                  string
+	MaterialSpecification string
+	Grade                 string
+	SMYS                  float64
+	AllowableStress       float64
+	Notes                 string
+	IsActive              bool
 }
 
 func GetMaterial(db *sql.DB) ([]PipelineMaterial, error) {
-	rows, err := db.Query("SELECT id, name, smys FROM pipeline_materials")
+	return GetPipelineMaterials(db, true)
+}
+
+func GetPipelineMaterials(db *sql.DB, activeOnly bool) ([]PipelineMaterial, error) {
+	query := `SELECT id, name, COALESCE(material_specification, name), COALESCE(grade, ''), smys, COALESCE(allowable_stress, 0), COALESCE(notes, ''), COALESCE(is_active, 1) FROM pipeline_materials`
+	if activeOnly {
+		query += ` WHERE COALESCE(is_active, 1) = 1`
+	}
+	query += ` ORDER BY name`
+	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -2725,7 +3296,7 @@ func GetMaterial(db *sql.DB) ([]PipelineMaterial, error) {
 
 	for rows.Next() {
 		var eq PipelineMaterial
-		err := rows.Scan(&eq.ID, &eq.Name, &eq.SMYS)
+		err := rows.Scan(&eq.ID, &eq.Name, &eq.MaterialSpecification, &eq.Grade, &eq.SMYS, &eq.AllowableStress, &eq.Notes, &eq.IsActive)
 		if err != nil {
 			return nil, err
 		}
@@ -2733,4 +3304,117 @@ func GetMaterial(db *sql.DB) ([]PipelineMaterial, error) {
 	}
 
 	return materials, nil
+}
+
+func SavePipelineMaterial(db *sql.DB, material PipelineMaterial) error {
+	name := strings.TrimSpace(material.Name)
+	if name == "" {
+		name = strings.TrimSpace(material.MaterialSpecification)
+	}
+	if name == "" || material.SMYS <= 0 {
+		return errors.New("material name and SMYS are required")
+	}
+	if material.MaterialSpecification == "" {
+		material.MaterialSpecification = name
+	}
+	if material.ID > 0 {
+		_, err := db.Exec(`UPDATE pipeline_materials SET name = ?, material_specification = ?, grade = ?, smys = ?, allowable_stress = ?, notes = ?, is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+			name, strings.TrimSpace(material.MaterialSpecification), strings.TrimSpace(material.Grade), material.SMYS, material.AllowableStress, strings.TrimSpace(material.Notes), material.ID)
+		return err
+	}
+	_, err := db.Exec(`INSERT INTO pipeline_materials (name, material_specification, grade, smys, allowable_stress, notes, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)
+		ON CONFLICT(name) DO UPDATE SET material_specification = excluded.material_specification, grade = excluded.grade, smys = excluded.smys, allowable_stress = excluded.allowable_stress, notes = excluded.notes, is_active = 1, updated_at = CURRENT_TIMESTAMP`,
+		name, strings.TrimSpace(material.MaterialSpecification), strings.TrimSpace(material.Grade), material.SMYS, material.AllowableStress, strings.TrimSpace(material.Notes))
+	return err
+}
+
+func DeactivatePipelineMaterial(db *sql.DB, id int) error {
+	_, err := db.Exec(`UPDATE pipeline_materials SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, id)
+	return err
+}
+
+type PipelineInspectionMethod struct {
+	ID          int
+	Name        string
+	Scope       string
+	Effectivity string
+	Notes       string
+	IsActive    bool
+}
+
+func GetPipelineInspectionMethods(db *sql.DB, activeOnly bool) ([]PipelineInspectionMethod, error) {
+	query := `SELECT id, name, scope, effectivity, COALESCE(notes, ''), COALESCE(is_active, 1) FROM pipeline_inspection_methods`
+	if activeOnly {
+		query += ` WHERE COALESCE(is_active, 1) = 1`
+	}
+	query += ` ORDER BY scope, name`
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var methods []PipelineInspectionMethod
+	for rows.Next() {
+		var method PipelineInspectionMethod
+		if err := rows.Scan(&method.ID, &method.Name, &method.Scope, &method.Effectivity, &method.Notes, &method.IsActive); err != nil {
+			return nil, err
+		}
+		methods = append(methods, method)
+	}
+	return methods, nil
+}
+
+func SavePipelineInspectionMethod(db *sql.DB, method PipelineInspectionMethod) error {
+	method.Name = strings.TrimSpace(method.Name)
+	method.Scope = normalizePipelineInspectionScope(method.Scope)
+	method.Effectivity = normalizePipelineInspectionEffectivity(method.Effectivity)
+	if method.Name == "" {
+		return errors.New("inspection method name is required")
+	}
+	if method.ID > 0 {
+		_, err := db.Exec(`UPDATE pipeline_inspection_methods SET name = ?, scope = ?, effectivity = ?, notes = ?, is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+			method.Name, method.Scope, method.Effectivity, strings.TrimSpace(method.Notes), method.ID)
+		return err
+	}
+	_, err := db.Exec(`INSERT INTO pipeline_inspection_methods (name, scope, effectivity, notes, is_active) VALUES (?, ?, ?, ?, 1)
+		ON CONFLICT(name, scope) DO UPDATE SET effectivity = excluded.effectivity, notes = excluded.notes, is_active = 1, updated_at = CURRENT_TIMESTAMP`,
+		method.Name, method.Scope, method.Effectivity, strings.TrimSpace(method.Notes))
+	return err
+}
+
+func DeactivatePipelineInspectionMethod(db *sql.DB, id int) error {
+	_, err := db.Exec(`UPDATE pipeline_inspection_methods SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, id)
+	return err
+}
+
+func PipelineInspectionMethodsByScope(methods []PipelineInspectionMethod, scope string) []PipelineInspectionMethod {
+	scope = normalizePipelineInspectionScope(scope)
+	filtered := make([]PipelineInspectionMethod, 0, len(methods))
+	for _, method := range methods {
+		if normalizePipelineInspectionScope(method.Scope) == scope {
+			filtered = append(filtered, method)
+		}
+	}
+	return filtered
+}
+
+func normalizePipelineInspectionScope(scope string) string {
+	if strings.ToLower(strings.TrimSpace(scope)) == "intrusive" {
+		return "intrusive"
+	}
+	return "nonintrusive"
+}
+
+func normalizePipelineInspectionEffectivity(effectivity string) string {
+	switch strings.Title(strings.ToLower(strings.TrimSpace(effectivity))) {
+	case "High":
+		return "High"
+	case "Low":
+		return "Low"
+	case "None":
+		return "None"
+	default:
+		return "Medium"
+	}
 }

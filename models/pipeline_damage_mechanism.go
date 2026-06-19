@@ -3,6 +3,15 @@ package models
 import "strings"
 
 const PipelineDamageMechanismSource = "Pipeline DM screening v2"
+const PipelineRuleVerified = "VERIFIED"
+const PipelineRulePartiallyVerified = "PARTIALLY_VERIFIED"
+const PipelineRuleTODOEngineeringConfirmation = "TODO_ENGINEERING_CONFIRMATION"
+
+type PipelineRuleMetadata struct {
+	SourceStandard  string `json:"source_standard"`
+	ConfidenceLevel string `json:"confidence_level"`
+	RuleStatus      string `json:"rule_status"`
+}
 
 type PipelineDamageMechanismOption struct {
 	Code        string `json:"code"`
@@ -29,6 +38,31 @@ var pipelineDamageMechanismOptions = []PipelineDamageMechanismOption{
 	{Code: "scc", Label: "SCC", Description: "Stress corrosion cracking from hoop stress, coating disbondment, and environmental conditions.", Category: "Internal Cracking"},
 	{Code: "fatigue", Label: "Fatigue", Description: "Cyclic pressure fatigue from pressure cycling at weld seams and stress concentrations.", Category: "Internal Cracking"},
 	{Code: "chemical_damage", Label: "Chemical Damage", Description: "Internal metal loss due to process chemicals.", Category: "Internal Thinning"},
+}
+
+var pipelineDamageMechanismMetadata = map[string]PipelineRuleMetadata{
+	"external_corrosion":            {SourceStandard: "API 571 / AMPP SP0169", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"coating_degradation":           {SourceStandard: "API 571 / AMPP SP0169", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+	"third_party_mechanical_damage": {SourceStandard: "API 570 / pipeline integrity management practice", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+	"internal_corrosion":            {SourceStandard: "API 581 / API 571", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"localized_corrosion":           {SourceStandard: "API 571", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+	"erosion":                       {SourceStandard: "API 571 / DNV-RP-O501 concept", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+	"erosion_corrosion":             {SourceStandard: "API 571", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+	"cracking":                      {SourceStandard: "NACE MR0175 / ISO 15156 / API 571", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
+	"scc":                           {SourceStandard: "API 571 / NACE MR0175 / ISO 15156", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+	"fatigue":                       {SourceStandard: "API 571", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+	"chemical_damage":               {SourceStandard: "Engineering review stub", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+}
+
+func PipelineDamageMechanismMetadata(code string) PipelineRuleMetadata {
+	if metadata, ok := pipelineDamageMechanismMetadata[NormalizePipelineDamageMechanism(code)]; ok {
+		return metadata
+	}
+	return PipelineRuleMetadata{
+		SourceStandard:  "Engineering review required",
+		ConfidenceLevel: "Low",
+		RuleStatus:      PipelineRuleTODOEngineeringConfirmation,
+	}
 }
 
 type PipelineDamageMechanismGroup struct {
@@ -77,15 +111,15 @@ func NormalizePipelineDamageMechanism(value string) string {
 	value = strings.TrimSpace(value)
 	legacy := map[string]string{
 		"coating_degradation":         "coating_degradation",
-		"coating_cui_degradation":      "coating_degradation",
-		"cui":                          "coating_degradation",
-		"third_party_damage":           "third_party_mechanical_damage",
-		"mechanical_damage":            "third_party_mechanical_damage",
-		"localized_corrosion_pitting":  "localized_corrosion",
+		"coating_cui_degradation":     "coating_degradation",
+		"cui":                         "coating_degradation",
+		"third_party_damage":          "third_party_mechanical_damage",
+		"mechanical_damage":           "third_party_mechanical_damage",
+		"localized_corrosion_pitting": "localized_corrosion",
 		"cracking_damage":             "cracking",
 		"cracking_scc_fatigue":        "scc",
 		"cracking_scc":                "scc",
-		"fatigue":                      "fatigue",
+		"fatigue":                     "fatigue",
 		"other_engineering_review":    "chemical_damage",
 	}
 	if normalized, ok := legacy[strings.ToLower(value)]; ok {

@@ -65,5 +65,7 @@ func Migrate(db *sql.DB) {
 	// Transaction Migration
 	RunAllAssessmentMigrations(config.DB)
 	PipelineOilAssessmentTables(config.DB)
+	PipelineOilReportingTables(config.DB)
 	PipelineMaterialTables(config.DB)
+	PipelineOilMasterDataTables(config.DB)
 }

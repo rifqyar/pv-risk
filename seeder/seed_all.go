@@ -88,6 +88,9 @@ func SeedAll(db *sql.DB) error {
 	if err := PipelineMaterial(db); err != nil {
 		return err
 	}
+	if err := PipelineInspectionMethod(db); err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -109,12 +109,21 @@ func main() {
 		pipelineRoute.POST("/submit", pipelineController.SubmitAssessment)
 		pipelineRoute.GET("/list", pipelineController.ShowListAssessment)
 		pipelineRoute.GET("/view/:id", pipelineController.ViewAssessmentDetail)
+		pipelineRoute.GET("/compare/:id", pipelineController.CompareAssessment)
 		pipelineRoute.GET("/edit/:id", pipelineController.EditAssessment)
 		pipelineRoute.POST("/update/:id", pipelineController.UpdateAssessment)
 		pipelineRoute.POST("/preview", pipelineController.PreviewAssessment)
 		pipelineRoute.POST("/calculate/:id", pipelineController.CalculateAssessment)
+		pipelineRoute.POST("/approve/:id", pipelineController.ApproveAssessment)
+		pipelineRoute.POST("/export/pdf/:id/audit", pipelineController.AuditPDFExport)
+		pipelineRoute.GET("/export/excel/:id", pipelineController.ExportExcel)
 		pipelineRoute.DELETE("/delete/:id", pipelineController.DeleteAssessment)
 		pipelineRoute.GET("/gas", pipelineController.ShowGasComingSoon)
+		pipelineRoute.GET("/master-data", pipelineController.ShowPipelineMasterData)
+		pipelineRoute.POST("/master-data/material/save", pipelineController.SavePipelineMaterial)
+		pipelineRoute.POST("/master-data/material/deactivate/:id", pipelineController.DeactivatePipelineMaterial)
+		pipelineRoute.POST("/master-data/inspection-method/save", pipelineController.SavePipelineInspectionMethod)
+		pipelineRoute.POST("/master-data/inspection-method/deactivate/:id", pipelineController.DeactivatePipelineInspectionMethod)
 	}
 
 	r.GET("/api/equipment-autofill/:id", controller.GetEquipmentAutofill)
@@ -171,7 +180,7 @@ func appTemplateFuncs() template.FuncMap {
 			}
 			return template.JS(b)
 		},
-		"fmtNum": formatTemplateNumber,
+		"fmtNum":               formatTemplateNumber,
 		"isPipelineGasService": isPipelineGasService,
 	}
 }

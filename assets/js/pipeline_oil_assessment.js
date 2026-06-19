@@ -6,6 +6,7 @@ $(function () {
   let resultIsStale = false;
   let isProgrammaticUpdate = false;
   let isRealtimeCalculating = false;
+  let isSavingAssessment = false;
   let realtimeTimer = null;
 
   localizeDecimalInputs();
@@ -32,6 +33,8 @@ $(function () {
     if (pipelineStepper) pipelineStepper.next();
     if ($activeStep.attr("id") === "pipeline-step-3") {
       previewPipelineRisk(false);
+    } else if ($activeStep.attr("id") === "pipeline-step-5") {
+      runRealtimePipelineCalculation();
     }
   });
 
@@ -39,11 +42,18 @@ $(function () {
     if (pipelineStepper) pipelineStepper.previous();
   });
 
+  $(".step-trigger").on("click", function () {
+    setTimeout(refreshReviewCalculationIfActive, 0);
+  });
+
   $form.on("input change", "input, select, textarea", function () {
     if (isProgrammaticUpdate) return;
     clearFieldError($(this));
     if (this.name === "service") {
       syncApplicableCodeAndMaterialStress(true);
+    } else if (this.name === "material_specification") {
+      applySelectedPipelineMaterial();
+      syncApplicableCodeAndMaterialStress(false);
     } else if (this.name === "applicable_code" || this.name === "smys_psi") {
       syncApplicableCodeAndMaterialStress(false);
     }
@@ -62,7 +72,7 @@ $(function () {
       <tr>
         <td><input class="form-control" name="inspection_point"></td>
         <td><input class="form-control" name="location_class"></td>
-        <td><input class="form-control" name="installation_type"></td>
+        <td><select class="form-select" name="installation_type"><option value="">-</option><option value="Underground">Underground</option><option value="Above Ground">Above Ground</option></select></td>
         <td><input type="text" inputmode="decimal" class="form-control" name="point_nominal_thickness_mm"></td>
         <td><input type="text" inputmode="decimal" class="form-control" name="point_actual_thickness_mm"></td>
         <td><input type="month" class="form-control" name="measured_year" value="${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}"></td>
@@ -136,72 +146,84 @@ $(function () {
       .catch(() => Swal.fire("Error", "Failed to calculate risk preview.", "error"));
   }
 
-  function saveReviewedAssessment() {
-    if (!validatePipelineForm(false)) return;
-    if (!currentResult) {
-      Swal.fire("Please calculate the risk before saving this assessment.", "The assessment can be saved after the result is available for review.", "warning");
+  async function saveReviewedAssessment() {
+    if (isSavingAssessment) return;
+    if (!validatePipelineForm(true)) {
+      Swal.fire("Complete the required fields before saving.", "A few required inputs are missing or invalid.", "warning");
       return;
     }
-    if (resultIsStale || resultSignature !== calculationSignature(collectPayload())) {
-      resultIsStale = true;
-      updateSaveState();
-      Swal.fire("Please calculate the risk before saving this assessment.", "Some input values changed. Please recalculate the risk result before saving.", "warning");
-      return;
-    }
-    if (!currentResult.final_risk_code || !currentResult.final_risk_level) {
-      Swal.fire("Please calculate the risk result before saving.", "Final risk code and risk level are required.", "warning");
-      return;
-    }
-
     const id = $form.data("assessment-id");
     const payload = collectPayload();
+    isSavingAssessment = true;
+    updateSaveState();
     Swal.fire({ title: "Saving...", allowOutsideClick: false, showConfirmButton: false });
     Swal.showLoading();
 
-    if (id) {
-      persistCalculation(id, payload);
-      return;
-    }
+    try {
+      const preview = await backendPreview(payload);
+      currentResult = preview.result;
+      resultSignature = calculationSignature(payload);
+      resultIsStale = false;
+      renderCalculationResult(currentResult);
 
-    fetch("/assessment-pipeline/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-      .then((r) => r.json())
-      .then((res) => {
-        if (res.status !== "success" || !res.id) {
-          Swal.fire("Check the form", humanizeServerError(res.message), "error");
-          return;
-        }
-        persistCalculation(res.id, payload);
-      })
-      .catch(() => Swal.fire("Error", "Failed to save assessment.", "error"));
+      const assessmentID = id || await createDraftAssessment(payload);
+      await persistCalculation(assessmentID, payload);
+    } catch (err) {
+      Swal.fire("Check the form", humanizeServerError(err.message), "error");
+      isSavingAssessment = false;
+      updateSaveState();
+    }
   }
 
-  function persistCalculation(id, payload) {
-    fetch(`/assessment-pipeline/calculate/${id}`, {
+  async function backendPreview(payload) {
+    const response = await fetch("/assessment-pipeline/preview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-    })
-      .then((r) => r.json())
-      .then((res) => {
-        if (res.status !== "success") {
-          Swal.fire("Check the form", humanizeServerError(res.message), "error");
-          return;
-        }
-        Swal.fire("Success", res.message, "success").then(() => {
-          window.location.href = `/assessment-pipeline/view/${id}`;
-        });
-      })
-      .catch(() => Swal.fire("Error", "Failed to save calculation result.", "error"));
+    });
+    const res = await response.json();
+    if (res.status !== "success" || !res.result) {
+      throw new Error(res.message || "Backend preview failed.");
+    }
+    return res;
+  }
+
+  async function createDraftAssessment(payload) {
+    const response = await fetch("/assessment-pipeline/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const res = await response.json();
+    if (res.status !== "success" || !res.id) {
+      throw new Error(res.message || "Failed to create pipeline draft.");
+    }
+    return res.id;
+  }
+
+  async function persistCalculation(id, payload) {
+    const response = await fetch(`/assessment-pipeline/calculate/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const res = await response.json();
+    if (res.status !== "success") {
+      throw new Error(res.message || "Failed to save calculation result.");
+    }
+    Swal.fire("Success", res.message, "success").then(() => {
+      window.location.href = `/assessment-pipeline/view/${id}`;
+    });
   }
 
   function collectPayload(includeGoverningDamageMechanism = true) {
     const data = {};
     $form.serializeArray().forEach((item) => {
       if (item.name.startsWith("point_") || ["inspection_point", "location_class", "installation_type", "measured_year"].includes(item.name)) return;
+      if (item.name === "right_of_way") {
+        data[item.name] = String(item.value || "").trim();
+        return;
+      }
       data[item.name] = numericOrString(item.value);
     });
     if (numberValue(data.nominal_wall_thickness_mm) > 0 && (numberValue(data.actual_wall_thickness_mm) <= 0 || numberValue(data.actual_wall_thickness_mm) > numberValue(data.nominal_wall_thickness_mm))) {
@@ -219,11 +241,11 @@ $(function () {
       inspection_effectivity_by_damage_mechanism: collectInspectionEffectivityByDM(),
       inspection_plan_by_damage_mechanism: collectInspectionPlanByDM(),
       release_fluid: $("[name='service']").val(),
-      generic_failure_frequency: numberValue($("input[name='generic_failure_frequency']").val()),
-      management_system_score: numberValue($("input[name='management_system_score']").val()),
-      base_tpd_rate: numberValue($("input[name='base_tpd_rate']").val()),
-      base_external_corr_rate: numberValue($("input[name='base_external_corr_rate']").val()),
-      base_internal_corr_rate: numberValue($("input[name='base_internal_corr_rate']").val()),
+      generic_failure_frequency: numberValue($("[name='generic_failure_frequency']").val()),
+      management_system_score: numberValue($("[name='management_system_score']").val()),
+      base_tpd_rate: numberValue($("[name='base_tpd_rate']").val()),
+      base_external_corr_rate: numberValue($("[name='base_external_corr_rate']").val()),
+      base_internal_corr_rate: numberValue($("[name='base_internal_corr_rate']").val()),
       depth_of_cover: $("[name='depth_of_cover']").val(),
       patrol_frequency: $("[name='patrol_frequency']").val(),
       row_condition: $("[name='row_condition']").val(),
@@ -301,15 +323,18 @@ $(function () {
 
     data.inspection_points = [];
     $("#pipelinePointsTable tbody tr").each(function () {
+      const pointName = String($(this).find("[name='inspection_point']").val() || "").trim();
       const nominal = numberValue($(this).find("[name='point_nominal_thickness_mm']").val());
       const actual = numberValue($(this).find("[name='point_actual_thickness_mm']").val());
+      const measuredYear = String($(this).find("[name='measured_year']").val() || "");
+      if (!pointName || nominal <= 0 || actual <= 0 || !measuredYear) return;
       data.inspection_points.push({
-        inspection_point: $(this).find("[name='inspection_point']").val(),
+        inspection_point: pointName,
         location_class: $(this).find("[name='location_class']").val(),
         installation_type: $(this).find("[name='installation_type']").val(),
         nominal_thickness_mm: nominal,
-        actual_thickness_mm: actual > 0 && actual <= nominal ? actual : nominal,
-        measured_year: String($(this).find("[name='measured_year']").val() || ""),
+        actual_thickness_mm: actual,
+        measured_year: measuredYear,
       });
     });
     data.RiskInput.co2_partial_pressure_psig = calculateCO2PartialPressureJS(data.RiskInput, data);
@@ -338,26 +363,26 @@ $(function () {
     $("#pipelineRiskLevel")
       .attr("class", `badge rounded-pill px-3 py-2 ${riskBadgeClass(result.final_risk_level)}`)
       .text(normalizeRiskLevel(result.final_risk_level));
-    $("#pipelineRiskExplanation").text(`This pipeline is classified as ${normalizeRiskLevel(result.final_risk_level)} because the probability of failure is ${result.pof || "-"} and the consequence category is ${result.cof || "-"}.`);
+    $("#pipelineRiskExplanation").text(`Risk drivers: Governing DM ${result.governing_damage_mechanism || "-"} (score ${fmt(result.governing_damage_factor)}), PoF ${result.pof || "-"} from GFF ${fmt(result.generic_failure_frequency)} x DM score x FMS ${fmt(result.management_system_factor)}, and CoF ${result.cof || "-"}. Final matrix cell ${result.final_risk_code || "-"} maps to ${normalizeRiskLevel(result.final_risk_level)}.`);
     $("#pipelineRiskMatrix").html(buildRiskMatrix(result.final_risk_code));
     $("#pipelineThicknessResult").html(buildThicknessResult(result.point_results || []));
     $("#pipelineRealtimeThicknessResult").html(buildRealtimeThicknessResult(result.point_results || []));
     renderDamageMechanismResults(result.damage_mechanism_results || []);
     renderInspectionPlanResults(result.inspection_plan_results || []);
     $("#pipelinePofBreakdown").html(listItems([
-      ["Third-Party DM Score", fmt(result.third_party_damage_factor)],
-      ["External Corrosion DM Score", fmt(result.external_corrosion_factor)],
-      ["Internal Corrosion DM Score", fmt(result.internal_corrosion_factor)],
-      ["Governing DM Score", fmt(result.governing_damage_factor)],
+      ["Third-Party Damage Result", damageMechanismSummary(result, "third_party_mechanical_damage", result.third_party_damage_factor)],
+      ["External Corrosion Result", damageMechanismSummary(result, "external_corrosion", result.external_corrosion_factor)],
+      ["Internal Corrosion Result", damageMechanismSummary(result, "internal_corrosion", result.internal_corrosion_factor)],
+      ["Governing Damage Mechanism", governingDamageMechanismSummary(result)],
       ["Main Failure Driver", result.governing_damage_mechanism],
-      ["GFF", fmt(result.generic_failure_frequency)],
-      ["FMS", fmt(result.management_system_factor)],
+      ["GFF Basis", selectedOptionLabel("generic_failure_frequency") || fmt(result.generic_failure_frequency)],
+      ["Management System Basis", `${selectedOptionLabel("management_system_score") || "-"} -> FMS ${fmt(result.management_system_factor)}`],
       ["Final PoF", fmt(result.pof_value)],
       ["PoF Category", result.pof],
     ]));
     $("#pipelineCofBreakdown").html(buildCofBreakdown(result));
     $("#pipelineRecommendationGroups").html(buildRecommendationGroups(result));
-    $("#pipelineRecommendationText").html(`<strong>Source:</strong> ${escapeHtml(result.recommendation_source || "Realtime browser preview; backend recalculates on save.")}<br><strong>Advisory:</strong> ${escapeHtml(result.recommendation || "-")}`);
+    $("#pipelineRecommendationText").html(`<strong>Source:</strong> ${escapeHtml(result.recommendation_source || "Realtime browser preview; backend recalculates on save.")}<br><strong>Confidence:</strong> ${escapeHtml(result.recommendation_confidence || "Low")}<br><strong>Advisory:</strong> ${escapeHtml(result.recommendation || "-")}`);
     $("#pipelineFormulaTrace").html(buildFormulaTrace(result.formula_trace || []));
   }
 
@@ -378,6 +403,41 @@ $(function () {
       ["Environmental Sensitivity", labelFor($("[name='environmental_sensitivity']"))],
       ["CoF Category", result.cof],
     ]);
+  }
+
+  function damageMechanismSummary(result, code, fallbackScore) {
+    const mechanism = (result.damage_mechanism_results || []).find((item) => item.code === code);
+    if (mechanism) {
+      return `${mechanism.severity || severityFromScoreLabel(mechanism.score)} - ${mechanism.label || codeLabel(code)}`;
+    }
+    return `${severityFromScoreLabel(fallbackScore)} - ${codeLabel(code)}`;
+  }
+
+  function governingDamageMechanismSummary(result) {
+    const label = result.governing_damage_mechanism || "-";
+    const mechanism = (result.damage_mechanism_results || []).find((item) => item.label === label);
+    if (mechanism) return `${mechanism.severity || severityFromScoreLabel(mechanism.score)} - ${label}`;
+    return `${severityFromScoreLabel(result.governing_damage_factor)} - ${label}`;
+  }
+
+  function severityFromScoreLabel(score) {
+    const value = numberValue(score);
+    if (value <= 0) return "NOT";
+    if (value < 1.5) return "Low";
+    if (value < 3) return "Moderate";
+    return "High";
+  }
+
+  function codeLabel(code) {
+    return String(code || "-")
+      .replaceAll("_", " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+
+  function selectedOptionLabel(name) {
+    const $field = $(`[name='${name}']`);
+    if (!$field.length || !$field.is("select")) return "";
+    return $field.find("option:selected").text();
   }
 
   function buildRecommendationGroups(result) {
@@ -429,11 +489,11 @@ $(function () {
         <td>${escapeHtml(fmt(point.minimum_thickness_mm || point.required_thickness_mm))}</td>
         <td>${escapeHtml(fmt(point.actual_thickness_mm))}</td>
         <td>${escapeHtml(fmt(point.remaining_thickness_mm))}</td>
-        <td>${escapeHtml(fmt(point.corrosion_rate_mm_year))}</td>
-        <td>${escapeHtml(fmt(point.remaining_life_years))}</td>
+        <td>${escapeHtml(fmtRate(point.corrosion_rate_mm_year))}</td>
+        <td>${escapeHtml(fmt(nonNegative(point.remaining_life_years)))}</td>
         <td>${escapeHtml(fmt(point.hoop_stress_psi))}</td>
         <td>${escapeHtml(fmt(point.maop_psi))}</td>
-        <td>${escapeHtml([point.thickness_status, point.maop_status].filter(Boolean).join(" / ") || "-")}</td>
+        <td>${statusBadges([overallTechnicalStatus(point)])}${technicalStatusCauses(point)}</td>
       </tr>
     `).join("");
   }
@@ -449,13 +509,55 @@ $(function () {
         <td>${escapeHtml(fmt(point.minimum_thickness_mm))}</td>
         <td>${escapeHtml(fmt(point.actual_thickness_mm))}</td>
         <td>${escapeHtml(fmt(point.remaining_thickness_mm))}</td>
-        <td>${escapeHtml(fmt(point.corrosion_rate_mm_year))} mm/year</td>
-        <td>${escapeHtml(fmt(point.remaining_life_years))} years</td>
+        <td>${escapeHtml(fmtRate(point.corrosion_rate_mm_year))} mm/year</td>
+        <td>${escapeHtml(fmt(nonNegative(point.remaining_life_years)))} years</td>
         <td>${escapeHtml(fmt(point.hoop_stress_psi))} psi</td>
         <td>${escapeHtml(fmt(point.maop_psi))} psi</td>
-        <td>${escapeHtml([point.thickness_status, point.hoop_stress_status, point.maop_status].filter(Boolean).join(" / ") || "-")}</td>
+        <td>${statusBadges([overallTechnicalStatus(point)])}${technicalStatusCauses(point)}</td>
       </tr>
     `).join("");
+  }
+
+  function statusBadges(values) {
+    const statuses = (values || []).filter(Boolean);
+    if (!statuses.length) return "-";
+    return statuses.map((status) => {
+      const text = String(status || "").trim();
+      const key = text.toLowerCase();
+      let badgeClass = "conditional";
+      let icon = "mdi-alert-circle-outline";
+      if (key.includes("not acceptable")) {
+        badgeClass = "not-acceptable";
+        icon = "mdi-close-circle-outline";
+      } else if (key.includes("acceptable")) {
+        badgeClass = "acceptable";
+        icon = "mdi-check-circle-outline";
+      }
+      return `<span class="pipeline-acceptance-badge ${badgeClass} me-1 mb-1"><i class="mdi ${icon}"></i>${escapeHtml(text)}</span>`;
+    }).join("");
+  }
+
+  function overallTechnicalStatus(point) {
+    const statuses = [point.thickness_status, point.hoop_stress_status, point.maop_status]
+      .filter(Boolean)
+      .map((status) => String(status).trim().toUpperCase());
+    if (!statuses.length) return "";
+    return statuses.some((status) => status === "NOT ACCEPTABLE")
+      ? "ENGINEERING EVALUATION REQUIRED"
+      : "ACCEPTABLE FOR CONTINUED SERVICE";
+  }
+
+  function technicalStatusCauses(point) {
+    const causes = [];
+    if (String(point.thickness_status || "").toUpperCase() === "NOT ACCEPTABLE") causes.push("Actual thickness below required/minimum thickness");
+    if (String(point.hoop_stress_status || "").toUpperCase() === "NOT ACCEPTABLE") causes.push("Hoop stress exceeds allowable stress basis");
+    if (String(point.maop_status || "").toUpperCase() === "NOT ACCEPTABLE") causes.push("MAOP is below design pressure");
+    if (!causes.length) return "";
+    return `<div class="small text-danger mt-1">${causes.map(escapeHtml).join("<br>")}</div>`;
+  }
+
+  function nonNegative(value) {
+    return Math.max(numberValue(value), 0);
   }
 
   function renderDamageMechanismResults(results) {
@@ -489,11 +591,11 @@ $(function () {
       return;
     }
     const valid = points.filter((point) => Number.isFinite(Number(point.remaining_life_years)));
-    const governing = valid.sort((a, b) => Number(a.remaining_life_years) - Number(b.remaining_life_years))[0];
+    const governing = valid.sort((a, b) => nonNegative(a.remaining_life_years) - nonNegative(b.remaining_life_years))[0];
     const minActual = Math.min(...points.map((point) => numberValue(point.actual_thickness_mm)).filter((value) => value > 0));
     const highestHoopStress = Math.max(...points.map((point) => numberValue(point.hoop_stress_psi)).filter((value) => value > 0));
     const lowestMAOP = Math.min(...points.map((point) => numberValue(point.maop_psi)).filter((value) => value > 0));
-    $("#pipelineSummaryRemainingLife").text(governing ? `${fmt(governing.remaining_life_years)} years` : "-");
+    $("#pipelineSummaryRemainingLife").text(governing ? `${fmt(nonNegative(governing.remaining_life_years))} years` : "-");
     $("#pipelineSummaryRemainingPoint").text(governing ? `Point: ${governing.inspection_point || "-"}` : "Point: -");
     $("#pipelineSummaryMinActual").text(Number.isFinite(minActual) ? `${fmt(minActual)} mm` : "-");
     $("#pipelineSummaryHoopStress").text(Number.isFinite(highestHoopStress) ? `${fmt(highestHoopStress)} psi` : "-");
@@ -518,6 +620,13 @@ $(function () {
       updateSaveState();
     } finally {
       isRealtimeCalculating = false;
+    }
+  }
+
+  function refreshReviewCalculationIfActive() {
+    if ($("#pipeline-step-6").hasClass("active")) {
+      updateReviewSummary();
+      runRealtimePipelineCalculation();
     }
   }
 
@@ -574,6 +683,35 @@ $(function () {
     if (pH2S < 0.5) return "Low";
     if (pH2S <= 15) return "Moderate";
     return "High";
+  }
+
+  const pipelineDMRuleMetadata = {
+    external_corrosion: { source_standard: "API 571 / AMPP SP0169", confidence_level: "Medium", rule_status: "PARTIALLY_VERIFIED" },
+    coating_degradation: { source_standard: "API 571 / AMPP SP0169", confidence_level: "Low", rule_status: "TODO_ENGINEERING_CONFIRMATION" },
+    third_party_mechanical_damage: { source_standard: "API 570 / pipeline integrity management practice", confidence_level: "Low", rule_status: "TODO_ENGINEERING_CONFIRMATION" },
+    internal_corrosion: { source_standard: "API 581 / API 571", confidence_level: "Medium", rule_status: "PARTIALLY_VERIFIED" },
+    localized_corrosion: { source_standard: "API 571", confidence_level: "Low", rule_status: "TODO_ENGINEERING_CONFIRMATION" },
+    erosion: { source_standard: "API 571 / DNV-RP-O501 concept", confidence_level: "Low", rule_status: "TODO_ENGINEERING_CONFIRMATION" },
+    erosion_corrosion: { source_standard: "API 571", confidence_level: "Low", rule_status: "TODO_ENGINEERING_CONFIRMATION" },
+    cracking: { source_standard: "NACE MR0175 / ISO 15156 / API 571", confidence_level: "Medium", rule_status: "PARTIALLY_VERIFIED" },
+    scc: { source_standard: "API 571 / NACE MR0175 / ISO 15156", confidence_level: "Low", rule_status: "TODO_ENGINEERING_CONFIRMATION" },
+    fatigue: { source_standard: "API 571", confidence_level: "Low", rule_status: "TODO_ENGINEERING_CONFIRMATION" },
+    chemical_damage: { source_standard: "Engineering review stub", confidence_level: "Low", rule_status: "TODO_ENGINEERING_CONFIRMATION" },
+  };
+
+  function annotatePipelineDMResult(item) {
+    const metadata = pipelineDMRuleMetadata[item.code] || {
+      source_standard: "Engineering review required",
+      confidence_level: "Low",
+      rule_status: "TODO_ENGINEERING_CONFIRMATION",
+    };
+    return {
+      ...item,
+      source: "Pipeline DM screening v2",
+      source_standard: metadata.source_standard,
+      confidence_level: metadata.confidence_level,
+      rule_status: metadata.rule_status,
+    };
   }
 
   function baseSeverityScoreJS(sev) {
@@ -842,17 +980,19 @@ $(function () {
     }
     const risk = input.RiskInput || {};
     const requiredIn = requiredThicknessIn(input);
-    const pointResults = points.map((point) => {
+    const pointResults = points.map((point, index) => {
       const actualIn = numberValue(point.actual_thickness_mm) / 25.4;
       const cr = corrosionRate(point, input);
-      const requiredMM = numberValue(point.required_thickness_mm) > 0 ? numberValue(point.required_thickness_mm) : requiredIn * 25.4;
-      const rl = cr > 0 ? capRemainingLife(Math.max((numberValue(point.actual_thickness_mm) - requiredMM) / cr, 0)) : 20;
+      const appraisalRequiredIn = index > 0 ? roundToPlaces(requiredIn, 3) : requiredIn;
+      const requiredMM = numberValue(point.required_thickness_mm) > 0 ? numberValue(point.required_thickness_mm) : appraisalRequiredIn * 25.4;
+      const rl = cr > 0 ? capRemainingLife((numberValue(point.actual_thickness_mm) - requiredMM) / cr) : 0;
       const hs = actualIn > 0 ? (numberValue(input.internal_design_pressure_psi) * numberValue(input.outside_diameter_in)) / (2 * actualIn) : 0;
       const maop = maopPsi(input, actualIn);
+      const allowableStress = allowableStressPsi(input);
       return {
         inspection_point: point.inspection_point,
         nominal_thickness_mm: point.nominal_thickness_mm,
-        required_thickness_mm: requiredMM,
+        required_thickness_mm: requiredIn * 25.4,
         minimum_thickness_mm: requiredMM,
         actual_thickness_mm: point.actual_thickness_mm,
         remaining_thickness_mm: Math.max(numberValue(point.actual_thickness_mm) - requiredMM, 0),
@@ -860,8 +1000,8 @@ $(function () {
         remaining_life_years: rl,
         hoop_stress_psi: hs,
         maop_psi: maop,
-        thickness_status: actualIn > requiredIn ? "ACCEPTABLE" : "NOT ACCEPTABLE",
-        hoop_stress_status: hs < numberValue(input.smys_psi) ? "ACCEPTABLE" : "NOT ACCEPTABLE",
+        thickness_status: actualIn > appraisalRequiredIn ? "ACCEPTABLE" : "NOT ACCEPTABLE",
+        hoop_stress_status: hs <= allowableStress ? "ACCEPTABLE" : "NOT ACCEPTABLE",
         maop_status: maop > numberValue(input.internal_design_pressure_psi) ? "ACCEPTABLE" : "NOT ACCEPTABLE",
       };
     });
@@ -885,10 +1025,10 @@ $(function () {
     const tpdResult = scoreThirdPartyDamageJS(risk);
     const chemicalResult = scoreChemicalDamageJS();
 
-    const dmResults = [externalResult, coatingResult, tpdResult, internalResult, localizedResult, erosionResult, erosionCorrosionResult, crackingResult, sccResult, fatigueResult, chemicalResult];
+    const dmResults = [externalResult, coatingResult, tpdResult, internalResult, localizedResult, erosionResult, erosionCorrosionResult, crackingResult, sccResult, fatigueResult, chemicalResult].map(annotatePipelineDMResult);
 
     const governingDM = dmResults.reduce((best, dm) => dm.score > best.score ? dm : best, dmResults[0]);
-    const governingScore = governingDM.score || 1e-10; // avoid zero PoF for display
+    const governingScore = governingDM.score || 0;
 
     const fms = Math.pow(10, (-0.02 * ((numberValue(risk.management_system_score) / 1000) * 100)) + 1);
     const pofValue = numberValue(risk.generic_failure_frequency) * governingScore * fms;
@@ -929,6 +1069,7 @@ $(function () {
       recommendation_groups: groups,
       recommendation_source: "Realtime browser preview; backend recalculates on save.",
       recommendation_rule_name: "pipeline-js-preview-v2",
+      recommendation_confidence: "Low",
       recommendation: [...groups.immediate_actions, ...groups.inspection_monitoring, ...groups.long_term_mitigation].join(" "),
     };
   }
@@ -967,8 +1108,7 @@ $(function () {
   }
 
   function updateSaveState() {
-    const canSave = !!currentResult && !resultIsStale;
-    $("#savePipelineDraft").prop("disabled", !canSave);
+    $("#savePipelineDraft").prop("disabled", isSavingAssessment);
   }
 
   function calculationSignature(payload) {
@@ -1030,13 +1170,31 @@ $(function () {
       }
     });
 
+    const rowWidthRaw = String($("[name='right_of_way']").val() || "").trim();
+    const rowWidth = parseLocalizedNumber(rowWidthRaw);
+    if (rowWidthRaw && (rowWidthRaw.includes("-") || !Number.isFinite(rowWidth) || rowWidth <= 0)) {
+      setFieldError($("[name='right_of_way']"), "Right of Way width must be a single positive number.");
+      valid = false;
+    }
+
     const chloride = parseInt($("input[name='chloride_content']").val(), 10);
     if (!Number.isFinite(chloride) || chloride < 0 || chloride > 5) {
       setFieldError($("input[name='chloride_content']"), "Chloride content must be between 0 and 5.");
       valid = false;
     }
 
+    let validPointCount = 0;
     $("#pipelinePointsTable tbody tr").each(function () {
+      const pointName = String($(this).find("[name='inspection_point']").val() || "").trim();
+      const nominal = numberValue($(this).find("[name='point_nominal_thickness_mm']").val());
+      const actual = numberValue($(this).find("[name='point_actual_thickness_mm']").val());
+      const measuredValue = String($(this).find("[name='measured_year']").val() || "");
+      if (!pointName || nominal <= 0 || actual <= 0 || !measuredValue) return;
+      validPointCount += 1;
+      if (actual > nominal) {
+        setFieldError($(this).find("[name='point_actual_thickness_mm']"), "Actual thickness cannot exceed nominal thickness.");
+        valid = false;
+      }
       const $measured = $(this).find("[name='measured_year']");
       const measured = parseMonthYearToFloatJS($measured.val());
       const used = parseMonthYearToFloatJS($("[name='year_used']").val() || $("[name='year_built']").val());
@@ -1045,6 +1203,10 @@ $(function () {
         valid = false;
       }
     });
+    if (!validPointCount) {
+      setFieldError($("#pipelinePointsTable tbody tr:first [name='inspection_point']"), "At least one complete inspection point row is required.");
+      valid = false;
+    }
 
     if (!valid) focusFirstInvalid();
     return valid;
@@ -1143,7 +1305,8 @@ $(function () {
     if (!trace.length) return '<tr><td colspan="4" class="text-center text-muted py-4">No calculation details returned.</td></tr>';
     return trace.map((item) => {
       const inputs = item.inputs ? Object.entries(item.inputs).map(([key, value]) => `${key}: ${formatTraceValue(value)}`).join("<br>") : "-";
-      return `<tr><td>${escapeHtml(item.formula_name || "-")}</td><td>${escapeHtml(item.excel_ref || "-")}</td><td class="text-wrap" style="min-width:320px;"><div>${escapeHtml(item.expression || "-")}</div><div class="text-muted small mt-1">${inputs}</div></td><td>${escapeHtml(formatTraceValue(item.output))}</td></tr>`;
+      const metadata = [item.source_standard, item.confidence_level, item.rule_status].filter(Boolean).join(" | ");
+      return `<tr><td>${escapeHtml(item.formula_name || "-")}</td><td>${escapeHtml(item.excel_ref || "-")}</td><td class="text-wrap" style="min-width:320px;"><div>${escapeHtml(item.expression || "-")}</div><div class="text-muted small mt-1">${inputs}</div>${metadata ? `<div class="text-primary small mt-1">${escapeHtml(metadata)}</div>` : ""}</td><td>${escapeHtml(formatTraceValue(item.output))}</td></tr>`;
     }).join("");
   }
 
@@ -1212,8 +1375,24 @@ $(function () {
     const smys = numberValue(input.smys_psi);
     if (smys <= 0) return 0;
     const code = normalizeApplicableCode(input.applicable_code);
-    if (code.includes("B31.3")) return Math.min((smys * 2) / 3, 20000);
+    if (code.includes("B31.3")) {
+      const masterStress = selectedMaterialAllowableStress();
+      return masterStress > 0 ? masterStress : Math.min((smys * 2) / 3, 20000);
+    }
     return smys;
+  }
+
+  function selectedMaterialAllowableStress() {
+    const selected = $("#materialSpecSelect option:selected");
+    return numberValue(selected.data("allowable-stress"));
+  }
+
+  function applySelectedPipelineMaterial() {
+    const selected = $("#materialSpecSelect option:selected");
+    const smys = numberValue(selected.data("smys"));
+    if (smys > 0) {
+      $("[name='smys_psi']").val(fmt(smys));
+    }
   }
 
   function syncApplicableCodeAndMaterialStress(forceServiceCode) {
@@ -1233,7 +1412,7 @@ $(function () {
       isProgrammaticUpdate = false;
     }
     const source = nextCode.includes("B31.3")
-      ? "Derived as min(2/3 x SMYS, 20,000 psi) for B31.3 allowable stress."
+      ? (selectedMaterialAllowableStress() > 0 ? "Allowable stress S is sourced from Pipeline Material Master." : "TODO_ENGINEERING_CONFIRMATION: no material-master allowable stress selected; fallback uses legacy min(2/3 x SMYS, 20,000 psi).")
       : "Derived from SMYS for B31.4/B31.8 pipeline formulas.";
     $("#pipelineMaterialStressSource").text(source);
   }
@@ -1333,11 +1512,11 @@ $(function () {
       h2o_content: numberValue($("input[name='h2o_content']").val()),
       chloride_content: parseInt($("input[name='chloride_content']").val(), 10) || 0,
       flow_rate: numberValue($("input[name='flow_rate']").val()),
-      base_tpd_rate: numberValue($("input[name='base_tpd_rate']").val()),
-      base_external_corr_rate: numberValue($("input[name='base_external_corr_rate']").val()),
-      base_internal_corr_rate: numberValue($("input[name='base_internal_corr_rate']").val()),
-      management_system_score: numberValue($("input[name='management_system_score']").val()),
-      generic_failure_frequency: numberValue($("input[name='generic_failure_frequency']").val()),
+      base_tpd_rate: numberValue($("[name='base_tpd_rate']").val()),
+      base_external_corr_rate: numberValue($("[name='base_external_corr_rate']").val()),
+      base_internal_corr_rate: numberValue($("[name='base_internal_corr_rate']").val()),
+      management_system_score: numberValue($("[name='management_system_score']").val()),
+      generic_failure_frequency: numberValue($("[name='generic_failure_frequency']").val()),
       operating_pressure_psi: numberValue($("input[name='operating_pressure_psi']").val()),
       coating_damage_level: $("[name='coating_damage_level']").val(),
       insulation_damage_level: $("[name='insulation_damage_level']").val(),
@@ -1386,6 +1565,19 @@ $(function () {
     return Math.min(numberValue(value), 20);
   }
 
+  function roundToPlaces(value, places) {
+    const factorValue = Math.pow(10, places);
+    return Math.round(numberValue(value) * factorValue) / factorValue;
+  }
+
+  function allowableStressPsi(input) {
+    const code = normalizeApplicableCode(input.applicable_code);
+    if (code.includes("B31.3")) {
+      return derivedMaterialStress(input) * (numberValue(input.quality_factor) || 1) * (numberValue(input.weld_joint_strength_factor) || 1);
+    }
+    return numberValue(input.smys_psi) * (numberValue(input.design_factor) || 0.72) * (numberValue(input.quality_factor) || 1) * (numberValue(input.temperature_derating_factor) || 1);
+  }
+
   function maopPsi(input, actualIn) {
     if (actualIn <= 0 || numberValue(input.outside_diameter_in) <= 0) return 0;
     const code = normalizeApplicableCode(input.applicable_code);
@@ -1426,6 +1618,11 @@ $(function () {
   }
 
   function methodEffectivity(method) {
+    const $option = $(".pipeline-inspection-method option").filter(function () {
+      return $(this).val() === method;
+    }).first();
+    const configured = $option.data("effectivity");
+    if (configured) return configured;
     const text = String(method || "").toLowerCase();
     if (!text || text === "none") return "None";
     if (text.includes("vie") || text.includes("direct") || text.includes("mpt") || text.includes("dpt")) return "High";
@@ -1441,16 +1638,13 @@ $(function () {
   }
 
   function defaultNonIntrusiveMethod(code) {
-    if (["external_corrosion", "coating_degradation"].includes(code)) return "Visual + CP / Coating Survey";
-    if (code === "third_party_mechanical_damage") return "ROW Patrol + Visual Survey";
-    if (code === "scc") return "Shear Wave Ultrasonic Testing";
-    return "Wall Thickness measurement by UT";
+    const $select = $(`.pipeline-inspection-method[data-dm-code='${code}'][data-scope='nonintrusive']`);
+    return $select.val() || $select.find("option:first").val() || "None";
   }
 
   function defaultIntrusiveMethod(code) {
-    if (code === "scc") return "Wet Fluorescent MPT / DPT";
-    if (code === "third_party_mechanical_damage") return "Direct Examination";
-    return "VIE + Wall Thickness measurement by UT";
+    const $select = $(`.pipeline-inspection-method[data-dm-code='${code}'][data-scope='intrusive']`);
+    return $select.val() || $select.find("option:first").val() || "None";
   }
 
   function pofCategory(value) {
@@ -1512,7 +1706,13 @@ $(function () {
   function fmt(value) {
     const numeric = parseLocalizedNumber(value);
     if (!Number.isFinite(numeric)) return value || "-";
-    return numeric.toLocaleString("id-ID", { useGrouping: false, maximumFractionDigits: 6 });
+    return numeric.toLocaleString("id-ID", { useGrouping: false, minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function fmtRate(value) {
+    const numeric = parseLocalizedNumber(value);
+    if (!Number.isFinite(numeric)) return value || "-";
+    return numeric.toLocaleString("id-ID", { useGrouping: false, minimumFractionDigits: 4, maximumFractionDigits: 4 });
   }
 
   function parseLocalizedNumber(value) {

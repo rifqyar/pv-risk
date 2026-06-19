@@ -3,10 +3,15 @@ package controller
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"html"
 	"net/http"
+	"net/url"
 	"pv-risk/config"
 	"pv-risk/models"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,11 +24,9 @@ func PipelineController() *NewPipelineController {
 }
 
 func (ctrl *NewPipelineController) ShowForm(c *gin.Context) {
-	var db = config.DB
-	material, err := models.GetMaterial(db)
-
+	material, methods, err := pipelineMasterDataForForm()
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Error fetching pipeline material specs: %v", err)
+		c.String(http.StatusInternalServerError, "Error fetching pipeline master data: %v", err)
 		return
 	}
 
@@ -31,6 +34,9 @@ func (ctrl *NewPipelineController) ShowForm(c *gin.Context) {
 		"ActiveMenu":                    "pipeline-oil-form",
 		"Mode":                          "create",
 		"Material":                      material,
+		"PipelineInspectionMethods":     methods,
+		"PipelineNonIntrusiveMethods":   models.PipelineInspectionMethodsByScope(methods, "nonintrusive"),
+		"PipelineIntrusiveMethods":      models.PipelineInspectionMethodsByScope(methods, "intrusive"),
 		"Input":                         pipelineOilDefaultInput(),
 		"PipelineDamageMechanismGroups": models.PipelineDamageMechanismGroups(),
 		"PipelineDamageMechanismSource": models.PipelineDamageMechanismSource,
@@ -83,8 +89,36 @@ func (ctrl *NewPipelineController) ViewAssessmentDetail(c *gin.Context) {
 		return
 	}
 	c.HTML(http.StatusOK, "pipeline_assessment_detail.html", gin.H{
-		"ActiveMenu": "pipeline-oil-detail",
-		"Assessment": assessment,
+		"ActiveMenu":          "pipeline-oil-detail",
+		"Assessment":          assessment,
+		"Versions":            mustPipelineVersions(service, id),
+		"AuditEvents":         mustPipelineAuditEvents(service, id),
+		"StandardsReferences": models.PipelineStandardsReferences(),
+	})
+}
+
+func (ctrl *NewPipelineController) CompareAssessment(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.String(http.StatusBadRequest, "Invalid assessment id")
+		return
+	}
+	service := models.NewPipelineOilService(config.DB)
+	assessment, err := service.GetAssessmentDetail(id)
+	if err != nil {
+		c.String(http.StatusNotFound, "Pipeline assessment not found")
+		return
+	}
+	comparison, err := service.GetAssessmentComparison(id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.HTML(http.StatusOK, "pipeline_assessment_compare.html", gin.H{
+		"ActiveMenu":  "pipeline-oil-compare",
+		"Assessment":  assessment,
+		"Comparison":  comparison,
+		"AuditEvents": mustPipelineAuditEvents(service, id),
 	})
 }
 
@@ -94,10 +128,9 @@ func (ctrl *NewPipelineController) EditAssessment(c *gin.Context) {
 		c.String(http.StatusBadRequest, "Invalid assessment id")
 		return
 	}
-	var db = config.DB
-	material, err := models.GetMaterial(db)
+	material, methods, err := pipelineMasterDataForForm()
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Error fetching pipeline material specs: %v", err)
+		c.String(http.StatusInternalServerError, "Error fetching pipeline master data: %v", err)
 		return
 	}
 	service := models.NewPipelineOilService(config.DB)
@@ -116,6 +149,9 @@ func (ctrl *NewPipelineController) EditAssessment(c *gin.Context) {
 		"ActiveMenu":                    "pipeline-oil-form",
 		"Mode":                          "edit",
 		"Material":                      material,
+		"PipelineInspectionMethods":     methods,
+		"PipelineNonIntrusiveMethods":   models.PipelineInspectionMethodsByScope(methods, "nonintrusive"),
+		"PipelineIntrusiveMethods":      models.PipelineInspectionMethodsByScope(methods, "intrusive"),
 		"Assessment":                    assessment,
 		"Input":                         input,
 		"AssessmentID":                  id,
@@ -192,11 +228,79 @@ func (ctrl *NewPipelineController) PreviewAssessment(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Pipeline calculation ready for review.", "result": result})
 }
 
-func (ctrl *NewPipelineController) ShowGasComingSoon(c *gin.Context) {
-	var db = config.DB
-	material, err := models.GetMaterial(db)
+func (ctrl *NewPipelineController) ApproveAssessment(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Error fetching pipeline material specs: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid assessment id"})
+		return
+	}
+	var payload struct {
+		Actor string `json:"actor"`
+		Note  string `json:"note"`
+	}
+	_ = c.ShouldBindJSON(&payload)
+	service := models.NewPipelineOilService(config.DB)
+	assessment, err := service.GetAssessmentDetail(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Pipeline assessment not found"})
+		return
+	}
+	if strings.TrimSpace(payload.Actor) == "" {
+		payload.Actor = assessment.Input.AssessmentBy
+	}
+	if err = service.RecordApproval(id, payload.Actor, payload.Note); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Pipeline approval recorded."})
+}
+
+func (ctrl *NewPipelineController) AuditPDFExport(c *gin.Context) {
+	ctrl.recordExport(c, "PDF")
+}
+
+func (ctrl *NewPipelineController) ExportExcel(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.String(http.StatusBadRequest, "Invalid assessment id")
+		return
+	}
+	service := models.NewPipelineOilService(config.DB)
+	assessment, err := service.GetAssessmentDetail(id)
+	if err != nil {
+		c.String(http.StatusNotFound, "Pipeline assessment not found")
+		return
+	}
+	_ = service.RecordExport(id, assessment.Input.AssessmentBy, "EXCEL")
+	filename := fmt.Sprintf("Pipeline_Assessment_%s.xls", safeExportName(assessment.Input.ReportNo))
+	c.Header("Content-Type", "application/vnd.ms-excel; charset=utf-8")
+	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
+	c.String(http.StatusOK, buildPipelineExcelHTML(assessment, mustPipelineAuditEvents(service, id), models.PipelineStandardsReferences()))
+}
+
+func (ctrl *NewPipelineController) recordExport(c *gin.Context, format string) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid assessment id"})
+		return
+	}
+	service := models.NewPipelineOilService(config.DB)
+	assessment, err := service.GetAssessmentDetail(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Pipeline assessment not found"})
+		return
+	}
+	if err = service.RecordExport(id, assessment.Input.AssessmentBy, format); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Export audit recorded."})
+}
+
+func (ctrl *NewPipelineController) ShowGasComingSoon(c *gin.Context) {
+	material, methods, err := pipelineMasterDataForForm()
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error fetching pipeline master data: %v", err)
 		return
 	}
 	input := pipelineGasDefaultInput()
@@ -204,10 +308,101 @@ func (ctrl *NewPipelineController) ShowGasComingSoon(c *gin.Context) {
 		"ActiveMenu":                    "pipeline-oil-form",
 		"Mode":                          "create",
 		"Material":                      material,
+		"PipelineInspectionMethods":     methods,
+		"PipelineNonIntrusiveMethods":   models.PipelineInspectionMethodsByScope(methods, "nonintrusive"),
+		"PipelineIntrusiveMethods":      models.PipelineInspectionMethodsByScope(methods, "intrusive"),
 		"Input":                         input,
 		"PipelineDamageMechanismGroups": models.PipelineDamageMechanismGroups(),
 		"PipelineDamageMechanismSource": models.PipelineDamageMechanismSource,
 	})
+}
+
+func (ctrl *NewPipelineController) ShowPipelineMasterData(c *gin.Context) {
+	materials, err := models.GetPipelineMaterials(config.DB, false)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error fetching pipeline materials: %v", err)
+		return
+	}
+	methods, err := models.GetPipelineInspectionMethods(config.DB, false)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error fetching pipeline inspection methods: %v", err)
+		return
+	}
+	c.HTML(http.StatusOK, "pipeline_master_data.html", gin.H{
+		"ActiveMenu":        "pipeline-master-data",
+		"Materials":         materials,
+		"InspectionMethods": methods,
+		"QueryStatus":       c.Query("status"),
+		"QueryMessage":      c.Query("message"),
+	})
+}
+
+func (ctrl *NewPipelineController) SavePipelineMaterial(c *gin.Context) {
+	id, _ := strconv.Atoi(c.PostForm("id"))
+	smys, _ := strconv.ParseFloat(strings.ReplaceAll(c.PostForm("smys"), ",", "."), 64)
+	allowableStress, _ := strconv.ParseFloat(strings.ReplaceAll(c.PostForm("allowable_stress"), ",", "."), 64)
+	err := models.SavePipelineMaterial(config.DB, models.PipelineMaterial{
+		ID:                    id,
+		Name:                  strings.TrimSpace(c.PostForm("name")),
+		MaterialSpecification: strings.TrimSpace(c.PostForm("material_specification")),
+		Grade:                 strings.TrimSpace(c.PostForm("grade")),
+		SMYS:                  smys,
+		AllowableStress:       allowableStress,
+		Notes:                 strings.TrimSpace(c.PostForm("notes")),
+	})
+	redirectPipelineMasterData(c, err)
+}
+
+func (ctrl *NewPipelineController) DeactivatePipelineMaterial(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err == nil {
+		err = models.DeactivatePipelineMaterial(config.DB, id)
+	}
+	redirectPipelineMasterData(c, err)
+}
+
+func (ctrl *NewPipelineController) SavePipelineInspectionMethod(c *gin.Context) {
+	id, _ := strconv.Atoi(c.PostForm("id"))
+	err := models.SavePipelineInspectionMethod(config.DB, models.PipelineInspectionMethod{
+		ID:          id,
+		Name:        strings.TrimSpace(c.PostForm("name")),
+		Scope:       c.PostForm("scope"),
+		Effectivity: c.PostForm("effectivity"),
+		Notes:       strings.TrimSpace(c.PostForm("notes")),
+	})
+	redirectPipelineMasterData(c, err)
+}
+
+func (ctrl *NewPipelineController) DeactivatePipelineInspectionMethod(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err == nil {
+		err = models.DeactivatePipelineInspectionMethod(config.DB, id)
+	}
+	redirectPipelineMasterData(c, err)
+}
+
+func pipelineMasterDataForForm() ([]models.PipelineMaterial, []models.PipelineInspectionMethod, error) {
+	materials, err := models.GetMaterial(config.DB)
+	if err != nil {
+		return nil, nil, err
+	}
+	methods, err := models.GetPipelineInspectionMethods(config.DB, true)
+	if err != nil {
+		return nil, nil, err
+	}
+	return materials, methods, nil
+}
+
+func redirectPipelineMasterData(c *gin.Context, err error) {
+	values := url.Values{}
+	if err != nil {
+		values.Set("status", "error")
+		values.Set("message", err.Error())
+		c.Redirect(http.StatusSeeOther, "/assessment-pipeline/master-data?"+values.Encode())
+		return
+	}
+	values.Set("status", "success")
+	c.Redirect(http.StatusSeeOther, "/assessment-pipeline/master-data?"+values.Encode())
 }
 
 func pipelineGasDefaultInput() models.PipelineOilInput {
@@ -224,7 +419,7 @@ func pipelineGasDefaultInput() models.PipelineOilInput {
 		Service:                   "Natural gas",
 		PipeSize:                  "323,85 mm (OD) x 10,31 mm (T) x 9966 m (L)",
 		PipeLengthM:               9966,
-		MaterialSpecification:     "API 5L X52",
+		MaterialSpecification:     "API 5L X 52",
 		FlangeMaterialSpec:        "-",
 		SMYSPsi:                   52000,
 		InternalDesignPressurePsi: 1350,
@@ -234,7 +429,7 @@ func pipelineGasDefaultInput() models.PipelineOilInput {
 		CoatingType:               "3 LPE & Painting",
 		CorrosionControl:          "SACP",
 		AllowanceIn:               0,
-		RightOfWay:                "6 - 9",
+		RightOfWay:                "10",
 		SafetyDevice:              "3 Unit Ball Valve, 4 Unit Gate Valve, 2 Unit Check Valve, & 1 Unit PSV",
 		AreaClassification:        "2",
 		InspectionPeriod:          "March 2025",
@@ -274,8 +469,8 @@ func pipelineGasDefaultInput() models.PipelineOilInput {
 			CPPotentialMV:               -900,
 			PHLevel:                     "6.5-8.5",
 			FluidCorrosivityMPY:         "2-5 mpy",
-			InhibitorEffectiveness:       "None",
-			BiocideTreatment:             "Not Required",
+			InhibitorEffectiveness:      "None",
+			BiocideTreatment:            "Not Required",
 			CorrosionMonitoringResult:   "Not Applicable",
 			H2SPpm:                      "<50 ppm",
 			PWHTStatus:                  "Unknown",
@@ -319,7 +514,7 @@ func pipelineOilDefaultInput() models.PipelineOilInput {
 		Service:                   "Oil",
 		PipeSize:                  "219,08 mm (OD) x 8,18 mm (T) x 9966 m (L)",
 		PipeLengthM:               9966,
-		MaterialSpecification:     "API 5L Gr.B",
+		MaterialSpecification:     "API 5L Gr B",
 		FlangeMaterialSpec:        "-",
 		SMYSPsi:                   35000,
 		InternalDesignPressurePsi: 1000,
@@ -329,7 +524,7 @@ func pipelineOilDefaultInput() models.PipelineOilInput {
 		CoatingType:               "3LPE & Painting",
 		CorrosionControl:          "-",
 		AllowanceIn:               0,
-		RightOfWay:                "6 - 9",
+		RightOfWay:                "10",
 		SafetyDevice:              "1 Unit Ball Valve & 3 Unit Check Valve",
 		AreaClassification:        "-",
 		InspectionPeriod:          "March 2025",
@@ -370,8 +565,8 @@ func pipelineOilDefaultInput() models.PipelineOilInput {
 			CPPotentialMV:               -900,
 			PHLevel:                     "6.5-8.5",
 			FluidCorrosivityMPY:         "2-5 mpy",
-			InhibitorEffectiveness:       "None",
-			BiocideTreatment:             "Not Required",
+			InhibitorEffectiveness:      "None",
+			BiocideTreatment:            "Not Required",
 			CorrosionMonitoringResult:   "Not Applicable",
 			H2SPpm:                      "<50 ppm",
 			PWHTStatus:                  "Unknown",
@@ -412,4 +607,96 @@ func statusFromPipelineError(err error) int {
 		return http.StatusBadRequest
 	}
 	return http.StatusInternalServerError
+}
+
+func mustPipelineVersions(service *models.PipelineOilService, id int) []models.PipelineOilAssessmentVersion {
+	versions, err := service.GetAssessmentVersions(id)
+	if err != nil {
+		return nil
+	}
+	return versions
+}
+
+func mustPipelineAuditEvents(service *models.PipelineOilService, id int) []models.PipelineOilAuditEvent {
+	events, err := service.GetAssessmentAuditEvents(id)
+	if err != nil {
+		return nil
+	}
+	return events
+}
+
+func safeExportName(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		value = "pipeline-assessment"
+	}
+	replacer := strings.NewReplacer("\\", "_", "/", "_", ":", "_", "*", "_", "?", "_", "\"", "_", "<", "_", ">", "_", "|", "_", " ", "_")
+	return replacer.Replace(value)
+}
+
+func buildPipelineExcelHTML(assessment *models.PipelineOilAssessment, auditEvents []models.PipelineOilAuditEvent, standards []string) string {
+	var b strings.Builder
+	b.WriteString("<html><head><meta charset=\"utf-8\"></head><body>")
+	b.WriteString("<h2>Pipeline Risk Assessment Report</h2>")
+	b.WriteString("<table border=\"1\">")
+	writeExcelRow(&b, "Tag Number", assessment.Input.ReportNo)
+	writeExcelRow(&b, "Pipeline Name", assessment.Input.LineIdentification)
+	writeExcelRow(&b, "Location", assessment.Input.Location)
+	writeExcelRow(&b, "Fluid Type", assessment.Input.Service)
+	writeExcelRow(&b, "Applicable Code", assessment.Input.ApplicableCode)
+	writeExcelRow(&b, "Assessment Status", string(assessment.Status))
+	writeExcelRow(&b, "Formula Version", assessment.FormulaVersion)
+	writeExcelRow(&b, "Created At", assessment.CreatedAt)
+	writeExcelRow(&b, "Updated At", assessment.UpdatedAt)
+	b.WriteString("</table>")
+
+	if assessment.Result != nil {
+		b.WriteString("<h3>Risk Result</h3><table border=\"1\">")
+		writeExcelRow(&b, "PoF", assessment.Result.PoF)
+		writeExcelRow(&b, "PoF Value", fmt.Sprintf("%.8g", assessment.Result.PoFValue))
+		writeExcelRow(&b, "CoF", assessment.Result.CoF)
+		writeExcelRow(&b, "CoF Value", fmt.Sprintf("%.8g", assessment.Result.CoFValue))
+		writeExcelRow(&b, "Risk Code", assessment.Result.FinalRiskCode)
+		writeExcelRow(&b, "Risk Level", assessment.Result.FinalRiskLevel)
+		writeExcelRow(&b, "Governing DM", assessment.Result.GoverningDamageMechanism)
+		writeExcelRow(&b, "Recommendation Source", assessment.Result.RecommendationSource)
+		writeExcelRow(&b, "Recommendation Rule", assessment.Result.RecommendationRuleName)
+		writeExcelRow(&b, "Recommendation Confidence", assessment.Result.RecommendationConfidence)
+		b.WriteString("</table>")
+
+		b.WriteString("<h3>Damage Mechanism Results</h3><table border=\"1\"><tr><th>Category</th><th>Mechanism</th><th>Severity</th><th>Score</th><th>Source</th><th>Confidence</th><th>Status</th></tr>")
+		for _, dm := range assessment.Result.DamageMechanismResults {
+			b.WriteString("<tr><td>" + html.EscapeString(dm.Category) + "</td><td>" + html.EscapeString(dm.Label) + "</td><td>" + html.EscapeString(dm.Severity) + "</td><td>" + fmt.Sprintf("%.2f", dm.Score) + "</td><td>" + html.EscapeString(dm.SourceStandard) + "</td><td>" + html.EscapeString(dm.ConfidenceLevel) + "</td><td>" + html.EscapeString(dm.RuleStatus) + "</td></tr>")
+		}
+		b.WriteString("</table>")
+
+		b.WriteString("<h3>Formula Trace</h3><table border=\"1\"><tr><th>Formula</th><th>Reference</th><th>Expression</th><th>Output</th><th>Source</th><th>Confidence</th><th>Status</th></tr>")
+		for _, trace := range assessment.Result.FormulaTrace {
+			b.WriteString("<tr><td>" + html.EscapeString(trace.FormulaName) + "</td><td>" + html.EscapeString(trace.ExcelRef) + "</td><td>" + html.EscapeString(trace.Expression) + "</td><td>" + html.EscapeString(fmt.Sprint(trace.Output)) + "</td><td>" + html.EscapeString(trace.SourceStandard) + "</td><td>" + html.EscapeString(trace.ConfidenceLevel) + "</td><td>" + html.EscapeString(trace.RuleStatus) + "</td></tr>")
+		}
+		b.WriteString("</table>")
+	}
+
+	b.WriteString("<h3>Standards References</h3><table border=\"1\">")
+	for _, standard := range standards {
+		writeExcelRow(&b, "Reference", standard)
+	}
+	b.WriteString("</table>")
+
+	b.WriteString("<h3>Audit Information</h3><table border=\"1\"><tr><th>Time</th><th>Action</th><th>User</th><th>Note</th></tr>")
+	for _, event := range auditEvents {
+		b.WriteString("<tr><td>" + html.EscapeString(event.CreatedAt) + "</td><td>" + html.EscapeString(event.Action) + "</td><td>" + html.EscapeString(event.Actor) + "</td><td>" + html.EscapeString(event.Note) + "</td></tr>")
+	}
+	b.WriteString("</table>")
+	b.WriteString("<p>Exported at " + html.EscapeString(time.Now().Format(time.RFC3339)) + "</p>")
+	b.WriteString("</body></html>")
+	return b.String()
+}
+
+func writeExcelRow(b *strings.Builder, label, value string) {
+	b.WriteString("<tr><th>")
+	b.WriteString(html.EscapeString(label))
+	b.WriteString("</th><td>")
+	b.WriteString(html.EscapeString(value))
+	b.WriteString("</td></tr>")
 }

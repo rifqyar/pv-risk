@@ -1,0 +1,133 @@
+{{ define "pipeline_master_data_content" }}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center py-3 mb-4">
+      <h4 class="mb-0"><span class="text-muted fw-light">Risk Assessment / Pipeline /</span> Master Data</h4>
+      <a href="/assessment-pipeline/form" class="btn btn-outline-secondary"><i class="mdi mdi-arrow-left me-1"></i> Pipeline Form</a>
+    </div>
+
+    {{ if eq .QueryStatus "success" }}
+    <div class="alert alert-success">Pipeline master data saved.</div>
+    {{ end }}
+    {{ if eq .QueryStatus "error" }}
+    <div class="alert alert-danger">{{ .QueryMessage }}</div>
+    {{ end }}
+
+    <div class="nav-align-top">
+      <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#pipeline-material-master" aria-controls="pipeline-material-master" aria-selected="true">
+            <i class="mdi mdi-pipe-wrench me-1"></i> Materials
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#pipeline-inspection-master" aria-controls="pipeline-inspection-master" aria-selected="false">
+            <i class="mdi mdi-clipboard-search-outline me-1"></i> Inspection Methods
+          </button>
+        </li>
+      </ul>
+      <div class="tab-content p-0 bg-transparent shadow-none">
+        <div class="tab-pane fade show active" id="pipeline-material-master" role="tabpanel">
+          <div class="card shadow-sm">
+          <div class="card-header">
+            <h5 class="mb-1">Pipeline Material Master</h5>
+            <p class="text-muted small mb-0">Material specification, SMYS, allowable stress, grade, and notes for pipeline calculations.</p>
+          </div>
+          <div class="card-body">
+            <form action="/assessment-pipeline/master-data/material/save" method="POST" class="row g-3 mb-4">
+              <input type="hidden" name="id" id="pipelineMaterialId">
+              <div class="col-md-3"><label class="form-label">Name</label><input class="form-control" name="name" id="pipelineMaterialName" required></div>
+              <div class="col-md-3"><label class="form-label">Specification</label><input class="form-control" name="material_specification" id="pipelineMaterialSpec"></div>
+              <div class="col-md-2"><label class="form-label">Grade</label><input class="form-control" name="grade" id="pipelineMaterialGrade"></div>
+              <div class="col-md-2"><label class="form-label">SMYS</label><input type="text" inputmode="decimal" class="form-control" name="smys" id="pipelineMaterialSMYS" required></div>
+              <div class="col-md-2"><label class="form-label">Allowable Stress</label><input type="text" inputmode="decimal" class="form-control" name="allowable_stress" id="pipelineMaterialAllowable"></div>
+              <div class="col-md-10"><label class="form-label">Notes</label><input class="form-control" name="notes" id="pipelineMaterialNotes"></div>
+              <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-primary w-100"><i class="mdi mdi-content-save-outline me-1"></i> Save</button></div>
+            </form>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle">
+                <thead><tr><th>Name</th><th>Grade</th><th>SMYS</th><th>Allowable Stress</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+                <tbody>
+                  {{ range .Materials }}
+                  <tr>
+                    <td><div class="fw-medium">{{ .Name }}</div><div class="text-muted small">{{ .MaterialSpecification }}</div></td>
+                    <td>{{ .Grade }}</td>
+                    <td>{{ .SMYS }}</td>
+                    <td>{{ .AllowableStress }}</td>
+                    <td>{{ if .IsActive }}<span class="badge bg-label-success">Active</span>{{ else }}<span class="badge bg-label-secondary">Inactive</span>{{ end }}</td>
+                    <td class="text-end">
+                      <button type="button" class="btn btn-sm btn-outline-primary edit-pipeline-material" data-id="{{ .ID }}" data-name="{{ .Name }}" data-spec="{{ .MaterialSpecification }}" data-grade="{{ .Grade }}" data-smys="{{ .SMYS }}" data-allowable="{{ .AllowableStress }}" data-notes="{{ .Notes }}"><i class="mdi mdi-pencil-outline"></i></button>
+                      {{ if .IsActive }}<form action="/assessment-pipeline/master-data/material/deactivate/{{ .ID }}" method="POST" class="d-inline"><button type="submit" class="btn btn-sm btn-outline-warning"><i class="mdi mdi-close-circle-outline"></i></button></form>{{ end }}
+                    </td>
+                  </tr>
+                  {{ end }}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="pipeline-inspection-master" role="tabpanel">
+          <div class="card shadow-sm">
+          <div class="card-header">
+            <h5 class="mb-1">Pipeline Inspection Method Master</h5>
+            <p class="text-muted small mb-0">Inspection method choices and effectivity used by damage-mechanism inspection planning.</p>
+          </div>
+          <div class="card-body">
+            <form action="/assessment-pipeline/master-data/inspection-method/save" method="POST" class="row g-3 mb-4">
+              <input type="hidden" name="id" id="pipelineMethodId">
+              <div class="col-md-4"><label class="form-label">Method</label><input class="form-control" name="name" id="pipelineMethodName" required></div>
+              <div class="col-md-2"><label class="form-label">Scope</label><select class="form-select" name="scope" id="pipelineMethodScope"><option value="nonintrusive">Non-Intrusive</option><option value="intrusive">Intrusive</option></select></div>
+              <div class="col-md-2"><label class="form-label">Effectivity</label><select class="form-select" name="effectivity" id="pipelineMethodEffectivity"><option>High</option><option>Medium</option><option>Low</option><option>None</option></select></div>
+              <div class="col-md-2"><label class="form-label">Notes</label><input class="form-control" name="notes" id="pipelineMethodNotes"></div>
+              <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-primary w-100"><i class="mdi mdi-content-save-outline me-1"></i> Save</button></div>
+            </form>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle">
+                <thead><tr><th>Method</th><th>Scope</th><th>Effectivity</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+                <tbody>
+                  {{ range .InspectionMethods }}
+                  <tr>
+                    <td><div class="fw-medium">{{ .Name }}</div><div class="text-muted small">{{ .Notes }}</div></td>
+                    <td>{{ .Scope }}</td>
+                    <td>{{ .Effectivity }}</td>
+                    <td>{{ if .IsActive }}<span class="badge bg-label-success">Active</span>{{ else }}<span class="badge bg-label-secondary">Inactive</span>{{ end }}</td>
+                    <td class="text-end">
+                      <button type="button" class="btn btn-sm btn-outline-primary edit-pipeline-method" data-id="{{ .ID }}" data-name="{{ .Name }}" data-scope="{{ .Scope }}" data-effectivity="{{ .Effectivity }}" data-notes="{{ .Notes }}"><i class="mdi mdi-pencil-outline"></i></button>
+                      {{ if .IsActive }}<form action="/assessment-pipeline/master-data/inspection-method/deactivate/{{ .ID }}" method="POST" class="d-inline"><button type="submit" class="btn btn-sm btn-outline-warning"><i class="mdi mdi-close-circle-outline"></i></button></form>{{ end }}
+                    </td>
+                  </tr>
+                  {{ end }}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+$(function () {
+  $(".edit-pipeline-material").on("click", function () {
+    $("#pipelineMaterialId").val($(this).data("id"));
+    $("#pipelineMaterialName").val($(this).data("name"));
+    $("#pipelineMaterialSpec").val($(this).data("spec"));
+    $("#pipelineMaterialGrade").val($(this).data("grade"));
+    $("#pipelineMaterialSMYS").val($(this).data("smys"));
+    $("#pipelineMaterialAllowable").val($(this).data("allowable"));
+    $("#pipelineMaterialNotes").val($(this).data("notes"));
+  });
+  $(".edit-pipeline-method").on("click", function () {
+    $("#pipelineMethodId").val($(this).data("id"));
+    $("#pipelineMethodName").val($(this).data("name"));
+    $("#pipelineMethodScope").val($(this).data("scope"));
+    $("#pipelineMethodEffectivity").val($(this).data("effectivity"));
+    $("#pipelineMethodNotes").val($(this).data("notes"));
+  });
+});
+</script>
+{{ end }}
+{{ template "layouts/master" . }}

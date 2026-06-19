@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pipeline Assessment Comparison</title>
+  <link rel="stylesheet" href="/static/vendor/fonts/materialdesignicons.css">
+  <link rel="stylesheet" href="/static/vendor/css/rtl/core.css">
+  <link rel="stylesheet" href="/static/vendor/css/rtl/theme-default.css">
+  <link rel="stylesheet" href="/static/css/demo.css">
+</head>
+<body>
+<div class="container-xxl py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+      <div>
+        <h4 class="fw-bold mb-1">Pipeline Assessment Comparison</h4>
+        <p class="text-muted mb-0 small">{{ .Assessment.Input.ReportNo }} | {{ .Assessment.Input.LineIdentification }}</p>
+      </div>
+      <div class="mt-3 mt-md-0 d-flex gap-2">
+        <a href="/assessment-pipeline/view/{{ .Assessment.ID }}" class="btn btn-outline-secondary"><i class="mdi mdi-arrow-left me-1"></i> Detail</a>
+      </div>
+    </div>
+
+    {{ if and .Comparison.CurrentVersion .Comparison.PreviousVersion }}
+    <div class="row g-4 mb-4">
+      <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-transparent border-bottom"><h6 class="mb-0 fw-bold">Previous Version v{{ .Comparison.PreviousVersion.VersionNumber }}</h6></div>
+          <div class="card-body small">
+            <div class="mb-2"><span class="text-muted">Created:</span> {{ .Comparison.PreviousVersion.CreatedAt }}</div>
+            <div class="mb-2"><span class="text-muted">By:</span> {{ .Comparison.PreviousVersion.CreatedBy }}</div>
+            <div class="mb-2"><span class="text-muted">Status:</span> {{ .Comparison.PreviousVersion.Status }}</div>
+            {{ if .Comparison.PreviousVersion.Result }}
+            <div class="mb-2"><span class="text-muted">Risk:</span> <strong>{{ .Comparison.PreviousVersion.Result.FinalRiskCode }} - {{ .Comparison.PreviousVersion.Result.FinalRiskLevel }}</strong></div>
+            <div class="mb-2"><span class="text-muted">Governing DM:</span> {{ .Comparison.PreviousVersion.Result.GoverningDamageMechanism }}</div>
+            {{ else }}
+            <div class="text-muted">No calculated result in this version.</div>
+            {{ end }}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-transparent border-bottom"><h6 class="mb-0 fw-bold">Current Version v{{ .Comparison.CurrentVersion.VersionNumber }}</h6></div>
+          <div class="card-body small">
+            <div class="mb-2"><span class="text-muted">Created:</span> {{ .Comparison.CurrentVersion.CreatedAt }}</div>
+            <div class="mb-2"><span class="text-muted">By:</span> {{ .Comparison.CurrentVersion.CreatedBy }}</div>
+            <div class="mb-2"><span class="text-muted">Status:</span> {{ .Comparison.CurrentVersion.Status }}</div>
+            {{ if .Comparison.CurrentVersion.Result }}
+            <div class="mb-2"><span class="text-muted">Risk:</span> <strong>{{ .Comparison.CurrentVersion.Result.FinalRiskCode }} - {{ .Comparison.CurrentVersion.Result.FinalRiskLevel }}</strong></div>
+            <div class="mb-2"><span class="text-muted">Governing DM:</span> {{ .Comparison.CurrentVersion.Result.GoverningDamageMechanism }}</div>
+            {{ else }}
+            <div class="text-muted">No calculated result in this version.</div>
+            {{ end }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-transparent border-bottom">
+        <h6 class="mb-0 fw-bold"><i class="mdi mdi-file-compare-outline me-2"></i>Changed Fields</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle mb-0">
+          <thead class="table-light"><tr><th class="ps-4">Field</th><th>Old Value</th><th>New Value</th></tr></thead>
+          <tbody>
+            {{ range .Comparison.Changes }}
+            <tr>
+              <td class="ps-4 fw-semibold text-wrap" style="min-width: 260px;">{{ .Field }}</td>
+              <td class="text-wrap" style="min-width: 260px;">{{ .OldValue }}</td>
+              <td class="text-wrap" style="min-width: 260px;">{{ .NewValue }}</td>
+            </tr>
+            {{ else }}
+            <tr><td colspan="3" class="text-center text-muted py-4">No field changes detected between the latest two versions.</td></tr>
+            {{ end }}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {{ else }}
+    <div class="card shadow-sm border-0">
+      <div class="card-body text-center py-5 text-muted">
+        <i class="mdi mdi-source-branch mdi-48px mb-2"></i>
+        <div class="fw-semibold mb-1">Comparison needs at least two versions.</div>
+        <div class="small">Create or recalculate another version to compare changes.</div>
+      </div>
+    </div>
+    {{ end }}
+</div>
+</body>
+</html>
