@@ -386,24 +386,57 @@
                             <label class="form-label">Soil Corrosivity Level</label>
                             <select class="form-select mb-3" name="soil_resistivity"><option value="<1000" {{ if eq .Input.RiskInput.SoilResistivity "<1000" }}selected{{ end }}>High corrosivity (&lt;1000 ohm-cm)</option><option value="1000-5000" {{ if eq .Input.RiskInput.SoilResistivity "1000-5000" }}selected{{ end }}>Medium (1000-5000 ohm-cm)</option><option value=">5000" {{ if eq .Input.RiskInput.SoilResistivity ">5000" }}selected{{ end }}>Low corrosivity (&gt;5000 ohm-cm)</option></select>
                             <label class="form-label">External Coating Condition</label>
-                            <select class="form-select mb-3" name="coating_condition"><option value="poor" {{ if eq .Input.RiskInput.CoatingCondition "poor" }}selected{{ end }}>Poor / failed</option><option value="fair" {{ if eq .Input.RiskInput.CoatingCondition "fair" }}selected{{ end }}>Fair</option><option value="good" {{ if eq .Input.RiskInput.CoatingCondition "good" }}selected{{ end }}>Good</option></select>
+                            <select class="form-select mb-3" name="coating_condition"><option value="Good" {{ if eq .Input.RiskInput.CoatingCondition "Good" }}selected{{ end }}>Good</option><option value="Damaged" {{ if eq .Input.RiskInput.CoatingCondition "Damaged" }}selected{{ end }}>Damaged</option><option value="Not Inspectable" {{ if eq .Input.RiskInput.CoatingCondition "Not Inspectable" }}selected{{ end }}>Not Inspectable</option><option value="Not Applicable" {{ if eq .Input.RiskInput.CoatingCondition "Not Applicable" }}selected{{ end }}>Not Applicable</option></select>
                             <label class="form-label">Cathodic Protection Status</label>
                             <select class="form-select mb-3" name="cp_status"><option value="failed" {{ if eq .Input.RiskInput.CPStatus "failed" }}selected{{ end }}>Failed / off</option><option value="borderline" {{ if eq .Input.RiskInput.CPStatus "borderline" }}selected{{ end }}>Borderline</option><option value="normal" {{ if eq .Input.RiskInput.CPStatus "normal" }}selected{{ end }}>Normal / compliant</option></select>
                             <label class="form-label">Cathodic Protection Potential</label>
                             <div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="cp_potential_mv" value="{{ .Input.RiskInput.CPPotentialMV }}" placeholder="-850"><span class="input-group-text">mV</span></div>
                           </div>
                           <div class="col-lg-4">
-                            <h6 class="fw-bold text-primary">Internal Corrosion</h6>
-                            <label class="form-label">Fluid Corrosivity Level</label>
-                            <select class="form-select mb-3" name="fluid_corrosivity"><option value="low" {{ if eq .Input.RiskInput.FluidCorrosivity "low" }}selected{{ end }}>Low</option><option value="medium" {{ if eq .Input.RiskInput.FluidCorrosivity "medium" }}selected{{ end }}>Medium</option><option value="high" {{ if eq .Input.RiskInput.FluidCorrosivity "high" }}selected{{ end }}>High</option></select>
-                            <label class="form-label">Water Content Level</label>
-                            <select class="form-select mb-3" name="water_content"><option value="low" {{ if eq .Input.RiskInput.WaterContent "low" }}selected{{ end }}>Low</option><option value="medium" {{ if eq .Input.RiskInput.WaterContent "medium" }}selected{{ end }}>Medium</option><option value="high" {{ if eq .Input.RiskInput.WaterContent "high" }}selected{{ end }}>High</option></select>
-                            <label class="form-label">CO2 / H2S Condition</label>
-                            <select class="form-select mb-3" name="co2_h2s_presence"><option value="none" {{ if eq .Input.RiskInput.CO2H2SPresence "none" }}selected{{ end }}>None</option><option value="present" {{ if eq .Input.RiskInput.CO2H2SPresence "present" }}selected{{ end }}>Present</option><option value="high" {{ if eq .Input.RiskInput.CO2H2SPresence "high" }}selected{{ end }}>High</option></select>
-                            <label class="form-label">MIC Condition</label>
-                            <select class="form-select mb-3" name="mic_risk"><option value="low" {{ if eq .Input.RiskInput.MICRisk "low" }}selected{{ end }}>Low</option><option value="medium" {{ if eq .Input.RiskInput.MICRisk "medium" }}selected{{ end }}>Medium</option><option value="high" {{ if eq .Input.RiskInput.MICRisk "high" }}selected{{ end }}>High</option></select>
-                            <label class="form-label">Wall Thickness Condition</label>
-                            <select class="form-select" name="wall_thickness_condition"><option value="healthy" {{ if eq .Input.RiskInput.WallThicknessCondition "healthy" }}selected{{ end }}>Healthy</option><option value="warning" {{ if eq .Input.RiskInput.WallThicknessCondition "warning" }}selected{{ end }}>Warning</option><option value="critical" {{ if eq .Input.RiskInput.WallThicknessCondition "critical" }}selected{{ end }}>Critical</option></select>
+                            <h6 class="fw-bold text-primary">Internal Corrosion (Section B)</h6>
+                            <label class="form-label">pH Level</label>
+                            <select class="form-select mb-3" name="ph_level"><option value="≤4.5" {{ if eq .Input.RiskInput.PHLevel "≤4.5" }}selected{{ end }}>≤4.5 (Strongly acidic)</option><option value="4.5-6.5" {{ if eq .Input.RiskInput.PHLevel "4.5-6.5" }}selected{{ end }}>4.5-6.5 (Mildly acidic)</option><option value="6.5-8.5" {{ if eq .Input.RiskInput.PHLevel "6.5-8.5" }}selected{{ end }}>6.5-8.5 (Neutral)</option><option value=">8.5" {{ if eq .Input.RiskInput.PHLevel ">8.5" }}selected{{ end }}>8.5+ (Alkaline)</option></select>
+                            <label class="form-label">Fluid Corrosivity (mpy)</label>
+                            <select class="form-select mb-3" name="fluid_corrosivity_mpy"><option value="<2 mpy" {{ if eq .Input.RiskInput.FluidCorrosivityMPY "<2 mpy" }}selected{{ end }}>&lt;2 mpy (Low)</option><option value="2-5 mpy" {{ if eq .Input.RiskInput.FluidCorrosivityMPY "2-5 mpy" }}selected{{ end }}>2-5 mpy (Moderate)</option><option value="5-10 mpy" {{ if eq .Input.RiskInput.FluidCorrosivityMPY "5-10 mpy" }}selected{{ end }}>5-10 mpy (High)</option><option value=">10 mpy" {{ if eq .Input.RiskInput.FluidCorrosivityMPY ">10 mpy" }}selected{{ end }}>10+ mpy (Severe)</option></select>
+                            <label class="form-label">Inhibitor Effectiveness</label>
+                            <select class="form-select mb-3" name="inhibitor_effectiveness"><option value="High (>90%)" {{ if eq .Input.RiskInput.InhibitorEffectiveness "High (>90%)" }}selected{{ end }}>High (>90%)</option><option value="Medium (60-90%)" {{ if eq .Input.RiskInput.InhibitorEffectiveness "Medium (60-90%)" }}selected{{ end }}>Medium (60-90%)</option><option value="Low (<60%)" {{ if eq .Input.RiskInput.InhibitorEffectiveness "Low (<60%)" }}selected{{ end }}>Low (&lt;60%)</option><option value="None" {{ if eq .Input.RiskInput.InhibitorEffectiveness "None" }}selected{{ end }}>None</option></select>
+                            <label class="form-label">Biocide Treatment</label>
+                            <select class="form-select mb-3" name="biocide_treatment"><option value="Yes" {{ if eq .Input.RiskInput.BiocideTreatment "Yes" }}selected{{ end }}>Yes</option><option value="No" {{ if eq .Input.RiskInput.BiocideTreatment "No" }}selected{{ end }}>No</option><option value="Not Required" {{ if eq .Input.RiskInput.BiocideTreatment "Not Required" }}selected{{ end }}>Not Required</option></select>
+                            <label class="form-label">Corrosion Monitoring Result</label>
+                            <select class="form-select mb-3" name="corrosion_monitoring_result"><option value="Satisfactory" {{ if eq .Input.RiskInput.CorrosionMonitoringResult "Satisfactory" }}selected{{ end }}>Satisfactory</option><option value="Unsatisfactory" {{ if eq .Input.RiskInput.CorrosionMonitoringResult "Unsatisfactory" }}selected{{ end }}>Unsatisfactory</option><option value="Not Applicable" {{ if eq .Input.RiskInput.CorrosionMonitoringResult "Not Applicable" }}selected{{ end }}>Not Applicable</option></select>
+                            <label class="form-label">H2S Concentration</label>
+                            <select class="form-select" name="h2s_ppm"><option value="<50 ppm" {{ if eq .Input.RiskInput.H2SPpm "<50 ppm" }}selected{{ end }}>&lt;50 ppm</option><option value="50-1000 ppm" {{ if eq .Input.RiskInput.H2SPpm "50-1000 ppm" }}selected{{ end }}>50-1000 ppm</option><option value=">1000 ppm" {{ if eq .Input.RiskInput.H2SPpm ">1000 ppm" }}selected{{ end }}>1000+ ppm</option></select>
+                          </div>
+                          <div class="col-lg-4">
+                            <h6 class="fw-bold text-primary">Component Composition (Section A)</h6>
+                            <label class="form-label">CO2 Content (mol%)</label>
+                            <div class="input-group mb-3"><input type="text" inputmode="decimal" class="form-control" name="co2_content" value="{{ .Input.RiskInput.CO2Content }}" placeholder="0"><span class="input-group-text">mol%</span></div>
+                            <label class="form-label">H2S Content (mol%)</label>
+                            <div class="input-group mb-3"><input type="text" inputmode="decimal" class="form-control" name="h2s_content" value="{{ .Input.RiskInput.H2SContent }}" placeholder="0"><span class="input-group-text">mol%</span></div>
+                            <label class="form-label">H2O Content (mol%)</label>
+                            <div class="input-group mb-3"><input type="text" inputmode="decimal" class="form-control" name="h2o_content" value="{{ .Input.RiskInput.H2OContent }}" placeholder="0"><span class="input-group-text">mol%</span></div>
+                          </div>
+                          <div class="col-lg-4">
+                            <h6 class="fw-bold text-primary">Operating Condition (Section C)</h6>
+                            <label class="form-label">PWHT Status</label>
+                            <select class="form-select mb-3" name="pwht_status"><option value="Yes" {{ if eq .Input.RiskInput.PWHTStatus "Yes" }}selected{{ end }}>Yes</option><option value="No" {{ if eq .Input.RiskInput.PWHTStatus "No" }}selected{{ end }}>No</option><option value="Unknown" {{ if eq .Input.RiskInput.PWHTStatus "Unknown" }}selected{{ end }}>Unknown</option></select>
+                            <label class="form-label">Weld Joint Type</label>
+                            <select class="form-select mb-3" name="weld_joint_type"><option value="Seamless" {{ if eq .Input.RiskInput.WeldJointType "Seamless" }}selected{{ end }}>Seamless</option><option value="SAW" {{ if eq .Input.RiskInput.WeldJointType "SAW" }}selected{{ end }}>SAW</option><option value="ERW" {{ if eq .Input.RiskInput.WeldJointType "ERW" }}selected{{ end }}>ERW</option><option value="Other" {{ if eq .Input.RiskInput.WeldJointType "Other" }}selected{{ end }}>Other</option></select>
+                            <label class="form-label">Flow Velocity Condition</label>
+                            <select class="form-select mb-3" name="flow_velocity_condition"><option value="Low (<3 m/s)" {{ if eq .Input.RiskInput.FlowVelocityCondition "Low (<3 m/s)" }}selected{{ end }}>Low (&lt;3 m/s)</option><option value="Moderate (3-10 m/s)" {{ if eq .Input.RiskInput.FlowVelocityCondition "Moderate (3-10 m/s)" }}selected{{ end }}>Moderate (3-10 m/s)</option><option value="High (10-20 m/s)" {{ if eq .Input.RiskInput.FlowVelocityCondition "High (10-20 m/s)" }}selected{{ end }}>High (10-20 m/s)</option><option value="Very High (>20 m/s)" {{ if eq .Input.RiskInput.FlowVelocityCondition "Very High (>20 m/s)" }}selected{{ end }}>Very High (&gt;20 m/s)</option></select>
+                            <label class="form-label">Solid Content</label>
+                            <select class="form-select" name="solid_content"><option value="None" {{ if eq .Input.RiskInput.SolidContent "None" }}selected{{ end }}>None</option><option value="Trace" {{ if eq .Input.RiskInput.SolidContent "Trace" }}selected{{ end }}>Trace</option><option value="Moderate" {{ if eq .Input.RiskInput.SolidContent "Moderate" }}selected{{ end }}>Moderate</option><option value="Heavy" {{ if eq .Input.RiskInput.SolidContent "Heavy" }}selected{{ end }}>Heavy</option></select>
+                          </div>
+                          <div class="col-lg-4">
+                            <h6 class="fw-bold text-primary">Previous Equipment Condition (Section D) & Cracking (E)</h6>
+                            <label class="form-label">Previous External Corrosion Finding</label>
+                            <select class="form-select mb-3" name="prev_ext_corrosion"><option value="No Finding" {{ if eq .Input.RiskInput.PrevExtCorrosion "No Finding" }}selected{{ end }}>No Finding</option><option value="Finding" {{ if eq .Input.RiskInput.PrevExtCorrosion "Finding" }}selected{{ end }}>Finding</option><option value="Not Inspectable" {{ if eq .Input.RiskInput.PrevExtCorrosion "Not Inspectable" }}selected{{ end }}>Not Inspectable</option></select>
+                            <label class="form-label">Previous Internal Thinning Finding</label>
+                            <select class="form-select mb-3" name="prev_int_thinning"><option value="No Finding" {{ if eq .Input.RiskInput.PrevIntThinning "No Finding" }}selected{{ end }}>No Finding</option><option value="Finding" {{ if eq .Input.RiskInput.PrevIntThinning "Finding" }}selected{{ end }}>Finding</option><option value="Not Inspectable" {{ if eq .Input.RiskInput.PrevIntThinning "Not Inspectable" }}selected{{ end }}>Not Inspectable</option></select>
+                            <label class="form-label">Coating Damage Level</label>
+                            <select class="form-select mb-3" name="coating_damage_level"><option value="Small" {{ if eq .Input.RiskInput.CoatingDamageLevel "Small" }}selected{{ end }}>Small</option><option value="Medium" {{ if eq .Input.RiskInput.CoatingDamageLevel "Medium" }}selected{{ end }}>Medium</option><option value="Large" {{ if eq .Input.RiskInput.CoatingDamageLevel "Large" }}selected{{ end }}>Large</option><option value="Severe" {{ if eq .Input.RiskInput.CoatingDamageLevel "Severe" }}selected{{ end }}>Severe</option></select>
+                            <label class="form-label">External Cracking Environment</label>
+                            <select class="form-select" name="env_ext_cracking"><option value="None" {{ if eq .Input.RiskInput.EnvExtCracking "None" }}selected{{ end }}>None</option><option value="H2S" {{ if eq .Input.RiskInput.EnvExtCracking "H2S" }}selected{{ end }}>H2S (Sour)</option><option value="Chloride" {{ if eq .Input.RiskInput.EnvExtCracking "Chloride" }}selected{{ end }}>Chloride</option><option value="Hydrogen" {{ if eq .Input.RiskInput.EnvExtCracking "Hydrogen" }}selected{{ end }}>Hydrogen</option><option value="Marine" {{ if eq .Input.RiskInput.EnvExtCracking "Marine" }}selected{{ end }}>Marine</option></select>
                           </div>
                           <div class="col-md-6"><label class="form-label">Generic Failure Frequency</label><input type="text" inputmode="decimal" class="form-control" name="generic_failure_frequency" value="{{ .Input.RiskInput.GenericFailureFrequency }}"></div>
                           <div class="col-md-6"><label class="form-label">Management System Score</label><input type="text" inputmode="decimal" class="form-control" name="management_system_score" value="{{ .Input.RiskInput.ManagementSystemScore }}"></div>
@@ -514,11 +547,15 @@
                         <label class="form-label">Class Location</label>
                         <select class="form-select mb-3" name="class_location">
                           <option value="remote" {{ if eq .Input.RiskInput.ClassLocation "remote" }}selected{{ end }}>Remote / low occupancy</option>
+                          <option value="class_1" {{ if eq .Input.RiskInput.ClassLocation "class_1" }}selected{{ end }}>Class 1</option>
+                          <option value="class_2" {{ if eq .Input.RiskInput.ClassLocation "class_2" }}selected{{ end }}>Class 2</option>
+                          <option value="class_3" {{ if eq .Input.RiskInput.ClassLocation "class_3" }}selected{{ end }}>Class 3</option>
+                          <option value="class_4" {{ if eq .Input.RiskInput.ClassLocation "class_4" }}selected{{ end }}>Class 4</option>
                           <option value="village" {{ if eq .Input.RiskInput.ClassLocation "village" }}selected{{ end }}>Village / populated area</option>
                           <option value="urban_dense" {{ if eq .Input.RiskInput.ClassLocation "urban_dense" }}selected{{ end }}>Urban / dense occupancy</option>
                         </select>
-                        <label class="form-label">Emergency Response Access</label>
-                        <select class="form-select" name="emergency_response"><option value="available" {{ if eq .Input.RiskInput.EmergencyResponse "available" }}selected{{ end }}>Available nearby</option><option value="limited" {{ if eq .Input.RiskInput.EmergencyResponse "limited" }}selected{{ end }}>Limited / delayed</option><option value="remote" {{ if eq .Input.RiskInput.EmergencyResponse "remote" }}selected{{ end }}>Remote area</option></select>
+                        <label class="form-label">One-Call System</label>
+                        <select class="form-select" name="one_call_system"><option value="Active and Effective" {{ if eq .Input.RiskInput.OneCallSystem "Active and Effective" }}selected{{ end }}>Active and Effective</option><option value="Limited" {{ if eq .Input.RiskInput.OneCallSystem "Limited" }}selected{{ end }}>Limited</option><option value="None" {{ if eq .Input.RiskInput.OneCallSystem "None" }}selected{{ end }}>None</option></select>
                       </div>
                     </div>
                   </div>
@@ -704,7 +741,7 @@
 <script type="application/json" id="pipelineSavedInspectionPlan">{{ toJSON .Input.RiskInput.InspectionPlanByDM }}</script>
 <script src="/assets/js/pipeline_oil_assessment.js"></script>
 <script>
-(function () {
+$(function () {
   // Pipeline material → SMYS auto-fill
   var materialDataEl = document.getElementById('pipelineMaterialData');
   var materialSelect = document.getElementById('materialSpecSelect');
@@ -713,7 +750,7 @@
   if (!materialSelect || !smysInput) return;
 
   // Restore saved value that may not be a known option
-  var savedSpec = {{ toJSON .Input.MaterialSpecification }};
+  var savedSpec = `{{ toJSON .Input.MaterialSpecification }}`;
   if (savedSpec) {
     var matched = false;
     for (var i = 0; i < materialSelect.options.length; i++) {
@@ -742,7 +779,7 @@
 
   materialSelect.addEventListener('change', applyMaterialSMYS);
   applyMaterialSMYS();
-})();
+});
 </script>
 {{ end }}
 {{ template "layouts/master" . }}

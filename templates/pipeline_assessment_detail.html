@@ -322,8 +322,9 @@
       <tr><th>Stored Damage Mechanism</th><td>{{ .Assessment.Input.RiskInput.DamageMechanism }}</td><th>Release Fluid</th><td>{{ .Assessment.Input.RiskInput.ReleaseFluid }}</td></tr>
       <tr><th>Base TPD / External / Internal</th><td>{{ fmtNum .Assessment.Input.RiskInput.BaseTPDRate }} / {{ fmtNum .Assessment.Input.RiskInput.BaseExternalCorrRate }} / {{ fmtNum .Assessment.Input.RiskInput.BaseInternalCorrRate }}</td><th>Inspection Effectivity</th><td>{{ .Assessment.Input.RiskInput.InspectionEffectivity }}</td></tr>
       <tr><th>Cover / Patrol / ROW</th><td>{{ .Assessment.Input.RiskInput.DepthOfCover }} / {{ .Assessment.Input.RiskInput.PatrolFrequency }} / {{ .Assessment.Input.RiskInput.ROWCondition }}</td><th>Soil / Coating / CP</th><td>{{ .Assessment.Input.RiskInput.SoilResistivity }} / {{ .Assessment.Input.RiskInput.CoatingCondition }} / {{ .Assessment.Input.RiskInput.CPStatus }}</td></tr>
-      <tr><th>CP Potential</th><td>{{ fmtNum .Assessment.Input.RiskInput.CPPotentialMV }} mV</td><th>Fluid / Water / CO2-H2S / MIC</th><td>{{ .Assessment.Input.RiskInput.FluidCorrosivity }} / {{ .Assessment.Input.RiskInput.WaterContent }} / {{ .Assessment.Input.RiskInput.CO2H2SPresence }} / {{ .Assessment.Input.RiskInput.MICRisk }}</td></tr>
-      <tr><th>Wall Thickness Condition</th><td>{{ .Assessment.Input.RiskInput.WallThicknessCondition }}</td><th>Gas Inputs</th><td>Buildings {{ .Assessment.Input.RiskInput.BuildingCountInsidePIR }}, Class {{ .Assessment.Input.RiskInput.ClassLocation }}, Emergency {{ .Assessment.Input.RiskInput.EmergencyResponse }}</td></tr>
+      <tr><th>CP Potential</th><td>{{ fmtNum .Assessment.Input.RiskInput.CPPotentialMV }} mV</td><th>pH / Corrosivity / Inhibitor</th><td>{{ .Assessment.Input.RiskInput.PHLevel }} / {{ .Assessment.Input.RiskInput.FluidCorrosivityMPY }} / {{ .Assessment.Input.RiskInput.InhibitorEffectiveness }}</td></tr>
+      <tr><th>H2S ppm / Biocide / Monitoring</th><td>{{ .Assessment.Input.RiskInput.H2SPpm }} / {{ .Assessment.Input.RiskInput.BiocideTreatment }} / {{ .Assessment.Input.RiskInput.CorrosionMonitoringResult }}</td><th>PWHT / Weld / Flow Velocity</th><td>{{ .Assessment.Input.RiskInput.PWHTStatus }} / {{ .Assessment.Input.RiskInput.WeldJointType }} / {{ .Assessment.Input.RiskInput.FlowVelocityCondition }}</td></tr>
+      <tr><th>Solid Content / Cracking Env</th><td>{{ .Assessment.Input.RiskInput.SolidContent }} / {{ .Assessment.Input.RiskInput.EnvExtCracking }}</td><th>Prev Ext Corr / Prev Thinning</th><td>{{ .Assessment.Input.RiskInput.PrevExtCorrosion }} / {{ .Assessment.Input.RiskInput.PrevIntThinning }}</td></tr>
       <tr><th>Oil/Liquid Inputs</th><td>Flow {{ fmtNum .Assessment.Input.RiskInput.FlowRate }} bbl/hr, Detection {{ fmtNum .Assessment.Input.RiskInput.DetectionTimeHours }} hr</td><th>Segment / Environment</th><td>{{ fmtNum .Assessment.Input.RiskInput.SegmentLengthBetweenValvesM }} m / {{ .Assessment.Input.RiskInput.EnvironmentalSensitivity }}</td></tr>
       <tr><th>Sensitive Receptor / Isolation Valve</th><td>{{ .Assessment.Input.RiskInput.NearbySensitiveReceptor }} / {{ .Assessment.Input.RiskInput.IsolationValveAvailable }}</td><th>Assessment By</th><td>{{ .Assessment.Input.AssessmentBy }}</td></tr>
     </table>
@@ -363,10 +364,10 @@
 
     <div class="pipeline-pdf-section">VI. DAMAGE MECHANISM AND INSPECTION PLAN</div>
     <table class="pipeline-pdf-table">
-      <thead><tr><th>Category</th><th>Damage Mechanism</th><th>Severity</th><th>Effectivity</th></tr></thead>
+      <thead><tr><th>Category</th><th>Damage Mechanism</th><th>Severity</th><th>Score</th><th>Effectivity</th></tr></thead>
       <tbody>
         {{ range .Assessment.Result.DamageMechanismResults }}
-        <tr><td>{{ .Category }}</td><td>{{ .Label }}</td><td>{{ .Severity }}</td><td>{{ .InspectionEffectivity }}</td></tr>
+        <tr><td>{{ .Category }}</td><td>{{ .Label }}</td><td>{{ .Severity }}</td><td>{{ printf "%.1f" .Score }}</td><td>{{ .InspectionEffectivity }}</td></tr>
         {{ end }}
       </tbody>
     </table>

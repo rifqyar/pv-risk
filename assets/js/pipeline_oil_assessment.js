@@ -224,14 +224,27 @@ $(function () {
       coating_condition: $("[name='coating_condition']").val(),
       cp_status: $("[name='cp_status']").val(),
       cp_potential_mv: numberValue($("input[name='cp_potential_mv']").val()),
-      fluid_corrosivity: $("[name='fluid_corrosivity']").val(),
-      water_content: $("[name='water_content']").val(),
-      co2_h2s_presence: $("[name='co2_h2s_presence']").val(),
-      mic_risk: $("[name='mic_risk']").val(),
-      wall_thickness_condition: $("[name='wall_thickness_condition']").val(),
+      coating_damage_level: $("[name='coating_damage_level']").val(),
+      one_call_system: $("[name='one_call_system']").val(),
+      ph_level: $("[name='ph_level']").val(),
+      fluid_corrosivity_mpy: $("[name='fluid_corrosivity_mpy']").val(),
+      inhibitor_effectiveness: $("[name='inhibitor_effectiveness']").val(),
+      biocide_treatment: $("[name='biocide_treatment']").val(),
+      corrosion_monitoring_result: $("[name='corrosion_monitoring_result']").val(),
+      h2s_ppm: $("[name='h2s_ppm']").val(),
+      pwht_status: $("[name='pwht_status']").val(),
+      weld_joint_type: $("[name='weld_joint_type']").val(),
+      flow_velocity_condition: $("[name='flow_velocity_condition']").val(),
+      solid_content: $("[name='solid_content']").val(),
+      prev_ext_corrosion: $("[name='prev_ext_corrosion']").val(),
+      prev_int_thinning: $("[name='prev_int_thinning']").val(),
+      prev_int_cracking: $("[name='prev_int_cracking']").val(),
+      prev_loc_int_corrosion: $("[name='prev_loc_int_corrosion']").val(),
+      insulation_condition: $("[name='insulation_condition']").val(),
+      ext_coating_condition: $("[name='ext_coating_condition']").val(),
+      env_ext_cracking: $("[name='env_ext_cracking']").val(),
       building_count_inside_pir: parseInt($("input[name='building_count_inside_pir']").val(), 10) || 0,
       class_location: $("[name='class_location']").val(),
-      emergency_response: $("[name='emergency_response']").val(),
       flow_rate: numberValue($("input[name='flow_rate']").val()),
       detection_time_hours: numberValue($("input[name='detection_time_hours']").val()),
       segment_length_between_valves_m: numberValue($("input[name='segment_length_between_valves_m']").val()),
@@ -239,7 +252,7 @@ $(function () {
       nearby_sensitive_receptor: $("input[name='nearby_sensitive_receptor']").is(":checked"),
       isolation_valve_available: $("input[name='isolation_valve_available']").is(":checked"),
       consequence_basis: "Pipeline MVP index-based CoF",
-      probability_basis: "PoF = GFF x max(DF_TPD, DF_EXTERNAL, DF_INTERNAL) x FMS",
+      probability_basis: "PoF = GFF x governing DM score x FMS",
       engineering_notes: $("textarea[name='engineering_notes']").val(),
       requires_confirmation: false,
       confirmation_todo_reason: "",
@@ -248,8 +261,12 @@ $(function () {
       "damage_mechanism", "inspection_effectivity", "generic_failure_frequency", "management_system_score",
       "base_tpd_rate", "base_external_corr_rate", "base_internal_corr_rate", "depth_of_cover",
       "patrol_frequency", "row_condition", "soil_resistivity", "coating_condition", "cp_status",
-      "cp_potential_mv", "fluid_corrosivity", "water_content", "co2_h2s_presence", "mic_risk",
-      "wall_thickness_condition", "building_count_inside_pir", "class_location", "emergency_response",
+      "cp_potential_mv", "coating_damage_level", "one_call_system", "ph_level", "fluid_corrosivity_mpy",
+      "inhibitor_effectiveness", "biocide_treatment", "corrosion_monitoring_result", "h2s_ppm",
+      "pwht_status", "weld_joint_type", "flow_velocity_condition", "solid_content",
+      "prev_ext_corrosion", "prev_int_thinning", "prev_int_cracking", "prev_loc_int_corrosion",
+      "insulation_condition", "ext_coating_condition", "env_ext_cracking",
+      "building_count_inside_pir", "class_location",
       "flow_rate", "detection_time_hours", "segment_length_between_valves_m", "environmental_sensitivity",
       "nearby_sensitive_receptor", "isolation_valve_available", "engineering_notes"
     ].forEach((key) => delete data[key]);
@@ -482,12 +499,10 @@ $(function () {
         maop_status: maop > numberValue(input.internal_design_pressure_psi) ? "ACCEPTABLE" : "NOT ACCEPTABLE",
       };
     });
-    const dfTPD = numberValue(risk.base_tpd_rate) / (factor({ "<1m": 0.8, "1-2m": 1.2, ">2m": 1.8 }, risk.depth_of_cover) * factor({ rare: 0.8, monthly: 1.2, weekly_daily: 1.8 }, risk.patrol_frequency) * factor({ poor: 0.8, fair: 1.2, good: 1.8 }, risk.row_condition));
-    let cpFactor = factor({ failed: 3, borderline: 1.8, normal: 1 }, risk.cp_status);
-    if (numberValue(risk.cp_potential_mv) > -850 && cpFactor < 1.8) cpFactor = 1.8;
-    const dfExternal = numberValue(risk.base_external_corr_rate) * factor({ "<1000": 3, "1000-5000": 1.8, ">5000": 1 }, risk.soil_resistivity) * factor({ poor: 3, fair: 1.8, good: 1 }, risk.coating_condition) * cpFactor;
-    const internalMap = { low: 1, none: 1, healthy: 1, medium: 1.9, present: 1.9, warning: 1.9, high: 3.5, critical: 3.5 };
-    const dfInternal = numberValue(risk.base_internal_corr_rate) * factor(internalMap, risk.fluid_corrosivity) * factor(internalMap, risk.water_content) * factor(internalMap, risk.co2_h2s_presence) * factor(internalMap, risk.mic_risk) * factor(internalMap, risk.wall_thickness_condition);
+    const dfTPD = numberValue(risk.base_tpd_rate) / (factor({ "<1m": 1, "1-2m": 1, ">2m": 1 }, risk.depth_of_cover) * factor({ rare: 1, monthly: 1, weekly_daily: 1 }, risk.patrol_frequency) * factor({ poor: 1, fair: 1, good: 1 }, risk.row_condition));
+    const cpFactor = factor({ failed: 1, borderline: 1, normal: 1 }, risk.cp_status);
+    const dfExternal = numberValue(risk.base_external_corr_rate) * factor({ "<1000": 1, "1000-5000": 1, ">5000": 1 }, risk.soil_resistivity) * factor({ Good: 1, Damaged: 1, "Not Inspectable": 1, "Not Applicable": 1 }, risk.coating_condition) * cpFactor;
+    const dfInternal = numberValue(risk.base_internal_corr_rate);
     const governing = [
       { label: "Third-Party Damage", code: "third_party_mechanical_damage", value: dfTPD },
       { label: "External Corrosion", code: "external_corrosion", value: dfExternal },
@@ -538,15 +553,18 @@ $(function () {
     const flowScore = numberValue(risk.flow_rate) >= 1000 ? 3.5 : numberValue(risk.flow_rate) >= 500 ? 2.2 : numberValue(risk.flow_rate) >= 100 ? 1.2 : 0;
     const internalMap = { low: 1, none: 1, healthy: 1, medium: 1.9, present: 1.9, warning: 1.9, high: 3.5, critical: 3.5 };
     const effectivity = collectInspectionEffectivityByDM();
-    const definitions = [
+const definitions = [
       ["external_corrosion", "External Corrosion", "External Damage", dfExternal],
-      ["coating_cui_degradation", "Coating / CUI Degradation", "External Damage", avg(factor({ poor: 3, fair: 1.8, good: 1 }, risk.coating_condition), factor({ "<1000": 3, "1000-5000": 1.8, ">5000": 1 }, risk.soil_resistivity), factor({ failed: 3, borderline: 1.8, normal: 1 }, risk.cp_status))],
+      ["coating_degradation", "Coating Degradation", "External Damage", factor({ Good: 1, Damaged: 1, "Not Inspectable": 1, "Not Applicable": 1 }, risk.coating_condition)],
       ["third_party_mechanical_damage", "Third-Party / Mechanical Damage", "External Damage", dfTPD],
       ["internal_corrosion", "Internal Corrosion", "Internal Thinning", dfInternal],
-      ["localized_corrosion_pitting", "Localized Corrosion / Pitting", "Internal Thinning", avg(dfInternal, rlScore, factor(internalMap, risk.wall_thickness_condition))],
-      ["erosion_corrosion", "Erosion / Erosion-Corrosion", "Internal Thinning", avg(flowScore, factor(internalMap, risk.fluid_corrosivity), factor(internalMap, risk.wall_thickness_condition))],
-      ["cracking_scc_fatigue", "Cracking / SCC / Fatigue", "Internal Cracking", avg(factor(internalMap, risk.co2_h2s_presence), factor(internalMap, risk.mic_risk), factor({ failed: 3.5, borderline: 1.9, normal: 1 }, risk.cp_status))],
-      ["other_engineering_review", "Other / Engineering Review", "Internal Cracking", 0],
+      ["localized_corrosion", "Localized Corrosion", "Internal Thinning", dfInternal],
+      ["erosion", "Erosion", "Internal Thinning", factor({ "Low (<3 m/s)": 1, "Moderate (3-10 m/s)": 1, "High (10-20 m/s)": 1, "Very High (>20 m/s)": 1 }, risk.flow_velocity_condition)],
+      ["erosion_corrosion", "Erosion-Corrosion", "Internal Thinning", dfInternal],
+      ["cracking", "Cracking", "Internal Cracking", 0],
+      ["scc", "SCC", "Internal Cracking", 0],
+      ["fatigue", "Fatigue", "Internal Cracking", 0],
+      ["chemical_damage", "Chemical Damage", "Internal Cracking", 0],
     ];
     return definitions.map(([code, label, category, score]) => ({ code, label, category, score, severity: severity(score), inspection_effectivity: effectivity[code] || "Medium" }));
   }
@@ -877,11 +895,18 @@ $(function () {
       soil_resistivity: $("[name='soil_resistivity']").val(),
       coating_condition: $("[name='coating_condition']").val(),
       cp_status: $("[name='cp_status']").val(),
-      fluid_corrosivity: $("[name='fluid_corrosivity']").val(),
-      water_content: $("[name='water_content']").val(),
-      co2_h2s_presence: $("[name='co2_h2s_presence']").val(),
-      mic_risk: $("[name='mic_risk']").val(),
-      wall_thickness_condition: $("[name='wall_thickness_condition']").val(),
+      coating_damage_level: $("[name='coating_damage_level']").val(),
+      one_call_system: $("[name='one_call_system']").val(),
+      ph_level: $("[name='ph_level']").val(),
+      fluid_corrosivity_mpy: $("[name='fluid_corrosivity_mpy']").val(),
+      inhibitor_effectiveness: $("[name='inhibitor_effectiveness']").val(),
+      biocide_treatment: $("[name='biocide_treatment']").val(),
+      corrosion_monitoring_result: $("[name='corrosion_monitoring_result']").val(),
+      h2s_ppm: $("[name='h2s_ppm']").val(),
+      pwht_status: $("[name='pwht_status']").val(),
+      weld_joint_type: $("[name='weld_joint_type']").val(),
+      flow_velocity_condition: $("[name='flow_velocity_condition']").val(),
+      solid_content: $("[name='solid_content']").val(),
       flow_rate: numberValue($("input[name='flow_rate']").val()),
     };
   }
@@ -976,14 +1001,14 @@ $(function () {
   }
 
   function defaultNonIntrusiveMethod(code) {
-    if (["external_corrosion", "coating_cui_degradation"].includes(code)) return "Visual + CP / Coating Survey";
+    if (["external_corrosion", "coating_degradation"].includes(code)) return "Visual + CP / Coating Survey";
     if (code === "third_party_mechanical_damage") return "ROW Patrol + Visual Survey";
-    if (code === "cracking_scc_fatigue") return "Shear Wave Ultrasonic Testing";
+    if (code === "scc") return "Shear Wave Ultrasonic Testing";
     return "Wall Thickness measurement by UT";
   }
 
   function defaultIntrusiveMethod(code) {
-    if (code === "cracking_scc_fatigue") return "Wet Fluorescent MPT / DPT";
+    if (code === "scc") return "Wet Fluorescent MPT / DPT";
     if (code === "third_party_mechanical_damage") return "Direct Examination";
     return "VIE + Wall Thickness measurement by UT";
   }
@@ -1007,8 +1032,8 @@ $(function () {
     if (buildings > 20) cof = "E";
     else if (buildings >= 6) cof = "D";
     else if (buildings >= 1) cof = "B";
-    if (risk.class_location === "village" && cofNumeric(cof) < 3) cof = "C";
-    if (risk.class_location === "urban_dense" && cofNumeric(cof) < 4) cof = "D";
+    if ((risk.class_location === "village" || risk.class_location === "class_3") && cofNumeric(cof) < 3) cof = "C";
+    if ((risk.class_location === "urban_dense" || risk.class_location === "class_4") && cofNumeric(cof) < 4) cof = "D";
     return { cof, value: cofNumeric(cof), pir };
   }
 
@@ -1029,7 +1054,7 @@ $(function () {
 
   function buildRealtimeRecommendationGroups(driver, level, isGas) {
     const groups = { immediate_actions: [], inspection_monitoring: ["Keep the formula trace with the assessment record."], long_term_mitigation: ["Update the assessment after mitigation or inspection results are available."] };
-    if (driver === "Third-Party Damage") groups.immediate_actions.push("Improve route markers and warning signs.", "Strengthen excavation permit control.");
+    if (driver === "Third-Party / Mechanical Damage") groups.immediate_actions.push("Improve route markers and warning signs.", "Strengthen excavation permit control.");
     if (driver === "External Corrosion") groups.immediate_actions.push("Verify cathodic protection performance.", "Prioritize coating defect checks.");
     if (driver === "Internal Corrosion") groups.immediate_actions.push("Review inhibitor condition, fluid corrosivity, and water handling.");
     if (level === "Critical") groups.immediate_actions.push("Escalate to engineering review before continued operation.");
