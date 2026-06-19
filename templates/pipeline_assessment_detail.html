@@ -16,6 +16,20 @@
   .content-wrapper .card .table:not(.pipeline-pdf-table) tbody tr:hover { background: #fbfcff; }
   .content-wrapper .card .table:not(.pipeline-pdf-table) .badge { font-size: .7rem; padding: .25rem .5rem; }
   .content-wrapper .pipeline-risk-matrix td { padding: 6px 5px; font-size: .72rem; }
+  .pipeline-acceptance-badge {
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    font-size: .72rem;
+    font-weight: 700;
+    gap: .25rem;
+    line-height: 1;
+    padding: .42rem .68rem;
+    text-transform: uppercase;
+  }
+  .pipeline-acceptance-badge.acceptable { background: #e8fadf; color: #3a7d14; }
+  .pipeline-acceptance-badge.conditional { background: #fff2d6; color: #a66a00; }
+  .pipeline-acceptance-badge.not-acceptable { background: #ffe5df; color: #c93314; }
   #pipeline-pdf-report { display: none; font-family: 'Times New Roman', Times, serif; background: #fff; color: #000; }
   .pipeline-pdf-page { width: 210mm; min-height: 297mm; padding: 12mm; margin: 0 auto; background: #fff; }
   .pipeline-pdf-header { border-bottom: 3px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
@@ -89,7 +103,16 @@
               {{ end }}
               <div class="bg-label-warning rounded-3 p-3 my-3 mx-auto text-start shadow-sm" style="width: 100%; max-width: 340px; border: 1px solid #ffab00;">
                 <div class="mb-2 text-dark"><i class="mdi mdi-alert-decagram-outline text-warning me-2 fs-5 align-middle"></i><span class="small">Main Driver:</span> <strong>{{ .Assessment.Result.GoverningDamageMechanism }}</strong></div>
-                <div class="text-dark"><i class="mdi mdi-clipboard-search-outline text-warning me-2 fs-5 align-middle"></i><span class="small">Inspection Result:</span> <strong>{{ .Assessment.Result.InspectionResult }}</strong></div>
+                <div class="text-dark d-flex align-items-center justify-content-between gap-2">
+                  <span><i class="mdi mdi-clipboard-search-outline text-warning me-2 fs-5 align-middle"></i><span class="small">Inspection Result:</span></span>
+                  {{ if eq .Assessment.Result.InspectionResult "ACCEPTABLE" }}
+                  <span class="pipeline-acceptance-badge acceptable">ACCEPTABLE</span>
+                  {{ else if eq .Assessment.Result.InspectionResult "CONDITIONALLY ACCEPTABLE" }}
+                  <span class="pipeline-acceptance-badge conditional">CONDITIONALLY ACCEPTABLE</span>
+                  {{ else }}
+                  <span class="pipeline-acceptance-badge not-acceptable">NOT ACCEPTABLE</span>
+                  {{ end }}
+                </div>
               </div>
               <div class="d-flex justify-content-center gap-2">
                 <div class="bg-white px-3 py-2 rounded-3 shadow-sm border flex-fill">
@@ -141,11 +164,11 @@
 
       <div class="col-lg-4 col-md-6">
         <div class="card shadow-sm border-0 rounded-4 h-100">
-          <div class="card-header bg-transparent border-bottom pt-3 pb-2"><h6 class="fw-bold mb-0 text-warning"><i class="mdi mdi-chart-bell-curve-cumulative me-2"></i>Risk Breakdown</h6></div>
+          <div class="card-header bg-transparent border-bottom pt-3 pb-2"><h6 class="fw-bold mb-0 text-warning"><i class="mdi mdi-chart-bell-curve-cumulative me-2"></i>Probability of Failure</h6></div>
           <ul class="list-group list-group-flush small">
             <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">GFF</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.GenericFailureFrequency }}</span></li>
             <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">FMS</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.ManagementSystemFactor }}</span></li>
-            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Governing DF</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.GoverningDamageFactor }}</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Governing DM Score</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.GoverningDamageFactor }}</span></li>
             <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Final PoF</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.PoFValue }}</span></li>
             {{ if isPipelineGasService .Assessment.Input.Service }}
             <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">PIR</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.PIRFeet }} ft</span></li>
@@ -181,6 +204,26 @@
               {{ range .Assessment.Result.DamageMechanismResults }}
               <span class="badge bg-label-secondary text-dark px-3 py-2 border">{{ .Label }}: <b>{{ .Severity }}</b></span>
               {{ end }}
+            </div>
+            <div class="mt-3">
+              <a class="text-primary small" data-bs-toggle="collapse" href="#triggerInputsCollapse" role="button" aria-expanded="false" aria-controls="triggerInputsCollapse"><i class="mdi mdi-chevron-down me-1"></i>Show Trigger Inputs per Mechanism</a>
+              <div class="collapse mt-2" id="triggerInputsCollapse">
+                {{ range .Assessment.Result.DamageMechanismResults }}
+                {{ if .TriggerInputs }}
+                <div class="mb-2">
+                  <div class="fw-bold small text-muted">{{ .Label }}</div>
+                  <table class="table table-sm table-bordered mb-1" style="font-size:.75rem;">
+                    <thead class="table-light"><tr><th>Field</th><th>Value</th><th>Reason</th></tr></thead>
+                    <tbody>
+                      {{ range .TriggerInputs }}
+                      <tr><td>{{ .Field }}</td><td>{{ .Value }}</td><td>{{ .Reason }}</td></tr>
+                      {{ end }}
+                    </tbody>
+                  </table>
+                </div>
+                {{ end }}
+                {{ end }}
+              </div>
             </div>
           </div>
         </div>

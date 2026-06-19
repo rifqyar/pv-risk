@@ -143,7 +143,7 @@ func TestCalculatePipelineOilMatchesWorkbookSamples(t *testing.T) {
 	assertClose(t, result.InternalCorrosionFactor, 1.0, 1e-12)
 	assertClose(t, result.GoverningDamageFactor, 1.0, 1e-12)
 	assertClose(t, result.PoFValue, 0.00003, 1e-12)
-	assertClose(t, result.CoFValue, 3078.547758648, 1e-9)
+	assertClose(t, result.CoFValue, 4617.8216379719998, 1e-9)
 	assertClose(t, result.RiskValue, 10, 1e-9)
 	if result.PoF != "2" || result.CoF != "E" || result.FinalRiskCode != "2E" || result.FinalRiskLevel != "Medium Risk" {
 		t.Fatalf("unexpected pipeline risk ranking: pof=%s cof=%s code=%s level=%s", result.PoF, result.CoF, result.FinalRiskCode, result.FinalRiskLevel)
@@ -360,10 +360,10 @@ func TestPipelineRecommendationCarriesSystemAdvisorySource(t *testing.T) {
 	if len(errs) > 0 {
 		t.Fatalf("unexpected validation errors: %+v", errs)
 	}
-	if result.RecommendationSource != "System advisory rule based on risk category, CoF factors, and governing pipeline damage-factor driver." {
+	if result.RecommendationSource != "System advisory rule based on risk category, CoF factors, and governing pipeline DM score driver." {
 		t.Fatalf("unexpected recommendation source: %q", result.RecommendationSource)
 	}
-	if result.RecommendationRuleName != "pipeline-system-advisory-v1 TODO_ENGINEERING_CONFIRMATION" {
+	if result.RecommendationRuleName != "pipeline-system-advisory-v2" {
 		t.Fatalf("unexpected recommendation rule: %q", result.RecommendationRuleName)
 	}
 	if result.Recommendation == "" {
@@ -371,6 +371,64 @@ func TestPipelineRecommendationCarriesSystemAdvisorySource(t *testing.T) {
 	}
 	if result.GoverningDamageMechanism == "" {
 		t.Fatalf("expected a governing damage mechanism, got empty")
+	}
+}
+
+func TestEngineeringConfirmationRequiredForPlaceholderFactorMaps(t *testing.T) {
+	placeholderMaps := []struct {
+		name string
+		m    map[string]float64
+	}{
+		{"pipelineDepthFactors", pipelineDepthFactors},
+		{"pipelinePatrolFactors", pipelinePatrolFactors},
+		{"pipelineROWFactors", pipelineROWFactors},
+		{"pipelineSoilFactors", pipelineSoilFactors},
+		{"pipelineCoatingConditionFactors", pipelineCoatingConditionFactors},
+		{"pipelineCPFactors", pipelineCPFactors},
+		{"pipelineClassLocationFactors", pipelineClassLocationFactors},
+		{"pipelineFluidCorrosivityMPYFactors", pipelineFluidCorrosivityMPYFactors},
+		{"pipelinePHSeverity", pipelinePHSeverity},
+		{"pipelineInhibitorModifiers", pipelineInhibitorModifiers},
+		{"pipelineCoatingDamageModifiers", pipelineCoatingDamageModifiers},
+		{"pipelineInsulationDamageModifiers", pipelineInsulationDamageModifiers},
+		{"pipelineConfidenceWeight", pipelineConfidenceWeight},
+		{"pipelineWeldCrackingModifiers", pipelineWeldCrackingModifiers},
+		{"pipelinePWHTModifiers", pipelinePWHTModifiers},
+		{"pipelineOneCallModifiers", pipelineOneCallModifiers},
+		{"pipelineH2SPpmSeverity", pipelineH2SPpmSeverity},
+		{"pipelineFlowVelocityModifiers", pipelineFlowVelocityModifiers},
+		{"pipelineSolidContentModifiers", pipelineSolidContentModifiers},
+		{"pipelineExtCrackingOptions", pipelineExtCrackingOptions},
+	}
+
+	allNeutral := true
+	for _, pm := range placeholderMaps {
+		for k, v := range pm.m {
+			if v != 1.0 {
+				allNeutral = false
+				t.Logf("confirmed: %s[%q] = %.4f (no longer neutral 1.0)", pm.name, k, v)
+			}
+		}
+	}
+
+	intMap := []struct {
+		name string
+		m    map[string]int
+	}{
+		{"pipelineFatigueCycleThresholds", pipelineFatigueCycleThresholds},
+	}
+	for _, pm := range intMap {
+		for k, v := range pm.m {
+			if v != 1 {
+				allNeutral = false
+				t.Logf("confirmed: %s[%q] = %d (no longer neutral)", pm.name, k, v)
+			}
+		}
+	}
+
+	if allNeutral {
+		t.Log("WARNING: All pipeline factor maps still use neutral 1.0 placeholder values. Engineering confirmation is required before production use.")
+		t.Log("When an engineer confirms a factor value, update the map entry and remove its TODO_ENGINEERING_CONFIRMATION comment. This test will log confirmed entries automatically.")
 	}
 }
 

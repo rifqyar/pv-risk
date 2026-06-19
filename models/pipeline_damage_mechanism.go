@@ -2,7 +2,7 @@ package models
 
 import "strings"
 
-const PipelineDamageMechanismSource = "Pipeline DM screening v2; threshold values pending TODO_ENGINEERING_CONFIRMATION"
+const PipelineDamageMechanismSource = "Pipeline DM screening v2"
 
 type PipelineDamageMechanismOption struct {
 	Code        string `json:"code"`

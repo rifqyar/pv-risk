@@ -4,6 +4,9 @@ $(function () {
   let currentResult = null;
   let resultSignature = "";
   let resultIsStale = false;
+  let isProgrammaticUpdate = false;
+  let isRealtimeCalculating = false;
+  let realtimeTimer = null;
 
   localizeDecimalInputs();
 
@@ -16,9 +19,11 @@ $(function () {
   updateConsequenceFields();
   applySavedInspectionPlan();
   updateReviewSummary();
-  loadSavedResult();
-  runRealtimePipelineCalculation();
-  updateSaveState();
+  setTimeout(() => {
+    loadSavedResult();
+    runRealtimePipelineCalculation();
+    updateSaveState();
+  }, 0);
 
   $(".pipeline-step-next").on("click", function () {
     const $activeStep = $(".bs-stepper-content .content.active");
@@ -35,6 +40,7 @@ $(function () {
   });
 
   $form.on("input change", "input, select, textarea", function () {
+    if (isProgrammaticUpdate) return;
     clearFieldError($(this));
     if (this.name === "service") {
       syncApplicableCodeAndMaterialStress(true);
@@ -43,7 +49,7 @@ $(function () {
     }
     updateConsequenceFields();
     updateReviewSummary();
-    runRealtimePipelineCalculation();
+    scheduleRealtimePipelineCalculation();
     markResultStaleIfNeeded();
   });
 
@@ -59,7 +65,7 @@ $(function () {
         <td><input class="form-control" name="installation_type"></td>
         <td><input type="text" inputmode="decimal" class="form-control" name="point_nominal_thickness_mm"></td>
         <td><input type="text" inputmode="decimal" class="form-control" name="point_actual_thickness_mm"></td>
-        <td><input type="number" class="form-control" name="measured_year" value="${new Date().getFullYear()}"></td>
+        <td><input type="month" class="form-control" name="measured_year" value="${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}"></td>
         <td><button type="button" class="btn btn-sm btn-icon btn-outline-danger remove-point"><i class="mdi mdi-trash-can-outline"></i></button></td>
       </tr>
     `);
@@ -119,6 +125,7 @@ $(function () {
         resultSignature = calculationSignature(payload);
         resultIsStale = false;
         renderCalculationResult(currentResult);
+        updateAutoCalcDisplay(payload.RiskInput || {}, payload);
         updateSaveState();
         if (showSuccess) {
           Swal.fire("Calculation ready", "Review the risk result before saving this assessment.", "success");
@@ -191,7 +198,7 @@ $(function () {
       .catch(() => Swal.fire("Error", "Failed to save calculation result.", "error"));
   }
 
-  function collectPayload() {
+  function collectPayload(includeGoverningDamageMechanism = true) {
     const data = {};
     $form.serializeArray().forEach((item) => {
       if (item.name.startsWith("point_") || ["inspection_point", "location_class", "installation_type", "measured_year"].includes(item.name)) return;
@@ -207,7 +214,7 @@ $(function () {
     data.material_stress_psi = derivedMaterialStress(data);
 
     data.RiskInput = {
-      damage_mechanism: governingDamageMechanismCode(),
+      damage_mechanism: includeGoverningDamageMechanism ? governingDamageMechanismCode() : "internal_corrosion",
       inspection_effectivity: $("[name='inspection_effectivity']").val() || "Representative",
       inspection_effectivity_by_damage_mechanism: collectInspectionEffectivityByDM(),
       inspection_plan_by_damage_mechanism: collectInspectionPlanByDM(),
@@ -243,6 +250,22 @@ $(function () {
       insulation_condition: $("[name='insulation_condition']").val(),
       ext_coating_condition: $("[name='ext_coating_condition']").val(),
       env_ext_cracking: $("[name='env_ext_cracking']").val(),
+      co2_content: numberValue($("input[name='co2_content']").val()),
+      h2s_content: numberValue($("input[name='h2s_content']").val()),
+      h2o_content: numberValue($("input[name='h2o_content']").val()),
+      n2_content: numberValue($("input[name='n2_content']").val()),
+      co_content: numberValue($("input[name='co_content']").val()),
+      chloride_content: parseInt($("input[name='chloride_content']").val(), 10) || 0,
+      conf_ext_corrosion: $("[name='conf_ext_corrosion']").val(),
+      conf_int_thinning: $("[name='conf_int_thinning']").val(),
+      conf_int_cracking: $("[name='conf_int_cracking']").val(),
+      conf_loc_int_corrosion: $("[name='conf_loc_int_corrosion']").val(),
+      insulation_damage_level: $("[name='insulation_damage_level']").val(),
+      ext_coating_damage_level: $("[name='ext_coating_damage_level']").val(),
+      fluida: $("[name='fluida']").val(),
+      phase: $("[name='phase']").val(),
+      pressure_cycle_count: numberValue($("input[name='pressure_cycle_count']").val()),
+      pressure_range_pct: numberValue($("input[name='pressure_range_pct']").val()),
       building_count_inside_pir: parseInt($("input[name='building_count_inside_pir']").val(), 10) || 0,
       class_location: $("[name='class_location']").val(),
       flow_rate: numberValue($("input[name='flow_rate']").val()),
@@ -266,6 +289,10 @@ $(function () {
       "pwht_status", "weld_joint_type", "flow_velocity_condition", "solid_content",
       "prev_ext_corrosion", "prev_int_thinning", "prev_int_cracking", "prev_loc_int_corrosion",
       "insulation_condition", "ext_coating_condition", "env_ext_cracking",
+      "co2_content", "h2s_content", "h2o_content", "n2_content", "co_content", "chloride_content",
+      "conf_ext_corrosion", "conf_int_thinning", "conf_int_cracking", "conf_loc_int_corrosion",
+      "insulation_damage_level", "ext_coating_damage_level", "fluida", "phase",
+      "pressure_cycle_count", "pressure_range_pct",
       "building_count_inside_pir", "class_location",
       "flow_rate", "detection_time_hours", "segment_length_between_valves_m", "environmental_sensitivity",
       "nearby_sensitive_receptor", "isolation_valve_available", "engineering_notes"
@@ -282,10 +309,25 @@ $(function () {
         installation_type: $(this).find("[name='installation_type']").val(),
         nominal_thickness_mm: nominal,
         actual_thickness_mm: actual > 0 && actual <= nominal ? actual : nominal,
-        measured_year: parseInt($(this).find("[name='measured_year']").val(), 10) || 0,
+        measured_year: String($(this).find("[name='measured_year']").val() || ""),
       });
     });
+    data.RiskInput.co2_partial_pressure_psig = calculateCO2PartialPressureJS(data.RiskInput, data);
+    data.RiskInput.h2s_partial_pressure_psig = calculateH2SPartialPressureJS(data.RiskInput, data);
+    data.RiskInput.wall_thickness_ratio = calculateWallThicknessRatioJS(data);
+    data.RiskInput.smys_utilization_pct = calculateSMYSUtilizationPctJS(data);
     return data;
+  }
+
+  function updateAutoCalcDisplay(input, riskData) {
+    var pCO2 = numberValue(input.co2_partial_pressure_psig) || calculateCO2PartialPressureJS(input || {}, riskData || {});
+    var pH2S = numberValue(input.h2s_partial_pressure_psig) || calculateH2SPartialPressureJS(input || {}, riskData || {});
+    var wtr = numberValue(input.wall_thickness_ratio) || calculateWallThicknessRatioJS(riskData || {});
+    var smysPct = numberValue(input.smys_utilization_pct) || calculateSMYSUtilizationPctJS(riskData || {});
+    $("#autoPCO2").text(pCO2 > 0 ? fmt(pCO2) : "-");
+    $("#autoPH2S").text(pH2S > 0 ? fmt(pH2S) : "-");
+    $("#autoWTR").text(wtr > 0 ? fmt(wtr) : "-");
+    $("#autoSMYS").text(smysPct > 0 ? fmt(smysPct) + "%" : "-");
   }
 
   function renderCalculationResult(result) {
@@ -303,10 +345,10 @@ $(function () {
     renderDamageMechanismResults(result.damage_mechanism_results || []);
     renderInspectionPlanResults(result.inspection_plan_results || []);
     $("#pipelinePofBreakdown").html(listItems([
-      ["Third-Party Damage Factor", fmt(result.third_party_damage_factor)],
-      ["External Corrosion Factor", fmt(result.external_corrosion_factor)],
-      ["Internal Corrosion Factor", fmt(result.internal_corrosion_factor)],
-      ["Governing DF", fmt(result.governing_damage_factor)],
+      ["Third-Party DM Score", fmt(result.third_party_damage_factor)],
+      ["External Corrosion DM Score", fmt(result.external_corrosion_factor)],
+      ["Internal Corrosion DM Score", fmt(result.internal_corrosion_factor)],
+      ["Governing DM Score", fmt(result.governing_damage_factor)],
       ["Main Failure Driver", result.governing_damage_mechanism],
       ["GFF", fmt(result.generic_failure_frequency)],
       ["FMS", fmt(result.management_system_factor)],
@@ -315,7 +357,7 @@ $(function () {
     ]));
     $("#pipelineCofBreakdown").html(buildCofBreakdown(result));
     $("#pipelineRecommendationGroups").html(buildRecommendationGroups(result));
-    $("#pipelineRecommendationText").html(`<strong>Source:</strong> ${escapeHtml(result.recommendation_source || "TODO_ENGINEERING_CONFIRMATION")}<br><strong>Advisory:</strong> ${escapeHtml(result.recommendation || "-")}`);
+    $("#pipelineRecommendationText").html(`<strong>Source:</strong> ${escapeHtml(result.recommendation_source || "Realtime browser preview; backend recalculates on save.")}<br><strong>Advisory:</strong> ${escapeHtml(result.recommendation || "-")}`);
     $("#pipelineFormulaTrace").html(buildFormulaTrace(result.formula_trace || []));
   }
 
@@ -459,14 +501,338 @@ $(function () {
   }
 
   function runRealtimePipelineCalculation() {
-    const payload = collectPayload();
-    const result = calculatePipelineRealtime(payload);
-    if (!result) return;
-    currentResult = result;
-    resultSignature = calculationSignature(payload);
-    resultIsStale = false;
-    renderCalculationResult(result);
-    updateSaveState();
+    if (isRealtimeCalculating) return;
+    isRealtimeCalculating = true;
+    try {
+      const payload = collectPayload();
+      const result = calculatePipelineRealtime(payload);
+      if (!result) {
+        updateAutoCalcDisplay(payload.RiskInput || {}, payload);
+        return;
+      }
+      currentResult = result;
+      resultSignature = calculationSignature(payload);
+      resultIsStale = false;
+      renderCalculationResult(result);
+      updateAutoCalcDisplay(payload.RiskInput || {}, payload);
+      updateSaveState();
+    } finally {
+      isRealtimeCalculating = false;
+    }
+  }
+
+  function scheduleRealtimePipelineCalculation() {
+    clearTimeout(realtimeTimer);
+    realtimeTimer = setTimeout(runRealtimePipelineCalculation, 80);
+  }
+
+  window.pipelineOilRecalculate = scheduleRealtimePipelineCalculation;
+
+  // --- Factor maps (mirror Go backend, all 1.0 neutral placeholders pending TODO_ENGINEERING_CONFIRMATION) ---
+  const dmFactors = {
+    depth:       { "<1m": 1, "1-2m": 1, ">2m": 1 },
+    patrol:      { rare: 1, monthly: 1, weekly_daily: 1 },
+    row:         { poor: 1, fair: 1, good: 1 },
+    soil:        { "<1000": 1, "1000-5000": 1, ">5000": 1 },
+    coating:     { Good: 1, Damaged: 1, "Not Inspectable": 1, "Not Applicable": 1 },
+    cp:          { failed: 1, borderline: 1, normal: 1 },
+    environment: { low: 1, medium: 1.5, high: 2.5 },
+    corrosivityMPY: { "<2 mpy": 1, "2-5 mpy": 1, "5-10 mpy": 1, ">10 mpy": 1 },
+    ph:          { "≤4.5": 1, "4.5-6.5": 1, "6.5-8.5": 1, ">8.5": 1 },
+    chloride:    { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1 },
+    inhibitor:   { "High (>90%)": 1, "Medium (60-90%)": 1, "Low (<60%)": 1, None: 1 },
+    coatingDamage: { Small: 1, Medium: 1, Large: 1, Severe: 1 },
+    insulationDamage: { Small: 1, Medium: 1, Large: 1, Severe: 1 },
+    prevFinding:  { "No Finding": 0, Finding: 1, "Not Inspectable": 0.5 },
+    confidence:   { high: 1, average: 1, low: 1 },
+    weld:         { Seamless: 1, SAW: 1, ERW: 1, Other: 1 },
+    pwht:         { Yes: 1, No: 1, Unknown: 1 },
+    oneCall:      { "Active and Effective": 1, Limited: 1, None: 1 },
+    h2sPpm:       { "<50 ppm": 1, "50-1000 ppm": 1, ">1000 ppm": 1 },
+    flowVelocity: { "Low (<3 m/s)": 1, "Moderate (3-10 m/s)": 1, "High (10-20 m/s)": 1, "Very High (>20 m/s)": 1 },
+    solidContent: { None: 1, Trace: 1, Moderate: 1, Heavy: 1 },
+    sccStress:    { Low: 30, Moderate: 50, High: 1e9 },
+    erosionVel:   { Low: 3, Moderate: 10, High: 20, "Very High": 1e9 },
+    fatigueCycle:  { Low: 100, Moderate: 10000, High: 1000000 },
+    wallThicknessRatio: { Acceptable: 1, "Conditionally Acceptable": 0.8, "Not Acceptable": 0 },
+    extCracking:  { None: 1, H2S: 1, Chloride: 1, Hydrogen: 1, Marine: 1 },
+    biocide:       { Yes: true, No: false, "Not Required": true },
+    co2Severity:   { Low: 5, Moderate: 20, High: 1e9 },
+    h2sSeverity:   { Not: 0.05, Low: 0.5, Moderate: 15, High: 1e9 },
+    classLocation: { class_1: 1, class_2: 1, class_3: 1, class_4: 1 },
+  };
+
+  function pCO2SeverityJS(pCO2) {
+    if (pCO2 <= 0) return "NOT";
+    if (pCO2 <= 5) return "Low";
+    if (pCO2 <= 20) return "Moderate";
+    return "High";
+  }
+
+  function pH2SSeverityJS(pH2S) {
+    if (pH2S < 0.05) return "NOT";
+    if (pH2S < 0.5) return "Low";
+    if (pH2S <= 15) return "Moderate";
+    return "High";
+  }
+
+  function baseSeverityScoreJS(sev) {
+    if (sev === "Low") return 1.0;
+    if (sev === "Moderate") return 2.0;
+    if (sev === "High") return 3.0;
+    return 0;
+  }
+
+  function escalateByFindingJS(score, prevFinding, confidence) {
+    if (prevFinding === "Finding") {
+      let weight = dmFactors.confidence[String(confidence || "").toLowerCase()] || 1.0;
+      return score + 1.0 * weight;
+    }
+    // "Not Inspectable" — no escalation applied, matching Go backend
+    return score;
+  }
+
+  function scoreInternalCorrosionJS(risk, input) {
+    const pCO2 = numberValue(input.co2_partial_pressure_psig) || calculateCO2PartialPressureJS(risk, input);
+    const h2o = numberValue(risk.h2o_content);
+    const corrosivity = risk.fluid_corrosivity_mpy;
+    const hasCO2 = pCO2 > 0;
+    const hasWater = h2o > 0;
+    const hasCorrosivity = corrosivity && corrosivity !== "<2 mpy";
+    const gatePassed = hasCO2 || hasWater || hasCorrosivity;
+    if (!gatePassed) return { code: "internal_corrosion", label: "Internal Corrosion", category: "Internal Thinning", score: 0, severity: "NOT" };
+    let score = 0;
+    if (pCO2 > 0) {
+      const sev = pCO2SeverityJS(pCO2);
+      score = baseSeverityScoreJS(sev);
+    } else {
+      score = factor(dmFactors.corrosivityMPY, corrosivity) || 1.0;
+    }
+    if (h2o > 5) score += 0; // TODO_ENGINEERING_CONFIRMATION
+    const phMod = factor(dmFactors.ph, risk.ph_level) - 1; // currently 0
+    score += phMod;
+    const inhibitorMod = factor(dmFactors.inhibitor, risk.inhibitor_effectiveness) - 1;
+    score += inhibitorMod;
+    const biocideNoWater = (risk.biocide_treatment === "No" && h2o > 0);
+    if (biocideNoWater) score += 0; // TODO_ENGINEERING_CONFIRMATION
+    score = escalateByFindingJS(score, risk.prev_int_thinning, risk.conf_int_thinning);
+    const sev = severityFromScoreJS(score);
+    return { code: "internal_corrosion", label: "Internal Corrosion", category: "Internal Thinning", score, severity: sev };
+  }
+
+  function scoreExternalCorrosionJS(risk, input) {
+    const coating = risk.coating_condition;
+    const cpStat = risk.cp_status;
+    const cpPot = numberValue(risk.cp_potential_mv);
+    const soil = risk.soil_resistivity;
+    const baseRate = numberValue(risk.base_external_corr_rate);
+    const coatingConcern = coating === "Damaged";
+    const cpConcern = cpStat === "failed" || cpStat === "borderline";
+    const soilConcern = soil === "<1000";
+    const gatePassed = cpConcern || coatingConcern || soilConcern;
+    if (!gatePassed) return { code: "external_corrosion", label: "External Corrosion", category: "External Damage", score: 0, severity: "NOT" };
+    let soilFactor = factor(dmFactors.soil, soil);
+    let coatingFactor = factor(dmFactors.coating, coating);
+    let cpFactor = factor(dmFactors.cp, cpStat);
+    if (cpPot !== 0 && cpPot > -850 && cpFactor < factor(dmFactors.cp, "borderline")) cpFactor = factor(dmFactors.cp, "borderline");
+    let score = baseRate * soilFactor * coatingFactor * cpFactor;
+    if (baseRate > 0) score = Math.max(score, 1.0);
+    score = escalateByFindingJS(score, risk.prev_ext_corrosion, risk.conf_ext_corrosion);
+    return { code: "external_corrosion", label: "External Corrosion", category: "External Damage", score, severity: severityFromScoreJS(score) };
+  }
+
+  function scoreLocalizedCorrosionJS(risk, input, internalResult) {
+    const internalScore = internalResult ? internalResult.score : 0;
+    const chloride = numberValue(risk.chloride_content);
+    const phLevel = risk.ph_level;
+    const prevLoc = risk.prev_loc_int_corrosion;
+    const gatePassed = internalResult.severity !== "NOT" || chloride >= 3 || phLevel === "≤4.5" || prevLoc === "Finding";
+    if (!gatePassed) return { code: "localized_corrosion", label: "Localized Corrosion", category: "Internal Thinning", score: 0, severity: "NOT" };
+    let score = internalScore;
+    if (chloride >= 3) score += factor(dmFactors.chloride, chloride) - 1;
+    if (phLevel === "≤4.5" || phLevel === "4.5-6.5") score += factor(dmFactors.ph, phLevel) - 1;
+    score = escalateByFindingJS(score, prevLoc, risk.conf_loc_int_corrosion);
+    return { code: "localized_corrosion", label: "Localized Corrosion", category: "Internal Thinning", score, severity: severityFromScoreJS(score) };
+  }
+
+  function scoreErosionJS(risk) {
+    const velocity = risk.flow_velocity_condition;
+    const solids = risk.solid_content;
+    const corrosivity = risk.fluid_corrosivity_mpy;
+    const gatePassed = (velocity && velocity !== "" && velocity !== "Low (<3 m/s)") || (solids && solids !== "" && solids !== "None");
+    if (!gatePassed) return { code: "erosion", label: "Erosion", category: "Internal Thinning", score: 0, severity: "NOT" };
+    let score = 1.0;
+    if (solids && solids !== "" && solids !== "None") score += factor(dmFactors.solidContent, solids) - 1;
+    if (corrosivity && corrosivity !== "" && corrosivity !== "<2 mpy") score += factor(dmFactors.corrosivityMPY, corrosivity) - 1;
+    return { code: "erosion", label: "Erosion", category: "Internal Thinning", score, severity: severityFromScoreJS(score) };
+  }
+
+  function scoreErosionCorrosionJS(risk, input, erosionResult) {
+    if (erosionResult.severity === "NOT") return { code: "erosion_corrosion", label: "Erosion-Corrosion", category: "Internal Thinning", score: 0, severity: "NOT" };
+    let score = erosionResult.score;
+    const corrosivity = risk.fluid_corrosivity_mpy;
+    score += factor(dmFactors.corrosivityMPY, corrosivity) - 1;
+    return { code: "erosion_corrosion", label: "Erosion-Corrosion", category: "Internal Thinning", score, severity: severityFromScoreJS(score) };
+  }
+
+  function scoreCrackingJS(risk, input) {
+    const pH2S = numberValue(input.h2s_partial_pressure_psig) || calculateH2SPartialPressureJS(risk, input);
+    const h2sContent = numberValue(risk.h2s_content);
+    const prevCracking = risk.prev_int_cracking || "No Finding";
+    const gatePassed = pH2S >= 0.05 || prevCracking === "Finding" || h2sContent > 0;
+    if (!gatePassed) return { code: "cracking", label: "Cracking", category: "Internal Cracking", score: 0, severity: "NOT" };
+    let score = baseSeverityScoreJS(pH2SSeverityJS(pH2S));
+    score += factor(dmFactors.pwht, risk.pwht_status) - 1;
+    score += factor(dmFactors.weld, risk.weld_joint_type) - 1;
+    score = escalateByFindingJS(score, prevCracking, risk.conf_int_cracking);
+    return { code: "cracking", label: "Cracking", category: "Internal Cracking", score, severity: severityFromScoreJS(score) };
+  }
+
+  function scoreSCCJS(risk, input) {
+    const smysPct = numberValue(input.smys_utilization_pct) || calculateSMYSUtilizationPctJS(input);
+    const coating = risk.coating_condition;
+    const cpStatus = risk.cp_status;
+    const h2sContent = numberValue(risk.h2s_content);
+    const stressConcern = smysPct >= 30;
+    const coatingConcern = coating === "Damaged";
+    const cpConcern = cpStatus === "failed" || cpStatus === "borderline";
+    const h2sPresent = h2sContent > 0;
+    const gatePassed = stressConcern && (coatingConcern || cpConcern || h2sPresent);
+    if (!gatePassed) return { code: "scc", label: "SCC", category: "Internal Cracking", score: 0, severity: "NOT" };
+    let score;
+    if (smysPct >= 72) score = 3.0;
+    else if (smysPct >= 50) score = 2.0;
+    else score = 1.0;
+    if (coatingConcern) score += factor(dmFactors.coating, coating) - 1;
+    if (h2sPresent) score += 0; // TODO_ENGINEERING_CONFIRMATION: H2S for sour SCC
+    return { code: "scc", label: "SCC", category: "Internal Cracking", score, severity: severityFromScoreJS(score) };
+  }
+
+  function scoreFatigueJS(risk) {
+    const cycles = numberValue(risk.pressure_cycle_count);
+    const prevCracking = risk.prev_int_cracking || "No Finding";
+    const gatePassed = cycles > 0 || prevCracking === "Finding";
+    if (!gatePassed) return { code: "fatigue", label: "Fatigue", category: "Internal Cracking", score: 0, severity: "NOT" };
+    let score = 1.0;
+    if (numberValue(risk.pressure_range_pct) > 0) score += 0; // TODO_ENGINEERING_CONFIRMATION: stress range modifier
+    score += factor(dmFactors.weld, risk.weld_joint_type) - 1;
+    score = escalateByFindingJS(score, prevCracking, risk.conf_int_cracking);
+    return { code: "fatigue", label: "Fatigue", category: "Internal Cracking", score, severity: severityFromScoreJS(score) };
+  }
+
+  function scoreCoatingDegradationJS(risk, input) {
+    const coating = risk.coating_condition;
+    const cpStatus = risk.cp_status;
+    const cpPot = numberValue(risk.cp_potential_mv);
+    const insulationCond = risk.insulation_condition;
+    const coatingConcern = coating === "Damaged";
+    const cpConcern = cpStatus === "failed" || cpStatus === "borderline";
+    const insulationConcern = insulationCond === "Damaged";
+    const gatePassed = coatingConcern || cpConcern || insulationConcern;
+    if (!gatePassed) return { code: "coating_degradation", label: "Coating Degradation", category: "External Damage", score: 0, severity: "NOT" };
+    let score = 1.0;
+    const coatingDamageLevel = risk.coating_damage_level;
+    if (coatingConcern && coatingDamageLevel) score += factor(dmFactors.coatingDamage, coatingDamageLevel) - 1;
+    if (risk.soil_resistivity === "<1000") score += factor(dmFactors.soil, risk.soil_resistivity) - 1;
+    if (cpPot !== 0 && cpPot > -850) score += 0; // TODO_ENGINEERING_CONFIRMATION: CP potential >-850mV
+    const opTempC = (5.0 / 9.0) * (numberValue(input.design_temperature_f) - 32);
+    if (insulationConcern && opTempC >= 0 && opTempC <= 175) score += 0; // TODO_ENGINEERING_CONFIRMATION: CUI
+    score = escalateByFindingJS(score, risk.prev_ext_corrosion, risk.conf_ext_corrosion);
+    return { code: "coating_degradation", label: "Coating Degradation", category: "External Damage", score, severity: severityFromScoreJS(score) };
+  }
+
+  function scoreThirdPartyDamageJS(risk) {
+    const baseRate = numberValue(risk.base_tpd_rate);
+    const depthFactor = factor(dmFactors.depth, risk.depth_of_cover);
+    const patrolFactor = factor(dmFactors.patrol, risk.patrol_frequency);
+    const rowFactor = factor(dmFactors.row, risk.row_condition);
+    const oneCallFactor = factor(dmFactors.oneCall, risk.one_call_system);
+    let score = baseRate;
+    if (baseRate <= 0) score = 1.0;
+    score = escalateByFindingJS(score, null, null);
+    return { code: "third_party_mechanical_damage", label: "Third-Party / Mechanical Damage", category: "External Damage", score, severity: severityFromScoreJS(score) };
+  }
+
+  function scoreChemicalDamageJS() {
+    return { code: "chemical_damage", label: "Chemical Damage", category: "Internal Thinning", score: 0, severity: "NOT" };
+  }
+
+  function severityFromScoreJS(score) {
+    if (score <= 0) return "NOT";
+    if (score < 1.5) return "Low";
+    if (score < 3.0) return "Moderate";
+    return "High";
+  }
+
+  function calculateCO2PartialPressureJS(risk, input) {
+    const co2 = numberValue(risk.co2_content);
+    const opPressure = numberValue(input.operating_pressure_psi);
+    if (co2 <= 0 || opPressure <= 0) return 0;
+    return (co2 / 100) * opPressure;
+  }
+
+  function calculateH2SPartialPressureJS(risk, input) {
+    const h2s = numberValue(risk.h2s_content);
+    const opPressure = numberValue(input.operating_pressure_psi);
+    if (h2s <= 0 || opPressure <= 0) return 0;
+    return (h2s / 100) * opPressure;
+  }
+
+  function calculateWallThicknessRatioJS(input) {
+    const points = input.inspection_points || [];
+    if (!points.length) return 1.0;
+    let minActual = points[0].actual_thickness_mm;
+    let minRequired = numberValue(points[0].required_thickness_mm);
+    const reqIn = requiredThicknessIn(input);
+    if (minRequired <= 0) minRequired = reqIn * 25.4;
+    for (const pt of points) {
+      const actual = numberValue(pt.actual_thickness_mm);
+      if (actual < minActual) minActual = actual;
+      let reqMM = numberValue(pt.required_thickness_mm);
+      if (reqMM <= 0) reqMM = reqIn * 25.4;
+      if (reqMM < minRequired) minRequired = reqMM;
+    }
+    if (minRequired <= 0) return 1.0;
+    return minActual / minRequired;
+  }
+
+  function calculateSMYSUtilizationPctJS(input) {
+    const smys = numberValue(input.smys_psi);
+    const od = numberValue(input.outside_diameter_in);
+    const points = input.inspection_points || [];
+    if (smys <= 0 || od <= 0 || !points.length) return 0;
+    let minActualIn = numberValue(points[0].actual_thickness_mm) / 25.4;
+    for (const pt of points) {
+      const actualIn = numberValue(pt.actual_thickness_mm) / 25.4;
+      if (actualIn < minActualIn) minActualIn = actualIn;
+    }
+    if (minActualIn <= 0) return 0;
+    return (numberValue(input.operating_pressure_psi) * od) / (2 * minActualIn * smys) * 100;
+  }
+
+  function parseMonthYearToFloatJS(val) {
+    if (!val) return 0;
+    const raw = String(val).trim();
+    if (!raw) return 0;
+    if (raw.includes("/")) {
+      const parts = raw.split("/");
+      const month = parseFloat(parts[0]);
+      const year = parseFloat(parts[1]);
+      if (isNaN(year)) return 0;
+      if (isNaN(month)) return year;
+      return year + (month - 1) / 12;
+    }
+    if (raw.includes("-")) {
+      const parts = raw.split("-");
+      const first = parseFloat(parts[0]);
+      const second = parseFloat(parts[1]);
+      if (isNaN(first)) return 0;
+      if (isNaN(second)) return first;
+      if (second > 100) return second + (first - 1) / 12;
+      return first + (second - 1) / 12;
+    }
+    const num = parseFloat(raw);
+    return isNaN(num) ? 0 : num;
   }
 
   function calculatePipelineRealtime(input) {
@@ -499,25 +865,46 @@ $(function () {
         maop_status: maop > numberValue(input.internal_design_pressure_psi) ? "ACCEPTABLE" : "NOT ACCEPTABLE",
       };
     });
-    const dfTPD = numberValue(risk.base_tpd_rate) / (factor({ "<1m": 1, "1-2m": 1, ">2m": 1 }, risk.depth_of_cover) * factor({ rare: 1, monthly: 1, weekly_daily: 1 }, risk.patrol_frequency) * factor({ poor: 1, fair: 1, good: 1 }, risk.row_condition));
-    const cpFactor = factor({ failed: 1, borderline: 1, normal: 1 }, risk.cp_status);
-    const dfExternal = numberValue(risk.base_external_corr_rate) * factor({ "<1000": 1, "1000-5000": 1, ">5000": 1 }, risk.soil_resistivity) * factor({ Good: 1, Damaged: 1, "Not Inspectable": 1, "Not Applicable": 1 }, risk.coating_condition) * cpFactor;
-    const dfInternal = numberValue(risk.base_internal_corr_rate);
-    const governing = [
-      { label: "Third-Party Damage", code: "third_party_mechanical_damage", value: dfTPD },
-      { label: "External Corrosion", code: "external_corrosion", value: dfExternal },
-      { label: "Internal Corrosion", code: "internal_corrosion", value: dfInternal },
-    ].sort((a, b) => b.value - a.value)[0];
+
+    // Auto-calculate partial pressures and SMYS utilization
+    input.co2_partial_pressure_psig = calculateCO2PartialPressureJS(risk, input);
+    input.h2s_partial_pressure_psig = calculateH2SPartialPressureJS(risk, input);
+    input.wall_thickness_ratio = calculateWallThicknessRatioJS(input);
+    input.smys_utilization_pct = calculateSMYSUtilizationPctJS(input);
+
+    // Gate-Modifier-Escalation scoring
+    const internalResult = scoreInternalCorrosionJS(risk, input);
+    const externalResult = scoreExternalCorrosionJS(risk, input);
+    const localizedResult = scoreLocalizedCorrosionJS(risk, input, internalResult);
+    const erosionResult = scoreErosionJS(risk);
+    const erosionCorrosionResult = scoreErosionCorrosionJS(risk, input, erosionResult);
+    const crackingResult = scoreCrackingJS(risk, input);
+    const sccResult = scoreSCCJS(risk, input);
+    const fatigueResult = scoreFatigueJS(risk);
+    const coatingResult = scoreCoatingDegradationJS(risk, input);
+    const tpdResult = scoreThirdPartyDamageJS(risk);
+    const chemicalResult = scoreChemicalDamageJS();
+
+    const dmResults = [externalResult, coatingResult, tpdResult, internalResult, localizedResult, erosionResult, erosionCorrosionResult, crackingResult, sccResult, fatigueResult, chemicalResult];
+
+    const governingDM = dmResults.reduce((best, dm) => dm.score > best.score ? dm : best, dmResults[0]);
+    const governingScore = governingDM.score || 1e-10; // avoid zero PoF for display
+
     const fms = Math.pow(10, (-0.02 * ((numberValue(risk.management_system_score) / 1000) * 100)) + 1);
-    const pofValue = numberValue(risk.generic_failure_frequency) * governing.value * fms;
+    const pofValue = numberValue(risk.generic_failure_frequency) * governingScore * fms;
     const pof = pofCategory(pofValue);
     const isGas = isGasService(input.service);
     const cofData = isGas ? gasCoF(input, risk) : liquidCoF(input, risk);
     const finalRiskCode = `${pof}${cofData.cof}`;
     const finalRiskLevel = matrixLevel(pof, cofData.cof);
-    const dmResults = calculateRealtimeDamageMechanisms(risk, dfTPD, dfExternal, dfInternal, pointResults);
     const inspectionPlanResults = calculateRealtimeInspectionPlan(dmResults);
-    const groups = buildRealtimeRecommendationGroups(governing.label, finalRiskLevel, isGas);
+    const groups = buildRealtimeRecommendationGroups(governingDM.label, finalRiskLevel, isGas);
+
+    // Map DM scores to legacy DF fields (0 → 1.0 for backward compat)
+    const dfTPD = tpdResult.score || 1.0;
+    const dfExternal = externalResult.score || 1.0;
+    const dfInternal = internalResult.score || 1.0;
+
     return {
       final_risk_code: finalRiskCode,
       final_risk_level: `${finalRiskLevel} Risk`,
@@ -531,8 +918,8 @@ $(function () {
       third_party_damage_factor: dfTPD,
       external_corrosion_factor: dfExternal,
       internal_corrosion_factor: dfInternal,
-      governing_damage_factor: governing.value,
-      governing_damage_mechanism: governing.label,
+      governing_damage_factor: governingScore,
+      governing_damage_mechanism: governingDM.label,
       damage_mechanism_results: dmResults,
       inspection_plan_results: inspectionPlanResults,
       point_results: pointResults,
@@ -541,32 +928,9 @@ $(function () {
       adjusted_spill_volume: cofData.adjustedSpill || 0,
       recommendation_groups: groups,
       recommendation_source: "Realtime browser preview; backend recalculates on save.",
-      recommendation_rule_name: "pipeline-js-preview-v1 TODO_ENGINEERING_CONFIRMATION",
+      recommendation_rule_name: "pipeline-js-preview-v2",
       recommendation: [...groups.immediate_actions, ...groups.inspection_monitoring, ...groups.long_term_mitigation].join(" "),
     };
-  }
-
-  function calculateRealtimeDamageMechanisms(risk, dfTPD, dfExternal, dfInternal, points) {
-    const remainingLives = points.map((p) => numberValue(p.remaining_life_years)).filter((v) => v > 0);
-    const rl = remainingLives.length ? Math.min(...remainingLives) : 20;
-    const rlScore = rl < 2 ? 3.5 : rl < 5 ? 2.2 : rl < 10 ? 1.2 : 0.8;
-    const flowScore = numberValue(risk.flow_rate) >= 1000 ? 3.5 : numberValue(risk.flow_rate) >= 500 ? 2.2 : numberValue(risk.flow_rate) >= 100 ? 1.2 : 0;
-    const internalMap = { low: 1, none: 1, healthy: 1, medium: 1.9, present: 1.9, warning: 1.9, high: 3.5, critical: 3.5 };
-    const effectivity = collectInspectionEffectivityByDM();
-const definitions = [
-      ["external_corrosion", "External Corrosion", "External Damage", dfExternal],
-      ["coating_degradation", "Coating Degradation", "External Damage", factor({ Good: 1, Damaged: 1, "Not Inspectable": 1, "Not Applicable": 1 }, risk.coating_condition)],
-      ["third_party_mechanical_damage", "Third-Party / Mechanical Damage", "External Damage", dfTPD],
-      ["internal_corrosion", "Internal Corrosion", "Internal Thinning", dfInternal],
-      ["localized_corrosion", "Localized Corrosion", "Internal Thinning", dfInternal],
-      ["erosion", "Erosion", "Internal Thinning", factor({ "Low (<3 m/s)": 1, "Moderate (3-10 m/s)": 1, "High (10-20 m/s)": 1, "Very High (>20 m/s)": 1 }, risk.flow_velocity_condition)],
-      ["erosion_corrosion", "Erosion-Corrosion", "Internal Thinning", dfInternal],
-      ["cracking", "Cracking", "Internal Cracking", 0],
-      ["scc", "SCC", "Internal Cracking", 0],
-      ["fatigue", "Fatigue", "Internal Cracking", 0],
-      ["chemical_damage", "Chemical Damage", "Internal Cracking", 0],
-    ];
-    return definitions.map(([code, label, category, score]) => ({ code, label, category, score, severity: severity(score), inspection_effectivity: effectivity[code] || "Medium" }));
   }
 
   function calculateRealtimeInspectionPlan(dmResults) {
@@ -642,6 +1006,13 @@ const definitions = [
       ["base_tpd_rate", "Base third-party damage rate must be a valid number."],
       ["base_external_corr_rate", "Base external corrosion rate must be a valid number."],
       ["base_internal_corr_rate", "Base internal corrosion rate must be a valid number."],
+      ["co2_content", "CO2 content must be zero or a valid number.", true],
+      ["h2s_content", "H2S content must be zero or a valid number.", true],
+      ["h2o_content", "H2O content must be zero or a valid number.", true],
+      ["n2_content", "N2 content must be zero or a valid number.", true],
+      ["co_content", "CO content must be zero or a valid number.", true],
+      ["pressure_cycle_count", "Pressure cycle count must be zero or a valid number.", true],
+      ["pressure_range_pct", "Pressure range must be zero or a valid number.", true],
     ];
     if (!isGasService($("[name='service']").val())) {
       numericFields.push(["flow_rate", "Flow rate must be a valid number."]);
@@ -649,11 +1020,28 @@ const definitions = [
       numericFields.push(["segment_length_between_valves_m", "Segment length between isolation valves must be a valid number."]);
     }
 
-    numericFields.forEach(([name, message]) => {
+    numericFields.forEach(([name, message, allowZero]) => {
       const $field = $(`[name='${name}']`);
       if (!$field.length) return;
-      if (numberValue($field.val()) <= 0) {
+      const value = parseLocalizedNumber($field.val());
+      if (!Number.isFinite(value) || (allowZero && value < 0) || (!allowZero && value <= 0)) {
         setFieldError($field, message);
+        valid = false;
+      }
+    });
+
+    const chloride = parseInt($("input[name='chloride_content']").val(), 10);
+    if (!Number.isFinite(chloride) || chloride < 0 || chloride > 5) {
+      setFieldError($("input[name='chloride_content']"), "Chloride content must be between 0 and 5.");
+      valid = false;
+    }
+
+    $("#pipelinePointsTable tbody tr").each(function () {
+      const $measured = $(this).find("[name='measured_year']");
+      const measured = parseMonthYearToFloatJS($measured.val());
+      const used = parseMonthYearToFloatJS($("[name='year_used']").val() || $("[name='year_built']").val());
+      if (measured <= used) {
+        setFieldError($measured, "Measured year must be after year used.");
         valid = false;
       }
     });
@@ -833,13 +1221,17 @@ const definitions = [
     if (!$code.length) return;
     const serviceCode = codeForService($("[name='service']").val());
     const nextCode = forceServiceCode ? serviceCode : normalizeApplicableCode($code.val() || serviceCode);
-    $code.val(nextCode);
-    const materialStress = derivedMaterialStress({
-      applicable_code: nextCode,
-      smys_psi: $("[name='smys_psi']").val(),
-    });
-    console.log("Derived material stress:", materialStress);
-    $("[name='material_stress_psi']").val(materialStress > 0 ? fmt(materialStress) : "");
+    isProgrammaticUpdate = true;
+    try {
+      $code.val(nextCode);
+      const materialStress = derivedMaterialStress({
+        applicable_code: nextCode,
+        smys_psi: $("[name='smys_psi']").val(),
+      });
+      $("[name='material_stress_psi']").val(materialStress > 0 ? fmt(materialStress) : "");
+    } finally {
+      isProgrammaticUpdate = false;
+    }
     const source = nextCode.includes("B31.3")
       ? "Derived as min(2/3 x SMYS, 20,000 psi) for B31.3 allowable stress."
       : "Derived from SMYS for B31.4/B31.8 pipeline formulas.";
@@ -882,8 +1274,25 @@ const definitions = [
   }
 
   function governingDamageMechanismCode() {
-    const results = calculateRealtimeDamageMechanisms(collectPayloadShallowRiskInput(), 0, 0, 0, []);
-    const highest = results.sort((a, b) => (b.score || 0) - (a.score || 0))[0];
+    const risk = collectPayloadShallowRiskInput();
+    const input = collectPayload(false);
+    input.co2_partial_pressure_psig = calculateCO2PartialPressureJS(risk, input);
+    input.h2s_partial_pressure_psig = calculateH2SPartialPressureJS(risk, input);
+    input.wall_thickness_ratio = calculateWallThicknessRatioJS(input);
+    input.smys_utilization_pct = calculateSMYSUtilizationPctJS(input);
+    const internalResult = scoreInternalCorrosionJS(risk, input);
+    const externalResult = scoreExternalCorrosionJS(risk, input);
+    const localizedResult = scoreLocalizedCorrosionJS(risk, input, internalResult);
+    const erosionResult = scoreErosionJS(risk);
+    const erosionCorrosionResult = scoreErosionCorrosionJS(risk, input, erosionResult);
+    const crackingResult = scoreCrackingJS(risk, input);
+    const sccResult = scoreSCCJS(risk, input);
+    const fatigueResult = scoreFatigueJS(risk);
+    const coatingResult = scoreCoatingDegradationJS(risk, input);
+    const tpdResult = scoreThirdPartyDamageJS(risk);
+    const chemicalResult = scoreChemicalDamageJS();
+    const dmResults = [externalResult, coatingResult, tpdResult, internalResult, localizedResult, erosionResult, erosionCorrosionResult, crackingResult, sccResult, fatigueResult, chemicalResult];
+    const highest = dmResults.reduce((best, dm) => dm.score > best.score ? dm : best, dmResults[0]);
     return highest && highest.score > 0 ? highest.code : "internal_corrosion";
   }
 
@@ -895,6 +1304,7 @@ const definitions = [
       soil_resistivity: $("[name='soil_resistivity']").val(),
       coating_condition: $("[name='coating_condition']").val(),
       cp_status: $("[name='cp_status']").val(),
+      cp_potential_mv: numberValue($("input[name='cp_potential_mv']").val()),
       coating_damage_level: $("[name='coating_damage_level']").val(),
       one_call_system: $("[name='one_call_system']").val(),
       ph_level: $("[name='ph_level']").val(),
@@ -907,7 +1317,33 @@ const definitions = [
       weld_joint_type: $("[name='weld_joint_type']").val(),
       flow_velocity_condition: $("[name='flow_velocity_condition']").val(),
       solid_content: $("[name='solid_content']").val(),
+      prev_ext_corrosion: $("[name='prev_ext_corrosion']").val(),
+      prev_int_thinning: $("[name='prev_int_thinning']").val(),
+      prev_int_cracking: $("[name='prev_int_cracking']").val(),
+      prev_loc_int_corrosion: $("[name='prev_loc_int_corrosion']").val(),
+      insulation_condition: $("[name='insulation_condition']").val(),
+      ext_coating_condition: $("[name='ext_coating_condition']").val(),
+      env_ext_cracking: $("[name='env_ext_cracking']").val(),
+      conf_ext_corrosion: $("[name='conf_ext_corrosion']").val(),
+      conf_int_thinning: $("[name='conf_int_thinning']").val(),
+      conf_int_cracking: $("[name='conf_int_cracking']").val(),
+      conf_loc_int_corrosion: $("[name='conf_loc_int_corrosion']").val(),
+      co2_content: numberValue($("input[name='co2_content']").val()),
+      h2s_content: numberValue($("input[name='h2s_content']").val()),
+      h2o_content: numberValue($("input[name='h2o_content']").val()),
+      chloride_content: parseInt($("input[name='chloride_content']").val(), 10) || 0,
       flow_rate: numberValue($("input[name='flow_rate']").val()),
+      base_tpd_rate: numberValue($("input[name='base_tpd_rate']").val()),
+      base_external_corr_rate: numberValue($("input[name='base_external_corr_rate']").val()),
+      base_internal_corr_rate: numberValue($("input[name='base_internal_corr_rate']").val()),
+      management_system_score: numberValue($("input[name='management_system_score']").val()),
+      generic_failure_frequency: numberValue($("input[name='generic_failure_frequency']").val()),
+      operating_pressure_psi: numberValue($("input[name='operating_pressure_psi']").val()),
+      coating_damage_level: $("[name='coating_damage_level']").val(),
+      insulation_damage_level: $("[name='insulation_damage_level']").val(),
+      ext_coating_damage_level: $("[name='ext_coating_damage_level']").val(),
+      pressure_cycle_count: numberValue($("input[name='pressure_cycle_count']").val()),
+      pressure_range_pct: numberValue($("input[name='pressure_range_pct']").val()),
     };
   }
 
@@ -937,9 +1373,13 @@ const definitions = [
   }
 
   function corrosionRate(point, input) {
-    const years = numberValue(point.measured_year) - numberValue(input.year_used);
-    if (years <= 0) return 0;
-    return Math.max((numberValue(point.nominal_thickness_mm) - numberValue(point.actual_thickness_mm)) / years, 0);
+    const nominal = numberValue(point.nominal_thickness_mm);
+    const actual = numberValue(point.actual_thickness_mm);
+    const yMeasured = parseMonthYearToFloatJS(String(point.measured_year || ""));
+    const yUsed = parseMonthYearToFloatJS(String(input.year_used || input.year_built || ""));
+    const diff = yMeasured - yUsed;
+    if (diff <= 0 || nominal <= 0) return 0;
+    return Math.max((nominal - actual) / diff, 0);
   }
 
   function capRemainingLife(value) {
@@ -1072,8 +1512,7 @@ const definitions = [
   function fmt(value) {
     const numeric = parseLocalizedNumber(value);
     if (!Number.isFinite(numeric)) return value || "-";
-    if (Math.abs(numeric) > 0 && Math.abs(numeric) < 0.001) return numeric.toExponential(3).replace(".", ",");
-    return numeric.toLocaleString("id-ID", { useGrouping: false, maximumFractionDigits: 2 });
+    return numeric.toLocaleString("id-ID", { useGrouping: false, maximumFractionDigits: 6 });
   }
 
   function parseLocalizedNumber(value) {
