@@ -2,8 +2,10 @@ package models
 
 import (
 	"database/sql"
+	"encoding/json"
 	"math"
 	"pv-risk/migrations"
+	"strings"
 	"testing"
 
 	_ "modernc.org/sqlite"
@@ -44,6 +46,19 @@ func samplePipelineOilInput() PipelineOilInput {
 			{InspectionPoint: "IP-8 C", NominalThicknessMM: 8.18, RequiredThicknessMM: 4.34, ActualThicknessMM: 6.21, MeasuredYear: "2025"},
 		},
 	}
+}
+
+func newPipelineTestDB(t *testing.T) *sql.DB {
+	t.Helper()
+	db, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { db.Close() })
+	db.SetMaxOpenConns(1)
+	migrations.PipelineOilAssessmentTables(db)
+	migrations.PipelineOilReportingTables(db)
+	return db
 }
 
 func samplePipelineGasWorkbookInput() PipelineOilInput {
@@ -522,6 +537,103 @@ func TestPipelineRecommendationCarriesSystemAdvisorySource(t *testing.T) {
 	}
 	if result.GoverningDamageMechanism == "" {
 		t.Fatalf("expected a governing damage mechanism, got empty")
+	}
+}
+
+func TestPipelineManualRecommendationSectionsAreSavedEditedAndNotOverwritten(t *testing.T) {
+	db := newPipelineTestDB(t)
+	service := NewPipelineOilService(db)
+	input := samplePipelineOilInput()
+	input.RecommendationImmediateActions = "Verify CP\nAssign owner"
+	input.RecommendationInspectionMonitoring = "Run UT survey\nReview CIPS"
+	input.RecommendationLongTermMitigation = "Install permanent sleeve"
+	input.RiskInput.EngineeringNotes = "Line one\nLine two"
+
+	id, err := service.CreateDraftAssessment(input)
+	if err != nil {
+		t.Fatalf("create draft: %v", err)
+	}
+	saved, err := service.GetAssessmentDetail(id)
+	if err != nil {
+		t.Fatalf("get draft: %v", err)
+	}
+	if saved.Input.RecommendationImmediateActions != input.RecommendationImmediateActions {
+		t.Fatalf("saved immediate actions mismatch: %q", saved.Input.RecommendationImmediateActions)
+	}
+
+	input.RecommendationImmediateActions = "Edited immediate\nKeep line break"
+	if err = service.UpdateDraftAssessment(id, input); err != nil {
+		t.Fatalf("edit draft: %v", err)
+	}
+	result, err := service.CalculateAssessment(id, input)
+	if err != nil {
+		t.Fatalf("calculate assessment: %v", err)
+	}
+	if got := strings.Join(result.RecommendationGroups.ImmediateActions, "\n"); got != input.RecommendationImmediateActions {
+		t.Fatalf("manual immediate actions overwritten: %q", got)
+	}
+	if got := strings.Join(result.RecommendationGroups.InspectionMonitor, "\n"); got != input.RecommendationInspectionMonitoring {
+		t.Fatalf("manual inspection monitoring overwritten: %q", got)
+	}
+	if got := strings.Join(result.RecommendationGroups.LongTermMitigation, "\n"); got != input.RecommendationLongTermMitigation {
+		t.Fatalf("manual long-term mitigation overwritten: %q", got)
+	}
+	if result.RecommendationConfidence == "" || result.RecommendationSource == "" || result.RecommendationRuleName == "" {
+		t.Fatalf("expected recommendation metadata to remain available: %+v", result)
+	}
+	if strings.Contains(result.Recommendation, "Edited immediate") || strings.Contains(result.Recommendation, "Run UT survey") || strings.Contains(result.Recommendation, "Install permanent sleeve") {
+		t.Fatalf("expected advisory text to remain system-generated, got %q", result.Recommendation)
+	}
+	if !strings.Contains(result.Recommendation, "Keep the formula trace") {
+		t.Fatalf("expected system-generated advisory text, got %q", result.Recommendation)
+	}
+
+	recalculated := input
+	recalculated.OperatingPressurePsi = input.OperatingPressurePsi + 10
+	result, err = service.CalculateAssessment(id, recalculated)
+	if err != nil {
+		t.Fatalf("recalculate assessment: %v", err)
+	}
+	if got := strings.Join(result.RecommendationGroups.ImmediateActions, "\n"); got != input.RecommendationImmediateActions {
+		t.Fatalf("recalculation overwrote manual recommendation: %q", got)
+	}
+}
+
+func TestPipelineManualRecommendationLegacyJSONStillDeserializes(t *testing.T) {
+	raw := []byte(`{"report_no":"legacy","manual_recommendation":"Legacy note\nsecond line","risk_input":{"engineering_notes":"old notes"}}`)
+	var input PipelineOilInput
+	if err := json.Unmarshal(raw, &input); err != nil {
+		t.Fatalf("legacy unmarshal failed: %v", err)
+	}
+	if input.ManualRecommendation != "Legacy note\nsecond line" {
+		t.Fatalf("legacy manual recommendation lost: %q", input.ManualRecommendation)
+	}
+	result := &PipelineOilResult{
+		Recommendation:       input.ManualRecommendation,
+		RecommendationSource: "User overridden recommendation.",
+	}
+	applyPipelineRecommendationCompatibility(&input, result)
+	if got := strings.Join(result.RecommendationGroups.ImmediateActions, "\n"); got != "Legacy manual recommendation: Legacy note\nsecond line" {
+		t.Fatalf("legacy recommendation not exposed as note: %q", got)
+	}
+}
+
+func TestPipelineManualRecommendationIsNotRequired(t *testing.T) {
+	input := samplePipelineOilInput()
+	input.ManualRecommendation = ""
+	input.RecommendationImmediateActions = ""
+	input.RecommendationInspectionMonitoring = ""
+	input.RecommendationLongTermMitigation = ""
+	if errs := ValidatePipelineOilDraft(input); len(errs) > 0 {
+		t.Fatalf("manual recommendation should not be required: %+v", errs)
+	}
+}
+
+func TestPipelineH2SPartialPressureUsesPPM(t *testing.T) {
+	got := calculateH2SPartialPressure(1000, 650)
+	want := 0.65
+	if math.Abs(got-want) > 0.000001 {
+		t.Fatalf("expected pH2S from ppm units %.6f, got %.6f", want, got)
 	}
 }
 

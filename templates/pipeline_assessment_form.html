@@ -550,10 +550,10 @@
 <h6 class="fw-bold text-primary"><i class="mdi mdi-molecule-co2"></i>A. Component Composition</h6>
                              <label class="form-label">CO2 Content (mol%)</label>
                              <div class="input-group mb-3"><input type="text" inputmode="decimal" class="form-control" name="co2_content" value="{{ .Input.RiskInput.CO2Content }}" placeholder="0"><span class="input-group-text">mol%</span></div>
-                             <label class="form-label">H2S Content (mol%)</label>
-                             <div class="input-group mb-3"><input type="text" inputmode="decimal" class="form-control" name="h2s_content" value="{{ .Input.RiskInput.H2SContent }}" placeholder="0"><span class="input-group-text">mol%</span></div>
-                             <label class="form-label">H2O Content (mol%)</label>
-                             <div class="input-group mb-3"><input type="text" inputmode="decimal" class="form-control" name="h2o_content" value="{{ .Input.RiskInput.H2OContent }}" placeholder="0"><span class="input-group-text">mol%</span></div>
+                             <label class="form-label">H2S Content (ppm)</label>
+                             <div class="input-group mb-3"><input type="text" inputmode="decimal" class="form-control" name="h2s_content" value="{{ .Input.RiskInput.H2SContent }}" placeholder="0"><span class="input-group-text">ppm</span></div>
+                             <label class="form-label">H2O Content (lb/mmscf)</label>
+                             <div class="input-group mb-3"><input type="text" inputmode="decimal" class="form-control" name="h2o_content" value="{{ .Input.RiskInput.H2OContent }}" placeholder="0"><span class="input-group-text">lb/mmscf</span></div>
                              <input type="hidden" name="n2_content" value="{{ .Input.RiskInput.N2Content }}">
                              <input type="hidden" name="co_content" value="{{ .Input.RiskInput.COContent }}">
                              <div class="pipeline-autocalc-panel mt-3">
@@ -905,7 +905,14 @@
                       <div class="card-header bg-transparent border-bottom"><h6 class="fw-bold mb-0 text-success"><i class="mdi mdi-clipboard-check-outline me-2"></i>Recommendation</h6></div>
                       <div class="card-body">
                         <div class="row g-3 align-items-start">
-                          <div class="col-lg-8"><div id="pipelineRecommendationGroups"></div></div>
+                          <div class="col-lg-8">
+                            <label class="form-label fw-bold text-danger">Immediate Actions</label>
+                            <textarea class="form-control mb-3" rows="4" name="recommendation_immediate_actions" placeholder="Enter immediate actions.">{{ .Input.RecommendationImmediateActions }}</textarea>
+                            <label class="form-label fw-bold text-warning">Inspection / Monitoring</label>
+                            <textarea class="form-control mb-3" rows="4" name="recommendation_inspection_monitoring" placeholder="Enter inspection or monitoring actions.">{{ .Input.RecommendationInspectionMonitoring }}</textarea>
+                            <label class="form-label fw-bold text-success">Long-Term Mitigation</label>
+                            <textarea class="form-control" rows="4" name="recommendation_long_term_mitigation" placeholder="Enter long-term mitigation actions.">{{ .Input.RecommendationLongTermMitigation }}</textarea>
+                          </div>
                           <div class="col-lg-4"><div class="alert alert-secondary small mb-0" id="pipelineRecommendationText"></div></div>
                         </div>
                       </div>
@@ -940,8 +947,6 @@
                       <div class="card-body">
                         <label class="form-label">Assessment By <span class="text-danger">*</span></label>
                         <input class="form-control mb-3" name="assessment_by" value="{{ .Input.AssessmentBy }}" required data-required-msg="Please enter the assessor name.">
-                        <label class="form-label">Manual Recommendation (Optional)</label>
-                        <textarea class="form-control mb-3" rows="3" name="manual_recommendation" placeholder="Overrides system recommendation if provided.">{{ .Input.ManualRecommendation }}</textarea>
                         <label class="form-label">Engineering Notes</label>
                         <textarea class="form-control" rows="4" name="engineering_notes" placeholder="Add optional notes for reviewers.">{{ .Input.RiskInput.EngineeringNotes }}</textarea>
                       </div>

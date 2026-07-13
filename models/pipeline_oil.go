@@ -251,54 +251,58 @@ func (fy FlexibleYear) Float() float64 {
 }
 
 type PipelineOilInput struct {
-	ID                        int                          `json:"id" form:"id"`
-	ReportNo                  string                       `json:"report_no" form:"report_no"`
-	PlaceIssued               string                       `json:"place_issued" form:"place_issued"`
-	DateIssued                string                       `json:"date_issued" form:"date_issued"`
-	OwnerUser                 string                       `json:"owner_user" form:"owner_user"`
-	Contractor                string                       `json:"contractor" form:"contractor"`
-	Location                  string                       `json:"location" form:"location"`
-	LineIdentification        string                       `json:"line_identification" form:"line_identification"`
-	YearBuilt                 int                          `json:"year_built" form:"year_built"`
-	YearUsed                  FlexibleYear                 `json:"year_used" form:"year_used"`
-	Service                   string                       `json:"service" form:"service"`
-	PipeSize                  string                       `json:"pipe_size" form:"pipe_size"`
-	PipeLengthM               float64                      `json:"pipe_length_m" form:"pipe_length_m"`
-	MaterialSpecification     string                       `json:"material_specification" form:"material_specification"`
-	FlangeMaterialSpec        string                       `json:"flange_material_spec" form:"flange_material_spec"`
-	SMYSPsi                   float64                      `json:"smys_psi" form:"smys_psi"`
-	InternalDesignPressurePsi float64                      `json:"internal_design_pressure_psi" form:"internal_design_pressure_psi"`
-	DesignTemperatureF        float64                      `json:"design_temperature_f" form:"design_temperature_f"`
-	OperatingTemperatureF     float64                      `json:"operating_temperature_f" form:"operating_temperature_f"`
-	TestPressurePsi           float64                      `json:"test_pressure_psi" form:"test_pressure_psi"`
-	MethodOfJoining           string                       `json:"method_of_joining" form:"method_of_joining"`
-	JointEfficiency           float64                      `json:"joint_efficiency" form:"joint_efficiency"`
-	CoatingType               string                       `json:"coating_type" form:"coating_type"`
-	CorrosionControl          string                       `json:"corrosion_control" form:"corrosion_control"`
-	AllowanceIn               float64                      `json:"allowance_in" form:"allowance_in"`
-	RightOfWay                string                       `json:"right_of_way" form:"right_of_way"`
-	SafetyDevice              string                       `json:"safety_device" form:"safety_device"`
-	AreaClassification        string                       `json:"area_classification" form:"area_classification"`
-	InspectionPeriod          string                       `json:"inspection_period" form:"inspection_period"`
-	ApplicableCode            string                       `json:"applicable_code" form:"applicable_code"`
-	OutsideDiameterIn         float64                      `json:"outside_diameter_in" form:"outside_diameter_in"`
-	OperatingPressurePsi      float64                      `json:"operating_pressure_psi" form:"operating_pressure_psi"`
-	RadiographicPercent       float64                      `json:"radiographic_percent" form:"radiographic_percent"`
-	NominalWallThicknessMM    float64                      `json:"nominal_wall_thickness_mm" form:"nominal_wall_thickness_mm"`
-	ActualWallThicknessMM     float64                      `json:"actual_wall_thickness_mm" form:"actual_wall_thickness_mm"`
-	TypeOfInstallation        string                       `json:"type_of_installation" form:"type_of_installation"`
-	QualityFactor             float64                      `json:"quality_factor" form:"quality_factor"`
-	WeldJointStrengthFactor   float64                      `json:"weld_joint_strength_factor" form:"weld_joint_strength_factor"`
-	DesignFactor              float64                      `json:"design_factor" form:"design_factor"`
-	MaterialStressPsi         float64                      `json:"material_stress_psi" form:"material_stress_psi"`
-	PreviousSKPP              string                       `json:"previous_skpp" form:"previous_skpp"`
-	ExpirationDate            string                       `json:"expiration_date" form:"expiration_date"`
-	CorrosionRateMPY          *float64                     `json:"corrosion_rate_mpy" form:"corrosion_rate_mpy"`
-	TemperatureDeratingFactor float64                      `json:"temperature_derating_factor" form:"temperature_derating_factor"`
-	ManualRecommendation      string                       `json:"manual_recommendation" form:"manual_recommendation"`
-	AssessmentBy              string                       `json:"assessment_by" form:"assessment_by"`
-	InspectionPoints          []PipelineOilInspectionPoint `json:"inspection_points"`
-	RiskInput                 PipelineOilRiskInput         `json:"risk_input"`
+	ID                                 int          `json:"id" form:"id"`
+	ReportNo                           string       `json:"report_no" form:"report_no"`
+	PlaceIssued                        string       `json:"place_issued" form:"place_issued"`
+	DateIssued                         string       `json:"date_issued" form:"date_issued"`
+	OwnerUser                          string       `json:"owner_user" form:"owner_user"`
+	Contractor                         string       `json:"contractor" form:"contractor"`
+	Location                           string       `json:"location" form:"location"`
+	LineIdentification                 string       `json:"line_identification" form:"line_identification"`
+	YearBuilt                          int          `json:"year_built" form:"year_built"`
+	YearUsed                           FlexibleYear `json:"year_used" form:"year_used"`
+	Service                            string       `json:"service" form:"service"`
+	PipeSize                           string       `json:"pipe_size" form:"pipe_size"`
+	PipeLengthM                        float64      `json:"pipe_length_m" form:"pipe_length_m"`
+	MaterialSpecification              string       `json:"material_specification" form:"material_specification"`
+	FlangeMaterialSpec                 string       `json:"flange_material_spec" form:"flange_material_spec"`
+	SMYSPsi                            float64      `json:"smys_psi" form:"smys_psi"`
+	InternalDesignPressurePsi          float64      `json:"internal_design_pressure_psi" form:"internal_design_pressure_psi"`
+	DesignTemperatureF                 float64      `json:"design_temperature_f" form:"design_temperature_f"`
+	OperatingTemperatureF              float64      `json:"operating_temperature_f" form:"operating_temperature_f"`
+	TestPressurePsi                    float64      `json:"test_pressure_psi" form:"test_pressure_psi"`
+	MethodOfJoining                    string       `json:"method_of_joining" form:"method_of_joining"`
+	JointEfficiency                    float64      `json:"joint_efficiency" form:"joint_efficiency"`
+	CoatingType                        string       `json:"coating_type" form:"coating_type"`
+	CorrosionControl                   string       `json:"corrosion_control" form:"corrosion_control"`
+	AllowanceIn                        float64      `json:"allowance_in" form:"allowance_in"`
+	RightOfWay                         string       `json:"right_of_way" form:"right_of_way"`
+	SafetyDevice                       string       `json:"safety_device" form:"safety_device"`
+	AreaClassification                 string       `json:"area_classification" form:"area_classification"`
+	InspectionPeriod                   string       `json:"inspection_period" form:"inspection_period"`
+	ApplicableCode                     string       `json:"applicable_code" form:"applicable_code"`
+	OutsideDiameterIn                  float64      `json:"outside_diameter_in" form:"outside_diameter_in"`
+	OperatingPressurePsi               float64      `json:"operating_pressure_psi" form:"operating_pressure_psi"`
+	RadiographicPercent                float64      `json:"radiographic_percent" form:"radiographic_percent"`
+	NominalWallThicknessMM             float64      `json:"nominal_wall_thickness_mm" form:"nominal_wall_thickness_mm"`
+	ActualWallThicknessMM              float64      `json:"actual_wall_thickness_mm" form:"actual_wall_thickness_mm"`
+	TypeOfInstallation                 string       `json:"type_of_installation" form:"type_of_installation"`
+	QualityFactor                      float64      `json:"quality_factor" form:"quality_factor"`
+	WeldJointStrengthFactor            float64      `json:"weld_joint_strength_factor" form:"weld_joint_strength_factor"`
+	DesignFactor                       float64      `json:"design_factor" form:"design_factor"`
+	MaterialStressPsi                  float64      `json:"material_stress_psi" form:"material_stress_psi"`
+	PreviousSKPP                       string       `json:"previous_skpp" form:"previous_skpp"`
+	ExpirationDate                     string       `json:"expiration_date" form:"expiration_date"`
+	CorrosionRateMPY                   *float64     `json:"corrosion_rate_mpy" form:"corrosion_rate_mpy"`
+	TemperatureDeratingFactor          float64      `json:"temperature_derating_factor" form:"temperature_derating_factor"`
+	RecommendationImmediateActions     string       `json:"recommendation_immediate_actions" form:"recommendation_immediate_actions"`
+	RecommendationInspectionMonitoring string       `json:"recommendation_inspection_monitoring" form:"recommendation_inspection_monitoring"`
+	RecommendationLongTermMitigation   string       `json:"recommendation_long_term_mitigation" form:"recommendation_long_term_mitigation"`
+	// Deprecated: retained only to deserialize legacy saved assessments.
+	ManualRecommendation string                       `json:"manual_recommendation" form:"manual_recommendation"`
+	AssessmentBy         string                       `json:"assessment_by" form:"assessment_by"`
+	InspectionPoints     []PipelineOilInspectionPoint `json:"inspection_points"`
+	RiskInput            PipelineOilRiskInput         `json:"risk_input"`
 }
 
 type PipelineOilRiskInput struct {
@@ -849,6 +853,7 @@ func (r *PipelineOilRepository) GetAssessment(id int) (*PipelineOilAssessment, e
 		}
 		a.Result = &result
 	}
+	applyPipelineRecommendationCompatibility(&a.Input, a.Result)
 	return &a, nil
 }
 
@@ -883,6 +888,7 @@ func (r *PipelineOilRepository) ListAssessments() ([]PipelineOilAssessment, erro
 			}
 			a.Result = &result
 		}
+		applyPipelineRecommendationCompatibility(&a.Input, a.Result)
 		items = append(items, a)
 	}
 	return items, rows.Err()
@@ -1391,7 +1397,7 @@ func applyPipelineIndexRisk(input PipelineOilInput, result *PipelineOilResult) {
 	result.RecommendationConfidence = "Low"
 	result.FormulaTrace = append(result.FormulaTrace,
 		trace("co2_partial_pressure", "Pipeline DM Input", "pCO2 = (CO2 mole% / 100) * operating_pressure_psig", map[string]interface{}{"co2_content": input.RiskInput.CO2Content, "operating_pressure_psi": input.OperatingPressurePsi}, input.RiskInput.CO2PartialPressurePSIG, ""),
-		trace("h2s_partial_pressure", "Pipeline DM Input", "pH2S = (H2S mole% / 100) * operating_pressure_psig", map[string]interface{}{"h2s_content": input.RiskInput.H2SContent, "operating_pressure_psi": input.OperatingPressurePsi}, input.RiskInput.H2SPartialPressurePSIG, ""),
+		trace("h2s_partial_pressure", "Pipeline DM Input", "pH2S = (H2S ppm / 1,000,000) * operating_pressure_psig", map[string]interface{}{"h2s_content_ppm": input.RiskInput.H2SContent, "operating_pressure_psi": input.OperatingPressurePsi}, input.RiskInput.H2SPartialPressurePSIG, ""),
 		trace("wall_thickness_ratio", "Pipeline DM Input", "wall_thickness_ratio = min(actual_thickness_mm) / min(required_thickness_mm)", map[string]interface{}{"inspection_points": len(input.InspectionPoints)}, input.RiskInput.WallThicknessRatio, ""),
 		trace("smys_utilization", "Pipeline DM Input", "SMYS utilization = (P * OD) / (2 * actual_thickness_in * SMYS) * 100", map[string]interface{}{"operating_pressure_psi": input.OperatingPressurePsi, "outside_diameter_in": input.OutsideDiameterIn, "smys_psi": input.SMYSPsi}, input.RiskInput.SMYSUtilizationPct, ""),
 		trace("governing_dm_score", PipelineDamageMechanismSource, "governing_dm_score = max(damage_mechanism_scores)", map[string]interface{}{"governing_driver": governingDriver, "mechanism_count": len(result.DamageMechanismResults)}, governingDF, ""),
@@ -2272,6 +2278,34 @@ type pipelineEngineeringAdvisory struct {
 }
 
 func generatePipelineEngineeringAdvisory(result *PipelineOilResult, input PipelineOilInput) pipelineEngineeringAdvisory {
+	groups := buildPipelineSystemAdvisoryGroups(result, input)
+	systemRecommendation := summarizePipelineRecommendationGroups(groups)
+	srcStr := "System advisory rule based on risk category, CoF factors, and governing pipeline DM score driver."
+
+	manualGroups := PipelineAdvisoryGroups{
+		ImmediateActions:   splitPipelineRecommendationText(input.RecommendationImmediateActions),
+		InspectionMonitor:  splitPipelineRecommendationText(input.RecommendationInspectionMonitoring),
+		LongTermMitigation: splitPipelineRecommendationText(input.RecommendationLongTermMitigation),
+	}
+	if hasPipelineRecommendationGroups(manualGroups) {
+		groups = manualGroups
+		srcStr = "Engineer-entered recommendation content; metadata describes advisory basis."
+	} else if strings.TrimSpace(input.ManualRecommendation) != "" {
+		groups = PipelineAdvisoryGroups{
+			ImmediateActions: []string{strings.TrimSpace(input.ManualRecommendation)},
+		}
+		srcStr = "Legacy manual recommendation retained from saved assessment."
+	}
+
+	return pipelineEngineeringAdvisory{
+		Groups:         groups,
+		Recommendation: systemRecommendation,
+		Source:         srcStr,
+		RuleName:       "pipeline-system-advisory-v2",
+	}
+}
+
+func buildPipelineSystemAdvisoryGroups(result *PipelineOilResult, input PipelineOilInput) PipelineAdvisoryGroups {
 	groups := PipelineAdvisoryGroups{
 		InspectionMonitor:  []string{"Keep the formula trace with the assessment record."},
 		LongTermMitigation: []string{"Update the assessment after mitigation or inspection results are available."},
@@ -2298,23 +2332,60 @@ func generatePipelineEngineeringAdvisory(result *PipelineOilResult, input Pipeli
 	} else {
 		groups.LongTermMitigation = append([]string{"Improve leak detection, isolation time, spill containment, and drainage/river protection."}, groups.LongTermMitigation...)
 	}
+	return groups
+}
+
+func splitPipelineRecommendationText(value string) []string {
+	lines := strings.Split(strings.Trim(value, " \t\r\n"), "\n")
+	items := make([]string, 0, len(lines))
+	for _, line := range lines {
+		line = strings.Trim(line, " \t\r")
+		if line != "" {
+			items = append(items, line)
+		}
+	}
+	return items
+}
+
+func summarizePipelineRecommendationGroups(groups PipelineAdvisoryGroups) string {
 	all := append([]string{}, groups.ImmediateActions...)
 	all = append(all, groups.InspectionMonitor...)
 	all = append(all, groups.LongTermMitigation...)
+	return strings.Join(all, " ")
+}
 
-	recStr := strings.Join(all, " ")
-	srcStr := "System advisory rule based on risk category, CoF factors, and governing pipeline DM score driver."
+func hasPipelineRecommendationGroups(groups PipelineAdvisoryGroups) bool {
+	return len(groups.ImmediateActions) > 0 || len(groups.InspectionMonitor) > 0 || len(groups.LongTermMitigation) > 0
+}
 
-	if input.ManualRecommendation != "" {
-		recStr = input.ManualRecommendation
-		srcStr = "User overridden recommendation."
+func applyPipelineRecommendationCompatibility(input *PipelineOilInput, result *PipelineOilResult) {
+	if input == nil || result == nil {
+		return
 	}
-
-	return pipelineEngineeringAdvisory{
-		Groups:         groups,
-		Recommendation: recStr,
-		Source:         srcStr,
-		RuleName:       "pipeline-system-advisory-v2",
+	hasNewFields := strings.TrimSpace(input.RecommendationImmediateActions) != "" ||
+		strings.TrimSpace(input.RecommendationInspectionMonitoring) != "" ||
+		strings.TrimSpace(input.RecommendationLongTermMitigation) != ""
+	if hasNewFields {
+		manualRecommendation := summarizePipelineRecommendationGroups(result.RecommendationGroups)
+		if strings.TrimSpace(result.Recommendation) == strings.TrimSpace(manualRecommendation) {
+			result.Recommendation = summarizePipelineRecommendationGroups(buildPipelineSystemAdvisoryGroups(result, *input))
+		}
+		return
+	}
+	if strings.TrimSpace(input.ManualRecommendation) == "" {
+		return
+	}
+	if hasPipelineRecommendationGroups(result.RecommendationGroups) && strings.TrimSpace(result.Recommendation) != strings.TrimSpace(input.ManualRecommendation) {
+		return
+	}
+	result.RecommendationGroups = PipelineAdvisoryGroups{
+		ImmediateActions: []string{"Legacy manual recommendation: " + strings.TrimSpace(input.ManualRecommendation)},
+	}
+	if strings.TrimSpace(result.Recommendation) == "" {
+		result.Recommendation = strings.TrimSpace(input.ManualRecommendation)
+	}
+	if strings.TrimSpace(result.RecommendationSource) == "" || strings.Contains(strings.ToLower(result.RecommendationSource), "user overridden") {
+		result.RecommendationSource = "Legacy manual recommendation retained from saved assessment."
 	}
 }
 
@@ -2812,6 +2883,10 @@ func applyPipelineOilDefaults(input *PipelineOilInput) {
 	if input.YearUsed.Float() == 0 {
 		input.YearUsed = FlexibleYear(strconv.Itoa(input.YearBuilt))
 	}
+	input.RecommendationImmediateActions = strings.Trim(input.RecommendationImmediateActions, " \t\r\n")
+	input.RecommendationInspectionMonitoring = strings.Trim(input.RecommendationInspectionMonitoring, " \t\r\n")
+	input.RecommendationLongTermMitigation = strings.Trim(input.RecommendationLongTermMitigation, " \t\r\n")
+	input.RiskInput.EngineeringNotes = strings.Trim(input.RiskInput.EngineeringNotes, " \t\r\n")
 	input.MaterialStressPsi = derivePipelineMaterialStressPsi(*input)
 }
 
@@ -3128,9 +3203,9 @@ func calculateCO2PartialPressure(co2ContentMolePct, operatingPressurePSIG float6
 }
 
 // Sourced: NACE MR0175 / PV SSC logic
-// pH2S = mole% H2S ├ù operating pressure (psig) / 100
-func calculateH2SPartialPressure(h2sContentMolePct, operatingPressurePSIG float64) float64 {
-	return (h2sContentMolePct / 100.0) * operatingPressurePSIG
+// pH2S = H2S ppm * operating pressure (psig) / 1,000,000
+func calculateH2SPartialPressure(h2sContentPPM, operatingPressurePSIG float64) float64 {
+	return (h2sContentPPM / 1000000.0) * operatingPressurePSIG
 }
 
 // Auto-calculated from inspection points: min(actual) / min(required)

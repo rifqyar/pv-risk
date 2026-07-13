@@ -39,6 +39,7 @@
   .pipeline-pdf-table { width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 7px; }
   .pipeline-pdf-table th, .pipeline-pdf-table td { border: 1px solid #000; padding: 4px 5px; vertical-align: top; }
   .pipeline-pdf-table th { background: #f2f2f2; text-align: left; }
+  .pipeline-pdf-preline { white-space: pre-line; }
 </style>
 
 <div class="content-wrapper">
@@ -196,6 +197,18 @@
         </div>
       </div>
 
+      <div class="col-lg-4 col-md-12">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+          <div class="card-header bg-transparent border-bottom pt-3 pb-2"><h6 class="fw-bold mb-0 text-primary"><i class="mdi mdi-molecule-co2 me-2"></i>Process & Condition</h6></div>
+          <ul class="list-group list-group-flush small">
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">CO2 Content</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Input.RiskInput.CO2Content }} mol%</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">H2S Content</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Input.RiskInput.H2SContent }} ppm</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">H2O Content</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Input.RiskInput.H2OContent }} lb/mmscf</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">pCO2 / pH2S</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Input.RiskInput.CO2PartialPressurePSIG }} / {{ fmtNum .Assessment.Input.RiskInput.H2SPartialPressurePSIG }} psig</span></li>
+          </ul>
+        </div>
+      </div>
+
       <div class="col-12">
         <div class="card shadow-sm border-0 rounded-4">
           <div class="card-header bg-transparent border-bottom pt-3 pb-2 d-flex justify-content-between align-items-center">
@@ -207,26 +220,6 @@
               {{ range .Assessment.Result.DamageMechanismResults }}
               <span class="badge bg-label-secondary text-dark px-3 py-2 border" title="{{ .SourceStandard }} | {{ .RuleStatus }}">{{ .Label }}: <b>{{ .Severity }}</b></span>
               {{ end }}
-            </div>
-            <div class="mt-3">
-              <a class="text-primary small" data-bs-toggle="collapse" href="#triggerInputsCollapse" role="button" aria-expanded="false" aria-controls="triggerInputsCollapse"><i class="mdi mdi-chevron-down me-1"></i>Show Trigger Inputs per Mechanism</a>
-              <div class="collapse mt-2" id="triggerInputsCollapse">
-                {{ range .Assessment.Result.DamageMechanismResults }}
-                {{ if .TriggerInputs }}
-                <div class="mb-2">
-                  <div class="fw-bold small text-muted">{{ .Label }} <span class="fw-normal">({{ .SourceStandard }} | {{ .ConfidenceLevel }} | {{ .RuleStatus }})</span></div>
-                  <table class="table table-sm table-bordered mb-1" style="font-size:.75rem;">
-                    <thead class="table-light"><tr><th>Field</th><th>Value</th><th>Reason</th></tr></thead>
-                    <tbody>
-                      {{ range .TriggerInputs }}
-                      <tr><td>{{ .Field }}</td><td>{{ .Value }}</td><td>{{ .Reason }}</td></tr>
-                      {{ end }}
-                    </tbody>
-                  </table>
-                </div>
-                {{ end }}
-                {{ end }}
-              </div>
             </div>
           </div>
         </div>
@@ -265,8 +258,8 @@
           <div class="card-body">
             <div class="alert alert-light border small mb-3">
               <strong>Source:</strong> {{ .Assessment.Result.RecommendationSource }} |
-              <strong>Rule:</strong> {{ .Assessment.Result.RecommendationRuleName }} |
-              <strong>Confidence:</strong> {{ .Assessment.Result.RecommendationConfidence }}
+              <strong>Confidence:</strong> {{ .Assessment.Result.RecommendationConfidence }} |
+              <strong>Advisory:</strong> {{ .Assessment.Result.Recommendation }}
             </div>
             <div class="row g-4">
               <div class="col-lg-4">
@@ -293,43 +286,6 @@
       </div>
 
       <div class="col-12">
-        <div class="card shadow-sm border-0 rounded-4">
-          <div class="card-header bg-transparent border-bottom pt-3 pb-2"><h6 class="fw-bold mb-0 text-info"><i class="mdi mdi-function-variant me-2"></i>Formula Trace</h6></div>
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table class="table table-sm table-striped mb-0 align-middle">
-                <thead class="table-light"><tr><th class="ps-4">Formula</th><th>Inputs / Expression</th><th>Output</th><th>Source</th><th>Confidence</th></tr></thead>
-                <tbody>
-                  {{ range .Assessment.Result.FormulaTrace }}
-                  <tr>
-                    <td class="ps-4 fw-semibold">{{ .FormulaName }}</td>
-                    <td class="text-wrap" style="min-width: 340px;"><div>{{ .Expression }}</div><div class="text-muted small">{{ .ExcelRef }}</div></td>
-                    <td class="text-wrap">{{ .Output }}</td>
-                    <td class="text-wrap">{{ .SourceStandard }}<div class="text-muted small">{{ .RuleStatus }}</div></td>
-                    <td>{{ .ConfidenceLevel }}</td>
-                  </tr>
-                  {{ else }}
-                  <tr><td colspan="5" class="text-center text-muted py-3">No formula trace available.</td></tr>
-                  {{ end }}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg-6">
-        <div class="card shadow-sm border-0 rounded-4 h-100">
-          <div class="card-header bg-transparent border-bottom pt-3 pb-2"><h6 class="fw-bold mb-0 text-secondary"><i class="mdi mdi-book-open-variant-outline me-2"></i>Standards References</h6></div>
-          <div class="card-body">
-            <ul class="mb-0 small">
-              {{ range .StandardsReferences }}<li>{{ . }}</li>{{ end }}
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg-6">
         <div class="card shadow-sm border-0 rounded-4 h-100">
           <div class="card-header bg-transparent border-bottom pt-3 pb-2"><h6 class="fw-bold mb-0 text-secondary"><i class="mdi mdi-history me-2"></i>Audit Trail</h6></div>
           <div class="card-body p-0">
@@ -451,6 +407,7 @@
       <tr><th>Base TPD / External / Internal</th><td>{{ fmtNum .Assessment.Input.RiskInput.BaseTPDRate }} / {{ fmtNum .Assessment.Input.RiskInput.BaseExternalCorrRate }} / {{ fmtNum .Assessment.Input.RiskInput.BaseInternalCorrRate }}</td><th>Inspection Effectivity</th><td>{{ .Assessment.Input.RiskInput.InspectionEffectivity }}</td></tr>
       <tr><th>Cover / Patrol / ROW</th><td>{{ .Assessment.Input.RiskInput.DepthOfCover }} / {{ .Assessment.Input.RiskInput.PatrolFrequency }} / {{ .Assessment.Input.RiskInput.ROWCondition }}</td><th>Soil / Coating / CP</th><td>{{ .Assessment.Input.RiskInput.SoilResistivity }} / {{ .Assessment.Input.RiskInput.CoatingCondition }} / {{ .Assessment.Input.RiskInput.CPStatus }}</td></tr>
       <tr><th>CP Potential</th><td>{{ fmtNum .Assessment.Input.RiskInput.CPPotentialMV }} mV</td><th>pH / Corrosivity / Inhibitor</th><td>{{ .Assessment.Input.RiskInput.PHLevel }} / {{ .Assessment.Input.RiskInput.FluidCorrosivityMPY }} / {{ .Assessment.Input.RiskInput.InhibitorEffectiveness }}</td></tr>
+      <tr><th>CO2 / H2S / H2O Content</th><td>{{ fmtNum .Assessment.Input.RiskInput.CO2Content }} mol% / {{ fmtNum .Assessment.Input.RiskInput.H2SContent }} ppm / {{ fmtNum .Assessment.Input.RiskInput.H2OContent }} lb/mmscf</td><th>pCO2 / pH2S</th><td>{{ fmtNum .Assessment.Input.RiskInput.CO2PartialPressurePSIG }} / {{ fmtNum .Assessment.Input.RiskInput.H2SPartialPressurePSIG }} psig</td></tr>
       <tr><th>H2S ppm / Biocide / Monitoring</th><td>{{ .Assessment.Input.RiskInput.H2SPpm }} / {{ .Assessment.Input.RiskInput.BiocideTreatment }} / {{ .Assessment.Input.RiskInput.CorrosionMonitoringResult }}</td><th>PWHT / Weld / Flow Velocity</th><td>{{ .Assessment.Input.RiskInput.PWHTStatus }} / {{ .Assessment.Input.RiskInput.WeldJointType }} / {{ .Assessment.Input.RiskInput.FlowVelocityCondition }}</td></tr>
       <tr><th>Solid Content / Cracking Env</th><td>{{ .Assessment.Input.RiskInput.SolidContent }} / {{ .Assessment.Input.RiskInput.EnvExtCracking }}</td><th>Prev Ext Corr / Prev Thinning</th><td>{{ .Assessment.Input.RiskInput.PrevExtCorrosion }} / {{ .Assessment.Input.RiskInput.PrevIntThinning }}</td></tr>
       <tr><th>Oil/Liquid Inputs</th><td>Flow {{ fmtNum .Assessment.Input.RiskInput.FlowRate }} bbl/hr, Detection {{ fmtNum .Assessment.Input.RiskInput.DetectionTimeHours }} hr</td><th>Segment / Environment</th><td>{{ fmtNum .Assessment.Input.RiskInput.SegmentLengthBetweenValvesM }} m / {{ .Assessment.Input.RiskInput.EnvironmentalSensitivity }}</td></tr>
@@ -509,33 +466,23 @@
       </tbody>
     </table>
 
-    <div class="pipeline-pdf-section">VII. ENGINEERING ADVISORY / SUGGESTED ACTIONS</div>
+    <div class="pipeline-pdf-section">VII. RECOMMENDATION</div>
     <table class="pipeline-pdf-table">
-      <tr><td>{{ .Assessment.Result.Recommendation }}</td></tr>
-      <tr><th>Source</th></tr>
-      <tr><td>{{ .Assessment.Result.RecommendationSource }} | {{ .Assessment.Result.RecommendationRuleName }} | Confidence: {{ .Assessment.Result.RecommendationConfidence }}</td></tr>
-      <tr><th>Engineering Notes</th></tr>
-      <tr><td>{{ .Assessment.Input.RiskInput.EngineeringNotes }}</td></tr>
+      <tr><th style="width: 28%;">Immediate Actions</th><td>{{ range .Assessment.Result.RecommendationGroups.ImmediateActions }}{{ . }}<br>{{ end }}</td></tr>
+      <tr><th>Inspection / Monitoring</th><td>{{ range .Assessment.Result.RecommendationGroups.InspectionMonitor }}{{ . }}<br>{{ end }}</td></tr>
+      <tr><th>Long-Term Mitigation</th><td>{{ range .Assessment.Result.RecommendationGroups.LongTermMitigation }}{{ . }}<br>{{ end }}</td></tr>
+      <tr><th>Source</th><td>{{ .Assessment.Result.RecommendationSource }}</td></tr>
+      <tr><th>Confidence</th><td>{{ .Assessment.Result.RecommendationConfidence }}</td></tr>
+      <tr><th>Advisory</th><td>{{ .Assessment.Result.Recommendation }}</td></tr>
     </table>
-
-    <div class="pipeline-pdf-section">VIII. FORMULA TRACE</div>
+    {{ if .Assessment.Input.RiskInput.EngineeringNotes }}
+    <div class="pipeline-pdf-section">Engineering Notes</div>
     <table class="pipeline-pdf-table">
-      <thead><tr><th>Formula</th><th>Expression</th><th>Output</th><th>Source</th><th>Confidence</th></tr></thead>
-      <tbody>
-        {{ range .Assessment.Result.FormulaTrace }}
-        <tr><td>{{ .FormulaName }}</td><td>{{ .Expression }}</td><td>{{ .Output }}</td><td>{{ .SourceStandard }} / {{ .RuleStatus }}</td><td>{{ .ConfidenceLevel }}</td></tr>
-        {{ end }}
-      </tbody>
+      <tr><td class="pipeline-pdf-preline">{{ .Assessment.Input.RiskInput.EngineeringNotes }}</td></tr>
     </table>
+    {{ end }}
 
-    <div class="pipeline-pdf-section">IX. STANDARDS REFERENCES</div>
-    <table class="pipeline-pdf-table">
-      <tbody>
-        {{ range .StandardsReferences }}<tr><td>{{ . }}</td></tr>{{ end }}
-      </tbody>
-    </table>
-
-    <div class="pipeline-pdf-section">X. AUDIT INFORMATION</div>
+    <div class="pipeline-pdf-section">VIII. AUDIT INFORMATION</div>
     <table class="pipeline-pdf-table">
       <thead><tr><th>Time</th><th>Action</th><th>User</th><th>Note</th></tr></thead>
       <tbody>

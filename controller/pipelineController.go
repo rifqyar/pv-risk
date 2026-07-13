@@ -275,7 +275,7 @@ func (ctrl *NewPipelineController) ExportExcel(c *gin.Context) {
 	filename := fmt.Sprintf("Pipeline_Assessment_%s.xls", safeExportName(assessment.Input.ReportNo))
 	c.Header("Content-Type", "application/vnd.ms-excel; charset=utf-8")
 	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
-	c.String(http.StatusOK, buildPipelineExcelHTML(assessment, mustPipelineAuditEvents(service, id), models.PipelineStandardsReferences()))
+	c.String(http.StatusOK, buildPipelineExcelHTML(assessment, mustPipelineAuditEvents(service, id)))
 }
 
 func (ctrl *NewPipelineController) recordExport(c *gin.Context, format string) {
@@ -634,7 +634,7 @@ func safeExportName(value string) string {
 	return replacer.Replace(value)
 }
 
-func buildPipelineExcelHTML(assessment *models.PipelineOilAssessment, auditEvents []models.PipelineOilAuditEvent, standards []string) string {
+func buildPipelineExcelHTML(assessment *models.PipelineOilAssessment, auditEvents []models.PipelineOilAuditEvent) string {
 	var b strings.Builder
 	b.WriteString("<html><head><meta charset=\"utf-8\"></head><body>")
 	b.WriteString("<h2>Pipeline Risk Assessment Report</h2>")
@@ -650,6 +650,14 @@ func buildPipelineExcelHTML(assessment *models.PipelineOilAssessment, auditEvent
 	writeExcelRow(&b, "Updated At", assessment.UpdatedAt)
 	b.WriteString("</table>")
 
+	b.WriteString("<h3>Process and Condition</h3><table border=\"1\">")
+	writeExcelRow(&b, "CO2 Content", fmt.Sprintf("%.8g mol%%", assessment.Input.RiskInput.CO2Content))
+	writeExcelRow(&b, "H2S Content", fmt.Sprintf("%.8g ppm", assessment.Input.RiskInput.H2SContent))
+	writeExcelRow(&b, "H2O Content", fmt.Sprintf("%.8g lb/mmscf", assessment.Input.RiskInput.H2OContent))
+	writeExcelRow(&b, "pCO2", fmt.Sprintf("%.8g psig", assessment.Input.RiskInput.CO2PartialPressurePSIG))
+	writeExcelRow(&b, "pH2S", fmt.Sprintf("%.8g psig", assessment.Input.RiskInput.H2SPartialPressurePSIG))
+	b.WriteString("</table>")
+
 	if assessment.Result != nil {
 		b.WriteString("<h3>Risk Result</h3><table border=\"1\">")
 		writeExcelRow(&b, "PoF", assessment.Result.PoF)
@@ -659,9 +667,13 @@ func buildPipelineExcelHTML(assessment *models.PipelineOilAssessment, auditEvent
 		writeExcelRow(&b, "Risk Code", assessment.Result.FinalRiskCode)
 		writeExcelRow(&b, "Risk Level", assessment.Result.FinalRiskLevel)
 		writeExcelRow(&b, "Governing DM", assessment.Result.GoverningDamageMechanism)
+		writeExcelMultilineRow(&b, "Immediate Actions", strings.Join(assessment.Result.RecommendationGroups.ImmediateActions, "\n"))
+		writeExcelMultilineRow(&b, "Inspection / Monitoring", strings.Join(assessment.Result.RecommendationGroups.InspectionMonitor, "\n"))
+		writeExcelMultilineRow(&b, "Long-Term Mitigation", strings.Join(assessment.Result.RecommendationGroups.LongTermMitigation, "\n"))
 		writeExcelRow(&b, "Recommendation Source", assessment.Result.RecommendationSource)
 		writeExcelRow(&b, "Recommendation Rule", assessment.Result.RecommendationRuleName)
 		writeExcelRow(&b, "Recommendation Confidence", assessment.Result.RecommendationConfidence)
+		writeExcelMultilineRow(&b, "Engineering Notes", assessment.Input.RiskInput.EngineeringNotes)
 		b.WriteString("</table>")
 
 		b.WriteString("<h3>Damage Mechanism Results</h3><table border=\"1\"><tr><th>Category</th><th>Mechanism</th><th>Severity</th><th>Score</th><th>Source</th><th>Confidence</th><th>Status</th></tr>")
@@ -670,18 +682,7 @@ func buildPipelineExcelHTML(assessment *models.PipelineOilAssessment, auditEvent
 		}
 		b.WriteString("</table>")
 
-		b.WriteString("<h3>Formula Trace</h3><table border=\"1\"><tr><th>Formula</th><th>Reference</th><th>Expression</th><th>Output</th><th>Source</th><th>Confidence</th><th>Status</th></tr>")
-		for _, trace := range assessment.Result.FormulaTrace {
-			b.WriteString("<tr><td>" + html.EscapeString(trace.FormulaName) + "</td><td>" + html.EscapeString(trace.ExcelRef) + "</td><td>" + html.EscapeString(trace.Expression) + "</td><td>" + html.EscapeString(fmt.Sprint(trace.Output)) + "</td><td>" + html.EscapeString(trace.SourceStandard) + "</td><td>" + html.EscapeString(trace.ConfidenceLevel) + "</td><td>" + html.EscapeString(trace.RuleStatus) + "</td></tr>")
-		}
-		b.WriteString("</table>")
 	}
-
-	b.WriteString("<h3>Standards References</h3><table border=\"1\">")
-	for _, standard := range standards {
-		writeExcelRow(&b, "Reference", standard)
-	}
-	b.WriteString("</table>")
 
 	b.WriteString("<h3>Audit Information</h3><table border=\"1\"><tr><th>Time</th><th>Action</th><th>User</th><th>Note</th></tr>")
 	for _, event := range auditEvents {
@@ -697,6 +698,14 @@ func writeExcelRow(b *strings.Builder, label, value string) {
 	b.WriteString("<tr><th>")
 	b.WriteString(html.EscapeString(label))
 	b.WriteString("</th><td>")
+	b.WriteString(html.EscapeString(value))
+	b.WriteString("</td></tr>")
+}
+
+func writeExcelMultilineRow(b *strings.Builder, label, value string) {
+	b.WriteString("<tr><th>")
+	b.WriteString(html.EscapeString(label))
+	b.WriteString("</th><td style=\"white-space: pre-wrap;\">")
 	b.WriteString(html.EscapeString(value))
 	b.WriteString("</td></tr>")
 }

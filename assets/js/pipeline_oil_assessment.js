@@ -49,6 +49,10 @@ $(function () {
   $form.on("input change", "input, select, textarea", function () {
     if (isProgrammaticUpdate) return;
     clearFieldError($(this));
+    if (isManualTextField(this.name)) {
+      updateSaveState();
+      return;
+    }
     if (this.name === "service") {
       syncApplicableCodeAndMaterialStress(true);
     } else if (this.name === "material_specification") {
@@ -381,7 +385,6 @@ $(function () {
       ["PoF Category", result.pof],
     ]));
     $("#pipelineCofBreakdown").html(buildCofBreakdown(result));
-    $("#pipelineRecommendationGroups").html(buildRecommendationGroups(result));
     $("#pipelineRecommendationText").html(`<strong>Source:</strong> ${escapeHtml(result.recommendation_source || "Realtime browser preview; backend recalculates on save.")}<br><strong>Confidence:</strong> ${escapeHtml(result.recommendation_confidence || "Low")}<br><strong>Advisory:</strong> ${escapeHtml(result.recommendation || "-")}`);
     $("#pipelineFormulaTrace").html(buildFormulaTrace(result.formula_trace || []));
   }
@@ -913,7 +916,7 @@ $(function () {
     const h2s = numberValue(risk.h2s_content);
     const opPressure = numberValue(input.operating_pressure_psi);
     if (h2s <= 0 || opPressure <= 0) return 0;
-    return (h2s / 100) * opPressure;
+    return (h2s / 1000000) * opPressure;
   }
 
   function calculateWallThicknessRatioJS(input) {
@@ -1111,9 +1114,22 @@ $(function () {
     $("#savePipelineDraft").prop("disabled", isSavingAssessment);
   }
 
+  function isManualTextField(name) {
+    return [
+      "recommendation_immediate_actions",
+      "recommendation_inspection_monitoring",
+      "recommendation_long_term_mitigation",
+      "engineering_notes",
+      "assessment_by",
+    ].includes(name);
+  }
+
   function calculationSignature(payload) {
     const clone = JSON.parse(JSON.stringify(payload));
     delete clone.assessment_by;
+    delete clone.recommendation_immediate_actions;
+    delete clone.recommendation_inspection_monitoring;
+    delete clone.recommendation_long_term_mitigation;
     if (clone.RiskInput) delete clone.RiskInput.engineering_notes;
     return JSON.stringify(clone);
   }
@@ -1147,8 +1163,8 @@ $(function () {
       ["base_external_corr_rate", "Base external corrosion rate must be a valid number."],
       ["base_internal_corr_rate", "Base internal corrosion rate must be a valid number."],
       ["co2_content", "CO2 content must be zero or a valid number.", true],
-      ["h2s_content", "H2S content must be zero or a valid number.", true],
-      ["h2o_content", "H2O content must be zero or a valid number.", true],
+      ["h2s_content", "H2S content (ppm) must be zero or a valid number.", true],
+      ["h2o_content", "H2O content (lb/mmscf) must be zero or a valid number.", true],
       ["n2_content", "N2 content must be zero or a valid number.", true],
       ["co_content", "CO content must be zero or a valid number.", true],
       ["pressure_cycle_count", "Pressure cycle count must be zero or a valid number.", true],
