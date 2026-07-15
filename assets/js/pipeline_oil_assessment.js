@@ -22,7 +22,6 @@ $(function () {
   updateReviewSummary();
   setTimeout(() => {
     loadSavedResult();
-    runRealtimePipelineCalculation();
     updateSaveState();
   }, 0);
 
@@ -32,7 +31,7 @@ $(function () {
     updateReviewSummary();
     if (pipelineStepper) pipelineStepper.next();
     if ($activeStep.attr("id") === "pipeline-step-3") {
-      previewPipelineRisk(false);
+      runRealtimePipelineCalculation();
     } else if ($activeStep.attr("id") === "pipeline-step-5") {
       runRealtimePipelineCalculation();
     }
@@ -43,7 +42,11 @@ $(function () {
   });
 
   $(".step-trigger").on("click", function () {
-    setTimeout(refreshReviewCalculationIfActive, 0);
+    const target = $(this).closest(".step").data("target");
+    setTimeout(() => {
+      refreshDamageMechanismScreeningIfActive(target);
+      refreshReviewCalculationIfActive();
+    }, 0);
   });
 
   $form.on("input change", "input, select, textarea", function () {
@@ -63,7 +66,7 @@ $(function () {
     }
     updateConsequenceFields();
     updateReviewSummary();
-    scheduleRealtimePipelineCalculation();
+    scheduleRealtimePipelineCalculationIfActive();
     markResultStaleIfNeeded();
   });
 
@@ -83,13 +86,13 @@ $(function () {
         <td><button type="button" class="btn btn-sm btn-icon btn-outline-danger remove-point"><i class="mdi mdi-trash-can-outline"></i></button></td>
       </tr>
     `);
-    runRealtimePipelineCalculation();
+    runRealtimePipelineCalculationIfActive();
     markResultStaleIfNeeded();
   });
 
   $(document).on("click", ".remove-point", function () {
     $(this).closest("tr").remove();
-    runRealtimePipelineCalculation();
+    runRealtimePipelineCalculationIfActive();
     markResultStaleIfNeeded();
   });
 
@@ -633,12 +636,36 @@ $(function () {
     }
   }
 
+  function refreshDamageMechanismScreeningIfActive(target) {
+    if (target === "#pipeline-step-4" || $("#pipeline-step-4").hasClass("active")) {
+      runRealtimePipelineCalculation();
+    }
+  }
+
   function scheduleRealtimePipelineCalculation() {
     clearTimeout(realtimeTimer);
     realtimeTimer = setTimeout(runRealtimePipelineCalculation, 80);
   }
 
-  window.pipelineOilRecalculate = scheduleRealtimePipelineCalculation;
+  function scheduleRealtimePipelineCalculationIfActive() {
+    const stepID = activePipelineStepID();
+    if (["pipeline-step-4", "pipeline-step-5", "pipeline-step-6"].includes(stepID)) {
+      scheduleRealtimePipelineCalculation();
+    }
+  }
+
+  function runRealtimePipelineCalculationIfActive() {
+    const stepID = activePipelineStepID();
+    if (["pipeline-step-4", "pipeline-step-5", "pipeline-step-6"].includes(stepID)) {
+      runRealtimePipelineCalculation();
+    }
+  }
+
+  function activePipelineStepID() {
+    return $(".bs-stepper-content .content.active").attr("id") || "";
+  }
+
+  window.pipelineOilRecalculate = scheduleRealtimePipelineCalculationIfActive;
 
   // --- Factor maps (mirror Go backend, all 1.0 neutral placeholders pending TODO_ENGINEERING_CONFIRMATION) ---
   const dmFactors = {
@@ -708,8 +735,10 @@ $(function () {
       confidence_level: "Low",
       rule_status: "TODO_ENGINEERING_CONFIRMATION",
     };
+    const effectivityByDM = collectInspectionEffectivityByDM();
     return {
       ...item,
+      inspection_effectivity: effectivityByDM[item.code] || "Medium",
       source: "Pipeline DM screening v2",
       source_standard: metadata.source_standard,
       confidence_level: metadata.confidence_level,
@@ -994,6 +1023,9 @@ $(function () {
       const allowableStress = allowableStressPsi(input);
       return {
         inspection_point: point.inspection_point,
+        location_class: point.location_class,
+        installation_type: point.installation_type,
+        measured_year: point.measured_year,
         nominal_thickness_mm: point.nominal_thickness_mm,
         required_thickness_mm: requiredIn * 25.4,
         minimum_thickness_mm: requiredMM,
@@ -1085,6 +1117,7 @@ $(function () {
       const intMethod = plan.intrusive_method || defaultIntrusiveMethod(item.code);
       const nonEff = methodEffectivity(nonMethod);
       const intEff = methodEffectivity(intMethod);
+      item.inspection_effectivity = nonEff;
       return {
         code: item.code,
         label: item.label,

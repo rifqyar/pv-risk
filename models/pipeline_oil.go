@@ -512,6 +512,9 @@ type PipelineInspectionPlanResult struct {
 
 type PipelineOilPointResult struct {
 	InspectionPoint       string  `json:"inspection_point"`
+	LocationClass         string  `json:"location_class"`
+	InstallationType      string  `json:"installation_type"`
+	MeasuredYear          string  `json:"measured_year"`
 	NominalThicknessMM    float64 `json:"nominal_thickness_mm"`
 	RequiredThicknessIn   float64 `json:"required_thickness_in"`
 	RequiredThicknessMM   float64 `json:"required_thickness_mm"`
@@ -1276,6 +1279,9 @@ func CalculatePipelineOil(input PipelineOilInput) (*PipelineOilResult, []Pipelin
 
 		pr := PipelineOilPointResult{
 			InspectionPoint:       point.InspectionPoint,
+			LocationClass:         point.LocationClass,
+			InstallationType:      point.InstallationType,
+			MeasuredYear:          string(point.MeasuredYear),
 			NominalThicknessMM:    point.NominalThicknessMM,
 			RequiredThicknessIn:   result.RequiredThicknessIn,
 			RequiredThicknessMM:   result.RequiredThicknessMM,
@@ -1452,7 +1458,7 @@ func defaultPipelineNonIntrusiveMethod(code string) string {
 		return "Visual + CP / Coating Survey"
 	case "third_party_mechanical_damage":
 		return "ROW Patrol + Visual Survey"
-	case "cracking_scc_fatigue":
+	case "cracking", "scc", "fatigue":
 		return "Shear Wave Ultrasonic Testing"
 	default:
 		return "Wall Thickness measurement by UT"
@@ -1528,15 +1534,7 @@ func calculatePipelineDamageMechanismResults(input PipelineOilInput) []PipelineD
 			dmResult.severity = "NOT"
 			dmResult.formula = "Mechanism not implemented"
 		}
-		effectivity := input.RiskInput.InspectionEffectivity
-		if byDM := input.RiskInput.InspectionEffectivityByDM; byDM != nil {
-			if selected := strings.TrimSpace(byDM[option.Code]); selected != "" {
-				effectivity = selected
-			}
-		}
-		if effectivity == "" {
-			effectivity = "Representative"
-		}
+		effectivity := pipelineDamageMechanismEffectivity(input, option.Code)
 		metadata := PipelineDamageMechanismMetadata(option.Code)
 		results = append(results, PipelineDamageMechanismResult{
 			Code:                  option.Code,
@@ -1554,6 +1552,31 @@ func calculatePipelineDamageMechanismResults(input PipelineOilInput) []PipelineD
 		})
 	}
 	return results
+}
+
+func pipelineDamageMechanismEffectivity(input PipelineOilInput, code string) string {
+	if byDM := input.RiskInput.InspectionEffectivityByDM; byDM != nil {
+		if selected := normalizePipelineInspectionEffectivityOrBlank(byDM[code]); selected != "" {
+			return selected
+		}
+	}
+	if plan, ok := input.RiskInput.InspectionPlanByDM[code]; ok {
+		if strings.TrimSpace(plan.NonIntrusiveMethod) != "" {
+			selected := pipelineMethodEffectivity(plan.NonIntrusiveMethod)
+			return selected
+		}
+	}
+	if selected := normalizePipelineInspectionEffectivity(input.RiskInput.InspectionEffectivity); selected != "" {
+		return selected
+	}
+	return "Medium"
+}
+
+func normalizePipelineInspectionEffectivityOrBlank(effectivity string) string {
+	if strings.TrimSpace(effectivity) == "" {
+		return ""
+	}
+	return normalizePipelineInspectionEffectivity(effectivity)
 }
 
 func severityFromScore(score float64) string {

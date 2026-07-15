@@ -392,6 +392,91 @@ func TestPipelineDamageMechanismsCarryStandardsMetadata(t *testing.T) {
 	}
 }
 
+func TestPipelineInspectionMethodSelectionUpdatesEffectivityAndInterval(t *testing.T) {
+	none := samplePipelineOilInput()
+	none.RiskInput.InspectionEffectivityByDM = nil
+	none.RiskInput.InspectionPlanByDM = map[string]PipelineInspectionPlanInput{
+		"internal_corrosion": {NonIntrusiveMethod: "None"},
+	}
+	noneResult, errs := CalculatePipelineOil(none)
+	if len(errs) > 0 {
+		t.Fatalf("unexpected validation errors for none method: %+v", errs)
+	}
+
+	high := samplePipelineOilInput()
+	high.RiskInput.InspectionEffectivityByDM = nil
+	high.RiskInput.InspectionPlanByDM = map[string]PipelineInspectionPlanInput{
+		"internal_corrosion": {NonIntrusiveMethod: "VIE + Wall Thickness measurement by UT"},
+	}
+	highResult, errs := CalculatePipelineOil(high)
+	if len(errs) > 0 {
+		t.Fatalf("unexpected validation errors for high method: %+v", errs)
+	}
+
+	noneDM := pipelineDMResultByCode(t, noneResult, "internal_corrosion")
+	highDM := pipelineDMResultByCode(t, highResult, "internal_corrosion")
+	if noneDM.InspectionEffectivity != "None" {
+		t.Fatalf("expected selected None method to set DM effectivity None, got %q", noneDM.InspectionEffectivity)
+	}
+	if highDM.InspectionEffectivity != "High" {
+		t.Fatalf("expected selected high method to set DM effectivity High, got %q", highDM.InspectionEffectivity)
+	}
+
+	nonePlan := pipelinePlanResultByCode(t, noneResult, "internal_corrosion")
+	highPlan := pipelinePlanResultByCode(t, highResult, "internal_corrosion")
+	if nonePlan.NonIntrusiveEffectivity != "None" || highPlan.NonIntrusiveEffectivity != "High" {
+		t.Fatalf("expected plan effectivity to follow selected methods, got none=%q high=%q", nonePlan.NonIntrusiveEffectivity, highPlan.NonIntrusiveEffectivity)
+	}
+	if nonePlan.NonIntrusiveIntervalMonths == highPlan.NonIntrusiveIntervalMonths {
+		t.Fatalf("expected inspection interval to change when method effectivity changes: none=%d high=%d", nonePlan.NonIntrusiveIntervalMonths, highPlan.NonIntrusiveIntervalMonths)
+	}
+}
+
+func TestPipelineRequiredThicknessPopulatesResultPointRowsAndSkipsEmptyRows(t *testing.T) {
+	in := samplePipelineOilInput()
+	in.InspectionPoints = append(in.InspectionPoints, PipelineOilInspectionPoint{})
+	in.InspectionPoints[0].RequiredThicknessMM = 0
+	in.InspectionPoints[0].LocationClass = "Class 2"
+	in.InspectionPoints[0].InstallationType = "Above Ground"
+
+	result, errs := CalculatePipelineOil(in)
+	if len(errs) > 0 {
+		t.Fatalf("unexpected validation errors: %+v", errs)
+	}
+	if len(result.PointResults) != 3 {
+		t.Fatalf("expected empty inspection point row to be skipped, got %d point results", len(result.PointResults))
+	}
+	first := result.PointResults[0]
+	if first.RequiredThicknessMM <= 0 {
+		t.Fatalf("expected authoritative result point required WT to be calculated, got %.6f", first.RequiredThicknessMM)
+	}
+	if first.LocationClass != "Class 2" || first.InstallationType != "Above Ground" || first.MeasuredYear != "2025" {
+		t.Fatalf("expected point metadata to be carried to result row, got %+v", first)
+	}
+}
+
+func pipelineDMResultByCode(t *testing.T, result *PipelineOilResult, code string) PipelineDamageMechanismResult {
+	t.Helper()
+	for _, item := range result.DamageMechanismResults {
+		if item.Code == code {
+			return item
+		}
+	}
+	t.Fatalf("damage mechanism %s not found", code)
+	return PipelineDamageMechanismResult{}
+}
+
+func pipelinePlanResultByCode(t *testing.T, result *PipelineOilResult, code string) PipelineInspectionPlanResult {
+	t.Helper()
+	for _, item := range result.InspectionPlanResults {
+		if item.Code == code {
+			return item
+		}
+	}
+	t.Fatalf("inspection plan %s not found", code)
+	return PipelineInspectionPlanResult{}
+}
+
 func TestPipelineFormulaTraceCarriesStandardsMetadata(t *testing.T) {
 	result, errs := CalculatePipelineOil(samplePipelineOilInput())
 	if len(errs) > 0 {

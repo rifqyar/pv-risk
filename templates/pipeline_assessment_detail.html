@@ -394,8 +394,16 @@
     <table class="pipeline-pdf-table">
       <thead><tr><th>Inspection Point</th><th>Location Class</th><th>Installation</th><th>Nominal WT</th><th>Required WT</th><th>Actual WT</th><th>Measured Year</th></tr></thead>
       <tbody>
-        {{ range .Assessment.Input.InspectionPoints }}
-        <tr><td>{{ .InspectionPoint }}</td><td>{{ .LocationClass }}</td><td>{{ .InstallationType }}</td><td>{{ fmtNum .NominalThicknessMM }} mm</td><td>{{ fmtNum .RequiredThicknessMM }} mm</td><td>{{ fmtNum .ActualThicknessMM }} mm</td><td>{{ .MeasuredYear }}</td></tr>
+        {{ range .Assessment.Result.PointResults }}
+        <tr>
+          <td>{{ .InspectionPoint }}</td>
+          <td>{{ .LocationClass }}</td>
+          <td>{{ .InstallationType }}</td>
+          <td>{{ fmtNum .NominalThicknessMM }} mm</td>
+          <td>{{ if gt .RequiredThicknessMM 0.0 }}{{ fmtNum .RequiredThicknessMM }} mm{{ else }}N/A{{ end }}</td>
+          <td>{{ fmtNum .ActualThicknessMM }} mm</td>
+          <td>{{ .MeasuredYear }}</td>
+        </tr>
         {{ end }}
       </tbody>
     </table>
