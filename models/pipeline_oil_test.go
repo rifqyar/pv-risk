@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"math"
+	"os"
 	"pv-risk/migrations"
+	"pv-risk/seeder"
 	"strings"
 	"testing"
 
@@ -432,6 +434,168 @@ func TestPipelineInspectionMethodSelectionUpdatesEffectivityAndInterval(t *testi
 	}
 }
 
+func TestPipelineInspectionEffectivityDoesNotChangeDMSeverity(t *testing.T) {
+	low := samplePipelineOilInput()
+	low.RiskInput.InspectionEffectivityByDM = map[string]string{"internal_corrosion": "Low"}
+	high := samplePipelineOilInput()
+	high.RiskInput.InspectionEffectivityByDM = map[string]string{"internal_corrosion": "High"}
+
+	lowResult, errs := CalculatePipelineOil(low)
+	if len(errs) > 0 {
+		t.Fatalf("unexpected validation errors for low effectivity: %+v", errs)
+	}
+	highResult, errs := CalculatePipelineOil(high)
+	if len(errs) > 0 {
+		t.Fatalf("unexpected validation errors for high effectivity: %+v", errs)
+	}
+
+	for _, lowDM := range lowResult.DamageMechanismResults {
+		highDM := pipelineDMResultByCode(t, highResult, lowDM.Code)
+		if lowDM.Score != highDM.Score || lowDM.Severity != highDM.Severity {
+			t.Fatalf("inspection effectivity changed %s severity/score: low=%s %.2f high=%s %.2f", lowDM.Code, lowDM.Severity, lowDM.Score, highDM.Severity, highDM.Score)
+		}
+	}
+}
+
+func TestPipelineDMModifiersAreFixedAtOneAndCustomModifiersDisabled(t *testing.T) {
+	if pipelineDMModifierDefault != 1.0 {
+		t.Fatalf("expected pipeline DM modifier default 1.0, got %.2f", pipelineDMModifierDefault)
+	}
+	if customPipelineDMModifiers {
+		t.Fatalf("custom pipeline DM modifiers must be disabled")
+	}
+	if err := ValidatePipelineDMModifierConfiguration(); err != nil {
+		t.Fatalf("expected all active pipeline DM modifier values to be 1.0: %v", err)
+	}
+	if got := adjustedPipelineDMScore(2.75); got != 2.75 {
+		t.Fatalf("expected adjusted score to equal base score with 1.0 modifier, got %.2f", got)
+	}
+}
+
+func TestPipelineAndPressureVesselUseSharedRiskThresholds(t *testing.T) {
+	tests := []struct {
+		score       int
+		pofCategory string
+		cofCategory string
+	}{
+		{1, "1", "A"},
+		{5, "1", "E"},
+		{6, "2", "C"},
+		{10, "2", "E"},
+		{12, "3", "D"},
+		{15, "3", "E"},
+		{16, "4", "D"},
+		{25, "5", "E"},
+	}
+	for _, tt := range tests {
+		pvLevel := ApprovedRiskLevelFromMatrixScore(tt.score)
+		_, pipelineLevel := calculatePipelineRiskRanking(tt.pofCategory, tt.cofCategory)
+		if pipelineLevel != pvLevel+" Risk" && !(pvLevel == "Extreme" && pipelineLevel == "Critical Risk") {
+			t.Fatalf("shared risk level mismatch for score %d: pv=%s pipeline=%s", tt.score, pvLevel, pipelineLevel)
+		}
+	}
+}
+
+func TestPipelineAndPressureVesselUseSharedCoFThresholds(t *testing.T) {
+	for _, value := range []float64{1, 2, 3, 4, 5} {
+		cof := ApprovedCoFCategoryFromIndex(value)
+		if got := ApprovedCoFNumeric(cof); got != value {
+			t.Fatalf("expected CoF value %.0f to round-trip through shared category, got %s %.0f", value, cof, got)
+		}
+	}
+}
+
+func TestPipelineMaterialStressUsesPipelineSpecificDataset(t *testing.T) {
+	db, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	migrations.PipelineMaterialTables(db)
+	migrations.PipelineOilMasterDataTables(db)
+	if err := seeder.PipelineMaterial(db); err != nil {
+		t.Fatalf("seed pipeline material dataset: %v", err)
+	}
+
+	var source, version, code, edition string
+	if err := db.QueryRow(`SELECT stress_source, stress_dataset_version, governing_code, code_edition FROM pipeline_materials WHERE name = 'API 5L Gr B'`).Scan(&source, &version, &code, &edition); err != nil {
+		t.Fatalf("read seeded pipeline material metadata: %v", err)
+	}
+	if source != seeder.PipelineMaterialStressDatasetSource || version != seeder.PipelineMaterialStressDatasetVersion || code == "" || edition == "" {
+		t.Fatalf("unexpected pipeline material dataset metadata: source=%q version=%q code=%q edition=%q", source, version, code, edition)
+	}
+}
+
+func TestPipelineMaterialStressNeverFallsBackToPressureVesselData(t *testing.T) {
+	in := sampleRawGasPipingWorkbookInput()
+	in.MaterialStressPsi = 0
+	if got := derivePipelineMaterialStressPsi(in); got != 0 {
+		t.Fatalf("expected no B31.3 fallback material stress, got %.2f", got)
+	}
+	errs := ValidatePipelineOilCalculation(in)
+	found := false
+	for _, err := range errs {
+		if err.Field == "material_stress_psi" && strings.Contains(err.Message, "ENGINEERING_REVIEW_REQUIRED") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected unsupported B31.3 material mapping to require engineering review, got %+v", errs)
+	}
+}
+
+func TestSharedThresholdBoundaryValues(t *testing.T) {
+	for _, tt := range []struct {
+		value float64
+		want  string
+	}{
+		{0.000009999, "1"},
+		{0.00001, "2"},
+		{0.0001, "3"},
+		{0.001, "4"},
+		{0.01, "5"},
+	} {
+		if got := ApprovedPoFCategory(tt.value); got != tt.want {
+			t.Fatalf("PoF boundary %.8f got %s want %s", tt.value, got, tt.want)
+		}
+	}
+	for _, tt := range []struct {
+		score int
+		want  string
+	}{
+		{5, "Low"},
+		{6, "Medium"},
+		{10, "Medium"},
+		{11, "High"},
+		{15, "High"},
+		{16, "Extreme"},
+	} {
+		if got := ApprovedRiskLevelFromMatrixScore(tt.score); got != tt.want {
+			t.Fatalf("risk boundary %d got %s want %s", tt.score, got, tt.want)
+		}
+	}
+}
+
+func TestResolvedEngineeringConfirmationItemsRemovedFromGoLiveAudit(t *testing.T) {
+	body, err := os.ReadFile("../docs/pipeline-go-live-calculation-audit.md")
+	if err != nil {
+		t.Fatalf("read audit doc: %v", err)
+	}
+	text := string(body)
+	for _, phrase := range []string{
+		"whether inspection effectiveness should alter Pipeline DM severity scores",
+		"Pipeline DM modifier magnitudes",
+		"licensed API 581 tables/risk thresholds",
+		"detailed CoF thresholds",
+		"approved B31.3 material stress table values",
+	} {
+		if strings.Contains(strings.ToLower(text), strings.ToLower(phrase)) {
+			t.Fatalf("resolved engineering confirmation phrase still present in audit doc: %s", phrase)
+		}
+	}
+}
+
 func TestPipelineRequiredThicknessPopulatesResultPointRowsAndSkipsEmptyRows(t *testing.T) {
 	in := samplePipelineOilInput()
 	in.InspectionPoints = append(in.InspectionPoints, PipelineOilInspectionPoint{})
@@ -722,8 +886,8 @@ func TestPipelineH2SPartialPressureUsesPPM(t *testing.T) {
 	}
 }
 
-func TestEngineeringConfirmationRequiredForPlaceholderFactorMaps(t *testing.T) {
-	placeholderMaps := []struct {
+func TestConfirmedPipelineModifierMapsRemainNeutral(t *testing.T) {
+	modifierMaps := []struct {
 		name string
 		m    map[string]float64
 	}{
@@ -749,34 +913,12 @@ func TestEngineeringConfirmationRequiredForPlaceholderFactorMaps(t *testing.T) {
 		{"pipelineExtCrackingOptions", pipelineExtCrackingOptions},
 	}
 
-	allNeutral := true
-	for _, pm := range placeholderMaps {
+	for _, pm := range modifierMaps {
 		for k, v := range pm.m {
 			if v != 1.0 {
-				allNeutral = false
-				t.Logf("confirmed: %s[%q] = %.4f (no longer neutral 1.0)", pm.name, k, v)
+				t.Fatalf("%s[%q] = %.4f, want fixed neutral 1.0", pm.name, k, v)
 			}
 		}
-	}
-
-	intMap := []struct {
-		name string
-		m    map[string]int
-	}{
-		{"pipelineFatigueCycleThresholds", pipelineFatigueCycleThresholds},
-	}
-	for _, pm := range intMap {
-		for k, v := range pm.m {
-			if v != 1 {
-				allNeutral = false
-				t.Logf("confirmed: %s[%q] = %d (no longer neutral)", pm.name, k, v)
-			}
-		}
-	}
-
-	if allNeutral {
-		t.Log("WARNING: All pipeline factor maps still use neutral 1.0 placeholder values. Engineering confirmation is required before production use.")
-		t.Log("When an engineer confirms a factor value, update the map entry and remove its TODO_ENGINEERING_CONFIRMATION comment. This test will log confirmed entries automatically.")
 	}
 }
 

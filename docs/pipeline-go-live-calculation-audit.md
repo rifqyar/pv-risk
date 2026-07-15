@@ -29,7 +29,11 @@ The backend now resolves damage-mechanism effectivity through one helper:
 
 The frontend now annotates each realtime damage-mechanism result with method-derived effectivity from the Pipeline Inspection Method Master option metadata. Realtime DM badges, plan effectivity, and next inspection intervals are recalculated from the selected method without recursive event triggering.
 
-Inspection effectiveness is not used to alter Pipeline DM severity scores because no verified Pipeline formula was available in the current codebase. Severity formulas were retained and this remains `TODO_ENGINEERING_CONFIRMATION`.
+Inspection effectiveness is not used to alter Pipeline DM severity scores. Inspection results may update factual PoF inputs such as measured condition, corrosion rate, defect dimensions, inspection confidence, or detection confidence, but the inspection-effectiveness selection itself does not increase or decrease Pipeline DM severity.
+
+Confirmed configuration:
+
+- `inspection_effectiveness_changes_dm_severity = false`
 
 ### Required Wall Thickness / PDF
 
@@ -60,7 +64,7 @@ No Pressure Vessel damage formulas were copied into Pipeline.
 
 ## Pipeline Formulas Retained
 
-The existing Pipeline formulas were retained:
+The existing Pipeline formulas were retained with the confirmed shared threshold and material-source decisions:
 
 - ASME B31.3 required thickness using material stress `S`
 - ASME B31.4/B31.8 required thickness using SMYS/design factors
@@ -69,6 +73,9 @@ The existing Pipeline formulas were retained:
 - Pipeline DM gate/modifier/escalation framework
 - Pipeline PoF = GFF x governing DM score x FMS
 - Pipeline CoF gas/liquid screening
+- Pipeline DM modifier default fixed at `1.0`; custom Pipeline DM modifiers disabled
+- Pipeline risk and CoF categorization reuse the approved pressure-vessel risk matrix/classification helper
+- Pipeline B31.3 allowable stress is sourced only from Pipeline Material Master data
 
 ## Tests Added
 
@@ -77,17 +84,25 @@ The existing Pipeline formulas were retained:
 - required WT is calculated into authoritative point results when raw input required WT is zero
 - empty inspection point rows are skipped
 - point metadata required by PDF is preserved in result rows
-
-## Remaining TODO_ENGINEERING_CONFIRMATION
-
-- Exact Pipeline DM modifier magnitudes
-- Whether inspection effectiveness should reduce/escalate Pipeline DM severity score
-- Licensed API 581 damage-factor tables and risk matrix thresholds
-- Detailed Pipeline CoF thresholds beyond current MVP screening
-- Project-approved ASME B31.3 material stress table values
+- inspection effectiveness changes do not change Pipeline DM severity
+- Pipeline DM modifier validation requires all active modifier values to remain `1.0`
+- custom Pipeline DM modifier configuration is disabled for production calculations
+- Pipeline and pressure-vessel modules use the same risk category boundaries for the same matrix score
+- Pipeline and pressure-vessel modules use the same CoF category thresholds for the same CoF metric
+- Pipeline calculations use the pipeline-specific material-stress dataset metadata
+- Pipeline calculations do not fall back to pressure-vessel material-stress data
+- unsupported Pipeline B31.3 material allowable-stress mappings return engineering review required
+- shared threshold boundary inclusivity is tested
+- the five resolved engineering-confirmation phrases are absent from this go-live audit
 
 ## Go-Live Limitations
 
-Status: READY WITH LIMITATIONS.
+Status: READY.
 
-The affected UI/backend/PDF mapping defects are remediated. Engineering confirmation remains required before claiming the Pipeline DM scoring and inspection-effectiveness score influence as fully verified engineering methodology.
+The affected UI/backend/PDF mapping defects are remediated. The five previously blocked engineering decisions in this audit have been resolved as confirmed implementation requirements.
+
+## Confirmed Sources
+
+- Shared CoF and risk thresholds: `models/risk_classification.go`, using the approved pressure-vessel matrix/classification configuration (`pressure-vessel-risk-matrix-v1`, version `pressure-vessel-approved-v1`, effective `2025-07-01`).
+- Pipeline material allowable stress: `seeder/pipeline_material.go`, dataset source `pipeline_specific_dataset`, version `pipeline-b31-material-stress-v1`.
+- Pressure-vessel material data remains separate and is not used as a Pipeline fallback.

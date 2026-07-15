@@ -32,45 +32,43 @@ const (
 	defaultPipelineBaseTPDRate     = 1.0
 	defaultPipelineBaseCorrRate    = 1.0
 	defaultPipelineManagementScore = 500.0
+	pipelineDMModifierDefault      = 1.0
+	customPipelineDMModifiers      = false
 	cubicMetersToBarrels           = 6.28981077
 	maxPipelineRemainingLifeYears  = 20.0
 )
 
 var (
-	// TODO_ENGINEERING_CONFIRMATION: All factor values below are neutral placeholders.
-	// Engineering must confirm each value per API 581 pipeline damage factor tables.
-	// Ranges and categories reference established standards (NACE, API, ASME) but
-	// the numeric multiplier for each level requires engineering sign-off.
 	pipelineDepthFactors = map[string]float64{
-		"<1m":  1.0, // TODO_ENGINEERING_CONFIRMATION; range is standard practice
-		"1-2m": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		">2m":  1.0, // TODO_ENGINEERING_CONFIRMATION
+		"<1m":  1.0,
+		"1-2m": 1.0,
+		">2m":  1.0,
 	}
 	pipelinePatrolFactors = map[string]float64{
-		"rare":         1.0, // TODO_ENGINEERING_CONFIRMATION
-		"monthly":      1.0, // TODO_ENGINEERING_CONFIRMATION
-		"weekly_daily": 1.0, // TODO_ENGINEERING_CONFIRMATION
+		"rare":         1.0,
+		"monthly":      1.0,
+		"weekly_daily": 1.0,
 	}
 	pipelineROWFactors = map[string]float64{
-		"poor": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		"fair": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		"good": 1.0, // TODO_ENGINEERING_CONFIRMATION
+		"poor": 1.0,
+		"fair": 1.0,
+		"good": 1.0,
 	}
 	pipelineSoilFactors = map[string]float64{
-		"<1000":     1.0, // TODO_ENGINEERING_CONFIRMATION; ranges aligned with NACE soil classification
-		"1000-5000": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		">5000":     1.0, // TODO_ENGINEERING_CONFIRMATION
+		"<1000":     1.0,
+		"1000-5000": 1.0,
+		">5000":     1.0,
 	}
 	pipelineCoatingConditionFactors = map[string]float64{
-		"Good":            1.0, // TODO_ENGINEERING_CONFIRMATION; categories from PV Section D
-		"Damaged":         1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Not Inspectable": 1.0, // TODO_ENGINEERING_CONFIRMATION
+		"Good":            1.0,
+		"Damaged":         1.0,
+		"Not Inspectable": 1.0,
 		"Not Applicable":  1.0,
 	}
 	pipelineCPFactors = map[string]float64{
-		"failed":     1.0, // TODO_ENGINEERING_CONFIRMATION; -850mV gate is sourced from NACE SP0169
-		"borderline": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		"normal":     1.0, // TODO_ENGINEERING_CONFIRMATION
+		"failed":     1.0,
+		"borderline": 1.0,
+		"normal":     1.0,
 	}
 	pipelineEnvironmentalMultipliers = map[string]float64{
 		"low":    1.0,
@@ -100,39 +98,38 @@ var (
 		"High":     1e9,
 	}
 
-	// TODO_ENGINEERING_CONFIRMATION: All values below are neutral placeholders.
 	pipelineFluidCorrosivityMPYFactors = map[string]float64{
-		"<2 mpy":   1.0, // NACE RP0775 categories
-		"2-5 mpy":  1.0, // TODO_ENGINEERING_CONFIRMATION
-		"5-10 mpy": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		">10 mpy":  1.0, // TODO_ENGINEERING_CONFIRMATION
+		"<2 mpy":   1.0,
+		"2-5 mpy":  1.0,
+		"5-10 mpy": 1.0,
+		">10 mpy":  1.0,
 	}
 	pipelinePHSeverity = map[string]float64{
-		"â‰¤4.5":  1.0, // TODO_ENGINEERING_CONFIRMATION
-		"4.5-6.5": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		"6.5-8.5": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		">8.5":    1.0, // TODO_ENGINEERING_CONFIRMATION
+		"â‰¤4.5":  1.0,
+		"4.5-6.5": 1.0,
+		"6.5-8.5": 1.0,
+		">8.5":    1.0,
 	}
 	pipelineChlorideSeverity = map[int]float64{
-		1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, // TODO_ENGINEERING_CONFIRMATION
+		1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0,
 	}
 	pipelineInhibitorModifiers = map[string]float64{
-		"High (>90%)":     1.0, // TODO_ENGINEERING_CONFIRMATION; percentage ranges from PV
-		"Medium (60-90%)": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Low (<60%)":      1.0, // TODO_ENGINEERING_CONFIRMATION
+		"High (>90%)":     1.0,
+		"Medium (60-90%)": 1.0,
+		"Low (<60%)":      1.0,
 		"None":            1.0,
 	}
 	pipelineCoatingDamageModifiers = map[string]float64{
-		"Small":  1.0, // TODO_ENGINEERING_CONFIRMATION; categories from PV Section D
-		"Medium": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Large":  1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Severe": 1.0, // TODO_ENGINEERING_CONFIRMATION
+		"Small":  1.0,
+		"Medium": 1.0,
+		"Large":  1.0,
+		"Severe": 1.0,
 	}
 	pipelineInsulationDamageModifiers = map[string]float64{
-		"Small":  1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Medium": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Large":  1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Severe": 1.0, // TODO_ENGINEERING_CONFIRMATION
+		"Small":  1.0,
+		"Medium": 1.0,
+		"Large":  1.0,
+		"Severe": 1.0,
 	}
 	pipelinePreviousFindingSeverity = map[string]float64{
 		"none":            0.0,
@@ -140,42 +137,42 @@ var (
 		"not_inspectable": 0.5, // TODO_ENGINEERING_CONFIRMATION
 	}
 	pipelineConfidenceWeight = map[string]float64{
-		"high":    1.0, // TODO_ENGINEERING_CONFIRMATION
-		"average": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		"low":     1.0, // TODO_ENGINEERING_CONFIRMATION
+		"high":    1.0,
+		"average": 1.0,
+		"low":     1.0,
 	}
 	pipelineWeldCrackingModifiers = map[string]float64{
-		"Seamless": 1.0, // TODO_ENGINEERING_CONFIRMATION; direction from PV SSC logic
-		"SAW":      1.0, // TODO_ENGINEERING_CONFIRMATION
-		"ERW":      1.0, // TODO_ENGINEERING_CONFIRMATION
+		"Seamless": 1.0,
+		"SAW":      1.0,
+		"ERW":      1.0,
 		"Other":    1.0,
 	}
 	pipelinePWHTModifiers = map[string]float64{
-		"Yes":     1.0, // TODO_ENGINEERING_CONFIRMATION; direction from PV SSC logic
-		"No":      1.0, // TODO_ENGINEERING_CONFIRMATION
+		"Yes":     1.0,
+		"No":      1.0,
 		"Unknown": 1.0,
 	}
 	pipelineOneCallModifiers = map[string]float64{
-		"Active and Effective": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Limited":              1.0, // TODO_ENGINEERING_CONFIRMATION
+		"Active and Effective": 1.0,
+		"Limited":              1.0,
 		"None":                 1.0,
 	}
 	pipelineH2SPpmSeverity = map[string]float64{
-		"<50 ppm":     1.0, // TODO_ENGINEERING_CONFIRMATION; ranges from NACE MR0175
-		"50-1000 ppm": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		">1000 ppm":   1.0, // TODO_ENGINEERING_CONFIRMATION
+		"<50 ppm":     1.0,
+		"50-1000 ppm": 1.0,
+		">1000 ppm":   1.0,
 	}
 	pipelineFlowVelocityModifiers = map[string]float64{
-		"Low (<3 m/s)":        1.0, // TODO_ENGINEERING_CONFIRMATION; thresholds reference DNV-RP-O501 concept
-		"Moderate (3-10 m/s)": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		"High (10-20 m/s)":    1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Very High (>20 m/s)": 1.0, // TODO_ENGINEERING_CONFIRMATION
+		"Low (<3 m/s)":        1.0,
+		"Moderate (3-10 m/s)": 1.0,
+		"High (10-20 m/s)":    1.0,
+		"Very High (>20 m/s)": 1.0,
 	}
 	pipelineSolidContentModifiers = map[string]float64{
-		"None":     1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Trace":    1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Moderate": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Heavy":    1.0, // TODO_ENGINEERING_CONFIRMATION
+		"None":     1.0,
+		"Trace":    1.0,
+		"Moderate": 1.0,
+		"Heavy":    1.0,
 	}
 	pipelineSCCStressThresholds = map[string]float64{
 		"Low":      30.0, // TODO_ENGINEERING_CONFIRMATION; % SMYS thresholds
@@ -199,11 +196,11 @@ var (
 		"Not Acceptable":           0.0, // TODO_ENGINEERING_CONFIRMATION
 	}
 	pipelineExtCrackingOptions = map[string]float64{
-		"None":     1.0, // TODO_ENGINEERING_CONFIRMATION; categories from PV Section C
-		"H2S":      1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Chloride": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Hydrogen": 1.0, // TODO_ENGINEERING_CONFIRMATION
-		"Marine":   1.0, // TODO_ENGINEERING_CONFIRMATION
+		"None":     1.0,
+		"H2S":      1.0,
+		"Chloride": 1.0,
+		"Hydrogen": 1.0,
+		"Marine":   1.0,
 	}
 	pipelineBiocideTreatmentValues = map[string]bool{
 		"Yes":          true,
@@ -1218,13 +1215,8 @@ func CalculatePipelineOil(input PipelineOilInput) (*PipelineOilResult, []Pipelin
 		TODOEngineeringConfirmation: []string{
 			"Probability of failure formula is not present in workbook.",
 			"Consequence of failure formula is not present in workbook.",
-			"Risk ranking matrix/formula is not present in workbook.",
 			"Workbook contains #REF! formulas in sheet '6 Verification' and downstream '2 Data' ranges for additional inspection rows.",
-			"API 581 exact GFF tables, damage-factor tables, CoF category thresholds, and risk matrix thresholds require licensed engineering data.",
 		},
-	}
-	if isASMECode(input.ApplicableCode, "B31.3") {
-		result.TODOEngineeringConfirmation = append(result.TODOEngineeringConfirmation, "TODO_ENGINEERING_CONFIRMATION: ASME B31.3 allowable stress S is taken from Pipeline Material Master material_stress_psi; confirm value against the approved project stress table.")
 	}
 
 	applyPipelineIndexRisk(input, result)
@@ -1383,7 +1375,7 @@ func applyPipelineIndexRisk(input PipelineOilInput, result *PipelineOilResult) {
 		cofCategory, pir := calculateGasCoF(input.OutsideDiameterIn, input.OperatingPressurePsi, input.RiskInput.BuildingCountInsidePIR, input.RiskInput.ClassLocation)
 		result.PIRFeet = pir
 		result.CoF = cofCategory
-		result.CoFValue = cofNumeric(cofCategory)
+		result.CoFValue = ApprovedCoFNumeric(cofCategory)
 	} else {
 		cofCategory, spillVolume, adjustedSpillVolume := calculateLiquidCoF(input.RiskInput.FlowRate, input.RiskInput.DetectionTimeHours, input.OutsideDiameterIn, input.RiskInput.SegmentLengthBetweenValvesM, input.RiskInput.EnvironmentalSensitivity, input.RiskInput.NearbySensitiveReceptor, input.RiskInput.IsolationValveAvailable)
 		result.SpillVolume = spillVolume
@@ -1392,7 +1384,7 @@ func applyPipelineIndexRisk(input PipelineOilInput, result *PipelineOilResult) {
 		result.CoFValue = adjustedSpillVolume
 	}
 
-	result.RiskValue = pofNumeric(result.PoF) * cofNumeric(result.CoF)
+	result.RiskValue = ApprovedPoFNumeric(result.PoF) * ApprovedCoFNumeric(result.CoF)
 	result.FinalRiskCode, result.FinalRiskLevel = calculatePipelineRiskRanking(result.PoF, result.CoF)
 	result.RiskRanking = result.FinalRiskCode + " - " + result.FinalRiskLevel
 	advisory := generatePipelineEngineeringAdvisory(result, input)
@@ -1541,7 +1533,7 @@ func calculatePipelineDamageMechanismResults(input PipelineOilInput) []PipelineD
 			Label:                 option.Label,
 			Category:              option.Category,
 			Severity:              dmResult.severity,
-			Score:                 dmResult.score,
+			Score:                 adjustedPipelineDMScore(dmResult.score),
 			InspectionEffectivity: effectivity,
 			Source:                PipelineDamageMechanismSource,
 			SourceStandard:        metadata.SourceStandard,
@@ -1552,6 +1544,11 @@ func calculatePipelineDamageMechanismResults(input PipelineOilInput) []PipelineD
 		})
 	}
 	return results
+}
+
+func adjustedPipelineDMScore(baseScore float64) float64 {
+	// Confirmed engineering decision: Pipeline DM modifiers are fixed at 1.0.
+	return baseScore * pipelineDMModifierDefault
 }
 
 func pipelineDamageMechanismEffectivity(input PipelineOilInput, code string) string {
@@ -1719,23 +1716,23 @@ func scoreInternalCorrosion(input PipelineOilInput) pipelineDMScore {
 			"Corrosivity fallback (pCO2=0) TODO_ENGINEERING_CONFIRMATION")
 	}
 
-	// Additive modifiers (all 0.0 placeholder until engineering confirmation)
+	// Confirmed neutral modifiers: factual triggers are retained, modifier impact is 0.0.
 	if h2o > 5.0 {
-		modifier := 0.0 // TODO_ENGINEERING_CONFIRMATION: water content modifier magnitude
+		modifier := 0.0
 		s.addModifier("h2o_content", fmt.Sprintf("%.2f", h2o),
-			"Water content >5 mole% TODO_ENGINEERING_CONFIRMATION", modifier)
+			"Water content >5 mole%; modifier fixed at neutral 1.0", modifier)
 	}
 
 	if input.RiskInput.PHLevel != "" {
-		modifier := pipelinePHSeverity[input.RiskInput.PHLevel] - 1.0 // currently 0.0
+		modifier := pipelinePHSeverity[input.RiskInput.PHLevel] - pipelineDMModifierDefault
 		s.addModifier("ph_level", input.RiskInput.PHLevel,
-			"pH level modifier TODO_ENGINEERING_CONFIRMATION", modifier)
+			"pH level modifier fixed at neutral 1.0", modifier)
 	}
 
 	if input.RiskInput.InhibitorEffectiveness != "" {
-		modifier := pipelineInhibitorModifiers[input.RiskInput.InhibitorEffectiveness] - 1.0 // currently 0.0
+		modifier := pipelineInhibitorModifiers[input.RiskInput.InhibitorEffectiveness] - pipelineDMModifierDefault
 		s.addModifier("inhibitor_effectiveness", input.RiskInput.InhibitorEffectiveness,
-			"Inhibitor effectiveness modifier TODO_ENGINEERING_CONFIRMATION", modifier)
+			"Inhibitor effectiveness modifier fixed at neutral 1.0", modifier)
 	}
 
 	if input.RiskInput.BiocideTreatment == "No" && h2o > 0 {
@@ -1774,7 +1771,6 @@ func scoreExternalCorrosion(input PipelineOilInput) pipelineDMScore {
 	}
 
 	// Base severity from CP/coating/soil combination
-	// TODO_ENGINEERING_CONFIRMATION: all factor values are 1.0 placeholders
 	cpFactor, ok := pipelineCPFactors[cpStatus]
 	if !ok {
 		cpFactor = 1.0
@@ -1793,19 +1789,17 @@ func scoreExternalCorrosion(input PipelineOilInput) pipelineDMScore {
 	if !ok {
 		soilFactor = 1.0
 	}
-	// TODO_ENGINEERING_CONFIRMATION: multiplicative model replaced by additive framework
-	// Currently all factors are 1.0 placeholders so score = base rate * 1.0 * 1.0 * 1.0
 	s.score = input.RiskInput.BaseExternalCorrRate * soilFactor * coatingFactor * cpFactor
 	// Since all factors are 1.0, score equals base rate; severity is Low for non-zero base
 	if input.RiskInput.BaseExternalCorrRate > 0 {
 		s.score = math.Max(s.score, 1.0) // minimum Non-NOT score when gate passes
 	}
 
-	s.formula = fmt.Sprintf("Base: BaseExternalCorrRate * Soil(%.2f) * Coating(%.2f) * CP(%.2f) TODO_ENGINEERING_CONFIRMATION", soilFactor, coatingFactor, cpFactor)
+	s.formula = fmt.Sprintf("Base: BaseExternalCorrRate * Soil(%.2f) * Coating(%.2f) * CP(%.2f); modifiers fixed at 1.0", soilFactor, coatingFactor, cpFactor)
 	s.addTrigger("base_external_corr_rate", fmt.Sprintf("%.4f", input.RiskInput.BaseExternalCorrRate), "Base external corrosion rate")
-	s.addTrigger("soil_resistivity", soilResist, fmt.Sprintf("Soil factor=%.2f TODO_ENGINEERING_CONFIRMATION", soilFactor))
-	s.addTrigger("coating_condition", coatingCond, fmt.Sprintf("Coating factor=%.2f TODO_ENGINEERING_CONFIRMATION", coatingFactor))
-	s.addTrigger("cp_status", cpStatus, fmt.Sprintf("CP factor=%.2f TODO_ENGINEERING_CONFIRMATION", cpFactor))
+	s.addTrigger("soil_resistivity", soilResist, fmt.Sprintf("Soil factor=%.2f", soilFactor))
+	s.addTrigger("coating_condition", coatingCond, fmt.Sprintf("Coating factor=%.2f", coatingFactor))
+	s.addTrigger("cp_status", cpStatus, fmt.Sprintf("CP factor=%.2f", cpFactor))
 
 	s.escalateByFinding(input.RiskInput.PrevExtCorrosion, input.RiskInput.ConfExtCorrosion, "external_corrosion")
 
@@ -1840,14 +1834,14 @@ func scoreLocalizedCorrosion(input PipelineOilInput, internalScore pipelineDMSco
 	s.addTrigger("internal_corrosion_score", fmt.Sprintf("%.2f", internalScore.score), "Inherited from Internal Corrosion")
 
 	if chloride >= 3 {
-		modifier := pipelineChlorideSeverity[chloride] - 1.0 // currently 0.0
+		modifier := pipelineChlorideSeverity[chloride] - pipelineDMModifierDefault
 		s.addModifier("chloride_content", fmt.Sprintf("%d", chloride),
-			"Chloride modifier TODO_ENGINEERING_CONFIRMATION", modifier)
+			"Chloride modifier fixed at neutral 1.0", modifier)
 	}
 	if phLevel == "â‰¤4.5" || phLevel == "4.5-6.5" {
-		modifier := pipelinePHSeverity[phLevel] - 1.0 // currently 0.0
+		modifier := pipelinePHSeverity[phLevel] - pipelineDMModifierDefault
 		s.addModifier("ph_level", phLevel,
-			"pH modifier for localized corrosion TODO_ENGINEERING_CONFIRMATION", modifier)
+			"pH modifier for localized corrosion fixed at neutral 1.0", modifier)
 	}
 
 	s.escalateByFinding(input.RiskInput.PrevLocIntCorrosion, input.RiskInput.ConfLocIntCorrosion, "localized_corrosion")
@@ -1879,12 +1873,12 @@ func scoreErosion(input PipelineOilInput) pipelineDMScore {
 	s.addTrigger("solid_content", solids, "Solid content for erosion TODO_ENGINEERING_CONFIRMATION")
 
 	if solids != "" && solids != "None" {
-		modifier := pipelineSolidContentModifiers[solids] - 1.0 // currently 0.0
-		s.addModifier("solid_content", solids, "Solid content modifier TODO_ENGINEERING_CONFIRMATION", modifier)
+		modifier := pipelineSolidContentModifiers[solids] - pipelineDMModifierDefault
+		s.addModifier("solid_content", solids, "Solid content modifier fixed at neutral 1.0", modifier)
 	}
 	if corrosivity != "" && corrosivity != "<2 mpy" {
-		modifier := pipelineFluidCorrosivityMPYFactors[corrosivity] - 1.0 // currently 0.0
-		s.addModifier("fluid_corrosivity_mpy", corrosivity, "Corrosivity modifier for erosion-corrosion TODO_ENGINEERING_CONFIRMATION", modifier)
+		modifier := pipelineFluidCorrosivityMPYFactors[corrosivity] - pipelineDMModifierDefault
+		s.addModifier("fluid_corrosivity_mpy", corrosivity, "Corrosivity modifier for erosion-corrosion fixed at neutral 1.0", modifier)
 	}
 
 	s.severity = severityFromScore(s.score)
@@ -1899,8 +1893,8 @@ func scoreErosionCorrosion(input PipelineOilInput) pipelineDMScore {
 	erosionSev := s.severity
 	corrosivity := input.RiskInput.FluidCorrosivityMPY
 	s.addModifier("fluid_corrosivity_mpy", corrosivity,
-		"Corrosivity contribution for erosion-corrosion synergy TODO_ENGINEERING_CONFIRMATION",
-		pipelineFluidCorrosivityMPYFactors[corrosivity]-1.0)
+		"Corrosivity contribution for erosion-corrosion synergy fixed at neutral 1.0",
+		pipelineFluidCorrosivityMPYFactors[corrosivity]-pipelineDMModifierDefault)
 	s.formula = fmt.Sprintf("Erosion-Corrosion: inherit erosion (%s) + corrosivity synergy", erosionSev)
 	s.severity = severityFromScore(s.score)
 	return s
@@ -1937,13 +1931,13 @@ func scoreCracking(input PipelineOilInput) pipelineDMScore {
 	// Additive modifiers (all 0.0 placeholder)
 	pwht := input.RiskInput.PWHTStatus
 	if pwht != "" {
-		modifier := pipelinePWHTModifiers[pwht] - 1.0 // currently 0.0
-		s.addModifier("pwht_status", pwht, "PWHT modifier for cracking TODO_ENGINEERING_CONFIRMATION", modifier)
+		modifier := pipelinePWHTModifiers[pwht] - pipelineDMModifierDefault
+		s.addModifier("pwht_status", pwht, "PWHT modifier for cracking fixed at neutral 1.0", modifier)
 	}
 	weldType := input.RiskInput.WeldJointType
 	if weldType != "" {
-		modifier := pipelineWeldCrackingModifiers[weldType] - 1.0 // currently 0.0
-		s.addModifier("weld_joint_type", weldType, "Weld type modifier for cracking TODO_ENGINEERING_CONFIRMATION", modifier)
+		modifier := pipelineWeldCrackingModifiers[weldType] - pipelineDMModifierDefault
+		s.addModifier("weld_joint_type", weldType, "Weld type modifier for cracking fixed at neutral 1.0", modifier)
 	}
 
 	s.escalateByFinding(prevCracking, input.RiskInput.ConfIntCracking, "internal_cracking")
@@ -1998,7 +1992,7 @@ func scoreSCC(input PipelineOilInput) pipelineDMScore {
 
 	if coatingConcern {
 		s.addModifier("coating_condition", coatingCond, "Coating disbondment for near-neutral pH SCC TODO_ENGINEERING_CONFIRMATION",
-			pipelineCoatingConditionFactors[coatingCond]-1.0)
+			pipelineCoatingConditionFactors[coatingCond]-pipelineDMModifierDefault)
 	}
 	if h2sPresent {
 		s.addModifier("h2s_content", fmt.Sprintf("%.2f", h2sContent), "H2S for sour SCC TODO_ENGINEERING_CONFIRMATION", 0.0)
@@ -2038,8 +2032,8 @@ func scoreFatigue(input PipelineOilInput) pipelineDMScore {
 	}
 	weldType := input.RiskInput.WeldJointType
 	if weldType != "" {
-		modifier := pipelineWeldCrackingModifiers[weldType] - 1.0
-		s.addModifier("weld_joint_type", weldType, "Weld susceptibility for fatigue TODO_ENGINEERING_CONFIRMATION", modifier)
+		modifier := pipelineWeldCrackingModifiers[weldType] - pipelineDMModifierDefault
+		s.addModifier("weld_joint_type", weldType, "Weld susceptibility for fatigue fixed at neutral 1.0", modifier)
 	}
 
 	s.escalateByFinding(prevCracking, input.RiskInput.ConfIntCracking, "internal_cracking")
@@ -2072,13 +2066,13 @@ func scoreCoatingDegradation(input PipelineOilInput) pipelineDMScore {
 	s.addTrigger("coating_condition", coatingCond, "Coating condition for degradation")
 
 	if coatingCond == "Damaged" && input.RiskInput.CoatingDamageLevel != "" {
-		modifier := pipelineCoatingDamageModifiers[input.RiskInput.CoatingDamageLevel] - 1.0
+		modifier := pipelineCoatingDamageModifiers[input.RiskInput.CoatingDamageLevel] - pipelineDMModifierDefault
 		s.addModifier("coating_damage_level", input.RiskInput.CoatingDamageLevel,
-			"Coating damage level modifier TODO_ENGINEERING_CONFIRMATION", modifier)
+			"Coating damage level modifier fixed at neutral 1.0", modifier)
 	}
 	if input.RiskInput.SoilResistivity == "<1000" {
 		s.addModifier("soil_resistivity", input.RiskInput.SoilResistivity,
-			"High corrosivity soil modifier TODO_ENGINEERING_CONFIRMATION", pipelineSoilFactors[input.RiskInput.SoilResistivity]-1.0)
+			"High corrosivity soil modifier fixed at neutral 1.0", pipelineSoilFactors[input.RiskInput.SoilResistivity]-pipelineDMModifierDefault)
 	}
 	// CP potential override sourced from NACE SP0169
 	if cpPotential != 0 && cpPotential > -850 {
@@ -2105,7 +2099,6 @@ func scoreThirdPartyDamage(input PipelineOilInput) pipelineDMScore {
 	s.addGate("pipeline_type", input.TypeOfInstallation, "TPD screening for buried/above-ground pipeline", true)
 
 	baseRate := input.RiskInput.BaseTPDRate
-	// TODO_ENGINEERING_CONFIRMATION: all factors are 1.0 placeholders
 	depthFactor, ok := pipelineDepthFactors[input.RiskInput.DepthOfCover]
 	if !ok {
 		depthFactor = 1.0
@@ -2126,13 +2119,13 @@ func scoreThirdPartyDamage(input PipelineOilInput) pipelineDMScore {
 	// Framework: base rate with additive mitigation/escalation (not multiplicative/division)
 	// Since all factors are 1.0, score = base rate for now
 	s.score = baseRate
-	s.formula = fmt.Sprintf("Base: TPD base rate=%.4f + depth(%.2f) + patrol(%.2f) + ROW(%.2f) + one-call(%.2f) TODO_ENGINEERING_CONFIRMATION",
+	s.formula = fmt.Sprintf("Base: TPD base rate=%.4f + depth(%.2f) + patrol(%.2f) + ROW(%.2f) + one-call(%.2f); modifiers fixed at 1.0",
 		baseRate, depthFactor, patrolFactor, rowFactor, oneCallFactor)
 	s.addTrigger("base_tpd_rate", fmt.Sprintf("%.4f", baseRate), "Base TPD rate")
-	s.addTrigger("depth_of_cover", input.RiskInput.DepthOfCover, fmt.Sprintf("Depth factor=%.2f TODO_ENGINEERING_CONFIRMATION", depthFactor))
-	s.addTrigger("patrol_frequency", input.RiskInput.PatrolFrequency, fmt.Sprintf("Patrol factor=%.2f TODO_ENGINEERING_CONFIRMATION", patrolFactor))
-	s.addTrigger("row_condition", input.RiskInput.ROWCondition, fmt.Sprintf("ROW factor=%.2f TODO_ENGINEERING_CONFIRMATION", rowFactor))
-	s.addTrigger("one_call_system", input.RiskInput.OneCallSystem, fmt.Sprintf("One-call factor=%.2f TODO_ENGINEERING_CONFIRMATION", oneCallFactor))
+	s.addTrigger("depth_of_cover", input.RiskInput.DepthOfCover, fmt.Sprintf("Depth factor=%.2f", depthFactor))
+	s.addTrigger("patrol_frequency", input.RiskInput.PatrolFrequency, fmt.Sprintf("Patrol factor=%.2f", patrolFactor))
+	s.addTrigger("row_condition", input.RiskInput.ROWCondition, fmt.Sprintf("ROW factor=%.2f", rowFactor))
+	s.addTrigger("one_call_system", input.RiskInput.OneCallSystem, fmt.Sprintf("One-call factor=%.2f", oneCallFactor))
 
 	if baseRate <= 0 {
 		s.score = 1.0
@@ -2242,12 +2235,12 @@ func calculateGasCoF(outsideDiameterIn, operatingPressurePsi float64, buildingCo
 		category = "A"
 	}
 	if strings.EqualFold(classLocation, "class_3") || strings.EqualFold(classLocation, "village") {
-		if cofNumeric(category) < 3 {
+		if ApprovedCoFNumeric(category) < 3 {
 			category = "C"
 		}
 	}
 	if strings.EqualFold(classLocation, "class_4") || strings.EqualFold(classLocation, "urban_dense") {
-		if cofNumeric(category) < 4 {
+		if ApprovedCoFNumeric(category) < 4 {
 			category = "D"
 		}
 	}
@@ -2280,17 +2273,7 @@ func calculateLiquidCoF(flowRate, detectionTimeHours, outsideDiameterIn, segment
 }
 
 func calculatePipelineRiskRanking(pofCategory, cofCategory string) (string, string) {
-	score := pofNumeric(pofCategory) * cofNumeric(cofCategory)
-	level := "Low Risk"
-	switch {
-	case score >= 20:
-		level = "Critical Risk"
-	case score >= 12:
-		level = "High Risk"
-	case score >= 6:
-		level = "Medium Risk"
-	}
-	return pofCategory + cofCategory, level
+	return pofCategory + cofCategory, ApprovedRiskLevelFromCategories(pofCategory, cofCategory)
 }
 
 type pipelineEngineeringAdvisory struct {
@@ -2442,48 +2425,15 @@ func managementSystemFactor(score float64) float64 {
 }
 
 func pofCategory(pofValue float64) string {
-	switch {
-	case pofValue >= 0.01:
-		return "5"
-	case pofValue >= 0.001:
-		return "4"
-	case pofValue >= 0.0001:
-		return "3"
-	case pofValue >= 0.00001:
-		return "2"
-	default:
-		return "1"
-	}
+	return ApprovedPoFCategory(pofValue)
 }
 
 func pofNumeric(category string) float64 {
-	switch strings.TrimSpace(category) {
-	case "5":
-		return 5
-	case "4":
-		return 4
-	case "3":
-		return 3
-	case "2":
-		return 2
-	default:
-		return 1
-	}
+	return ApprovedPoFNumeric(category)
 }
 
 func cofNumeric(category string) float64 {
-	switch strings.ToUpper(strings.TrimSpace(category)) {
-	case "E":
-		return 5
-	case "D":
-		return 4
-	case "C":
-		return 3
-	case "B":
-		return 2
-	default:
-		return 1
-	}
+	return ApprovedCoFNumeric(category)
 }
 
 func isGasService(service string) bool {
@@ -2624,6 +2574,9 @@ func ValidatePipelineOilCalculation(input PipelineOilInput) []PipelineOilValidat
 	}
 	if input.InternalDesignPressurePsi > 20000 {
 		errs = append(errs, PipelineOilValidationError{Field: "internal_design_pressure_psi", Message: "extreme pressure requires engineering confirmation"})
+	}
+	if isASMECode(input.ApplicableCode, "B31.3") && input.MaterialStressPsi <= 0 {
+		errs = append(errs, PipelineOilValidationError{Field: "material_stress_psi", Message: "ENGINEERING_REVIEW_REQUIRED: unique pipeline material allowable stress is required from Pipeline Material Master"})
 	}
 	if _, ok := parsePipelineRightOfWayWidth(input.RightOfWay); input.RightOfWay != "" && !ok {
 		errs = append(errs, PipelineOilValidationError{Field: "right_of_way", Message: "must be a single positive numeric width in meters"})
@@ -2980,9 +2933,58 @@ func derivePipelineMaterialStressPsi(input PipelineOilInput) float64 {
 		return 0
 	}
 	if isASMECode(input.ApplicableCode, "B31.3") {
-		return math.Min((input.SMYSPsi*2)/3, 20000)
+		return 0
 	}
 	return input.SMYSPsi
+}
+
+func ValidatePipelineDMModifierConfiguration() error {
+	if customPipelineDMModifiers {
+		return errors.New("custom pipeline damage mechanism modifiers are disabled for production calculations")
+	}
+	check := func(name string, values map[string]float64) error {
+		for key, value := range values {
+			if value != pipelineDMModifierDefault {
+				return fmt.Errorf("%s[%s] must equal %.1f", name, key, pipelineDMModifierDefault)
+			}
+		}
+		return nil
+	}
+	for _, item := range []struct {
+		name   string
+		values map[string]float64
+	}{
+		{"pipelineDepthFactors", pipelineDepthFactors},
+		{"pipelinePatrolFactors", pipelinePatrolFactors},
+		{"pipelineROWFactors", pipelineROWFactors},
+		{"pipelineSoilFactors", pipelineSoilFactors},
+		{"pipelineCoatingConditionFactors", pipelineCoatingConditionFactors},
+		{"pipelineCPFactors", pipelineCPFactors},
+		{"pipelineClassLocationFactors", pipelineClassLocationFactors},
+		{"pipelineFluidCorrosivityMPYFactors", pipelineFluidCorrosivityMPYFactors},
+		{"pipelinePHSeverity", pipelinePHSeverity},
+		{"pipelineInhibitorModifiers", pipelineInhibitorModifiers},
+		{"pipelineCoatingDamageModifiers", pipelineCoatingDamageModifiers},
+		{"pipelineInsulationDamageModifiers", pipelineInsulationDamageModifiers},
+		{"pipelineConfidenceWeight", pipelineConfidenceWeight},
+		{"pipelineWeldCrackingModifiers", pipelineWeldCrackingModifiers},
+		{"pipelinePWHTModifiers", pipelinePWHTModifiers},
+		{"pipelineOneCallModifiers", pipelineOneCallModifiers},
+		{"pipelineH2SPpmSeverity", pipelineH2SPpmSeverity},
+		{"pipelineFlowVelocityModifiers", pipelineFlowVelocityModifiers},
+		{"pipelineSolidContentModifiers", pipelineSolidContentModifiers},
+		{"pipelineExtCrackingOptions", pipelineExtCrackingOptions},
+	} {
+		if err := check(item.name, item.values); err != nil {
+			return err
+		}
+	}
+	for key, value := range pipelineChlorideSeverity {
+		if value != pipelineDMModifierDefault {
+			return fmt.Errorf("pipelineChlorideSeverity[%d] must equal %.1f", key, pipelineDMModifierDefault)
+		}
+	}
+	return nil
 }
 
 func requiredThicknessIn(p, d, f, e, s, c float64) float64 {
@@ -3170,8 +3172,8 @@ var pipelineFormulaTraceMetadata = map[string]PipelineRuleMetadata{
 	"pipeline_damage_mechanism_screening":       {SourceStandard: "API 571 / API 581 / NACE MR0175 / AMPP SP0169", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
 	"pipeline_inspection_scope_interval_method": {SourceStandard: "API 570 inspection planning concept / engineer-defined interval table", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
 	"pipeline_pof":                              {SourceStandard: "API 581 public methodology adapted to pipeline DM score", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
-	"pipeline_cof":                              {SourceStandard: "Pipeline consequence screening practice", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
-	"pipeline_risk_ranking":                     {SourceStandard: "Pipeline MVP matrix pending licensed API 581 matrix confirmation", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
+	"pipeline_cof":                              {SourceStandard: "Shared pressure-vessel CoF category thresholds", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
+	"pipeline_risk_ranking":                     {SourceStandard: "Shared pressure-vessel risk matrix thresholds", ConfidenceLevel: "High", RuleStatus: PipelineRuleVerified},
 	"pipeline_damage_mechanism_metadata":        {SourceStandard: "Pipeline classification metadata", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},
 	"pipeline_engineering_advisory":             {SourceStandard: "System advisory rule", ConfidenceLevel: "Low", RuleStatus: PipelineRuleTODOEngineeringConfirmation},
 	"api581_management_system_factor":           {SourceStandard: "API 581 public methodology", ConfidenceLevel: "Medium", RuleStatus: PipelineRulePartiallyVerified},

@@ -166,16 +166,7 @@ func scoreFluid(f string) int {
 }
 
 func mapRisk(index int) string {
-	switch {
-	case index <= 5:
-		return "Low"
-	case index <= 10:
-		return "Medium"
-	case index <= 15:
-		return "High"
-	default:
-		return "Extreme"
-	}
+	return models.ApprovedRiskLevelFromMatrixScore(index)
 }
 
 func scoreDamage(mech string) int {

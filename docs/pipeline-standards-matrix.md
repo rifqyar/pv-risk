@@ -27,7 +27,7 @@ Status legend:
 | H2S partial pressure | `(H2S mole percent / 100) * operating pressure` | Cracking | 0.05 psia sour screening concept | NACE MR0175 / ISO 15156 | PARTIALLY_VERIFIED |
 | Management system factor | `10^((-0.02 * ((score / 1000) * 100)) + 1)` | PoF support | Management score 0 to 1000 | API 581 public methodology | PARTIALLY_VERIFIED |
 | Pipeline PoF | `GFF * governing DM score * FMS` | All governing mechanisms | PoF category lookup in code | API 581 concept adapted to pipeline DM score | PARTIALLY_VERIFIED |
-| Risk ranking | `PoF category * CoF category` | All governing mechanisms | MVP matrix in code | Pipeline MVP matrix pending API 581 matrix confirmation | TODO_ENGINEERING_CONFIRMATION |
+| Risk ranking | `PoF category * CoF category` | All governing mechanisms | Shared approved pressure-vessel risk matrix in code | Pressure-vessel approved classification source reused for Pipeline categorization | VERIFIED |
 | Gas PIR | Existing PIR formula in implementation | Consequence | Building count categories in code | Pipeline consequence screening practice | TODO_ENGINEERING_CONFIRMATION |
 | Liquid spill volume | Flow and detection/isolation inputs | Consequence | Environmental adjustment in code | Pipeline consequence screening practice | TODO_ENGINEERING_CONFIRMATION |
 | Inspection intervals | Severity and effectivity multiplier | All mechanisms | 6 to 120 months clamp | API 570 inspection planning concept / engineer-defined table | TODO_ENGINEERING_CONFIRMATION |
@@ -59,5 +59,5 @@ Status legend:
 | SMYS utilization 30, 50, 72 percent | SCC stress screening | ASME B31 stress concept, SCC bands pending | TODO_ENGINEERING_CONFIRMATION |
 | Severity score less than 1.5 / less than 3.0 / 3.0 or greater | NOT/Low/Moderate/High mapping | Pipeline MVP calibration | TODO_ENGINEERING_CONFIRMATION |
 | PoF category thresholds | PoF category mapping | API 581 concept adapted to MVP | TODO_ENGINEERING_CONFIRMATION |
-| CoF category thresholds | CoF category mapping | Pipeline MVP consequence screening | TODO_ENGINEERING_CONFIRMATION |
+| CoF category thresholds | CoF category mapping | Shared approved pressure-vessel CoF category thresholds | VERIFIED |
 | Inspection interval 6 to 120 months | Clamp for generated inspection plan | Engineer-defined application limit | TODO_ENGINEERING_CONFIRMATION |

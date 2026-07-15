@@ -667,7 +667,7 @@ $(function () {
 
   window.pipelineOilRecalculate = scheduleRealtimePipelineCalculationIfActive;
 
-  // --- Factor maps (mirror Go backend, all 1.0 neutral placeholders pending TODO_ENGINEERING_CONFIRMATION) ---
+  // Confirmed engineering decision: Pipeline DM modifier values are fixed at 1.0.
   const dmFactors = {
     depth:       { "<1m": 1, "1-2m": 1, ">2m": 1 },
     patrol:      { rare: 1, monthly: 1, weekly_daily: 1 },
@@ -778,13 +778,13 @@ $(function () {
     } else {
       score = factor(dmFactors.corrosivityMPY, corrosivity) || 1.0;
     }
-    if (h2o > 5) score += 0; // TODO_ENGINEERING_CONFIRMATION
+    if (h2o > 5) score += 0;
     const phMod = factor(dmFactors.ph, risk.ph_level) - 1; // currently 0
     score += phMod;
     const inhibitorMod = factor(dmFactors.inhibitor, risk.inhibitor_effectiveness) - 1;
     score += inhibitorMod;
     const biocideNoWater = (risk.biocide_treatment === "No" && h2o > 0);
-    if (biocideNoWater) score += 0; // TODO_ENGINEERING_CONFIRMATION
+    if (biocideNoWater) score += 0;
     score = escalateByFindingJS(score, risk.prev_int_thinning, risk.conf_int_thinning);
     const sev = severityFromScoreJS(score);
     return { code: "internal_corrosion", label: "Internal Corrosion", category: "Internal Thinning", score, severity: sev };
@@ -874,7 +874,7 @@ $(function () {
     else if (smysPct >= 50) score = 2.0;
     else score = 1.0;
     if (coatingConcern) score += factor(dmFactors.coating, coating) - 1;
-    if (h2sPresent) score += 0; // TODO_ENGINEERING_CONFIRMATION: H2S for sour SCC
+    if (h2sPresent) score += 0;
     return { code: "scc", label: "SCC", category: "Internal Cracking", score, severity: severityFromScoreJS(score) };
   }
 
@@ -884,7 +884,7 @@ $(function () {
     const gatePassed = cycles > 0 || prevCracking === "Finding";
     if (!gatePassed) return { code: "fatigue", label: "Fatigue", category: "Internal Cracking", score: 0, severity: "NOT" };
     let score = 1.0;
-    if (numberValue(risk.pressure_range_pct) > 0) score += 0; // TODO_ENGINEERING_CONFIRMATION: stress range modifier
+    if (numberValue(risk.pressure_range_pct) > 0) score += 0;
     score += factor(dmFactors.weld, risk.weld_joint_type) - 1;
     score = escalateByFindingJS(score, prevCracking, risk.conf_int_cracking);
     return { code: "fatigue", label: "Fatigue", category: "Internal Cracking", score, severity: severityFromScoreJS(score) };
@@ -904,9 +904,9 @@ $(function () {
     const coatingDamageLevel = risk.coating_damage_level;
     if (coatingConcern && coatingDamageLevel) score += factor(dmFactors.coatingDamage, coatingDamageLevel) - 1;
     if (risk.soil_resistivity === "<1000") score += factor(dmFactors.soil, risk.soil_resistivity) - 1;
-    if (cpPot !== 0 && cpPot > -850) score += 0; // TODO_ENGINEERING_CONFIRMATION: CP potential >-850mV
+    if (cpPot !== 0 && cpPot > -850) score += 0;
     const opTempC = (5.0 / 9.0) * (numberValue(input.design_temperature_f) - 32);
-    if (insulationConcern && opTempC >= 0 && opTempC <= 175) score += 0; // TODO_ENGINEERING_CONFIRMATION: CUI
+    if (insulationConcern && opTempC >= 0 && opTempC <= 175) score += 0;
     score = escalateByFindingJS(score, risk.prev_ext_corrosion, risk.conf_ext_corrosion);
     return { code: "coating_degradation", label: "Coating Degradation", category: "External Damage", score, severity: severityFromScoreJS(score) };
   }
@@ -1426,7 +1426,7 @@ $(function () {
     const code = normalizeApplicableCode(input.applicable_code);
     if (code.includes("B31.3")) {
       const masterStress = selectedMaterialAllowableStress();
-      return masterStress > 0 ? masterStress : Math.min((smys * 2) / 3, 20000);
+      return masterStress > 0 ? masterStress : 0;
     }
     return smys;
   }
@@ -1461,7 +1461,7 @@ $(function () {
       isProgrammaticUpdate = false;
     }
     const source = nextCode.includes("B31.3")
-      ? (selectedMaterialAllowableStress() > 0 ? "Allowable stress S is sourced from Pipeline Material Master." : "TODO_ENGINEERING_CONFIRMATION: no material-master allowable stress selected; fallback uses legacy min(2/3 x SMYS, 20,000 psi).")
+      ? (selectedMaterialAllowableStress() > 0 ? "Allowable stress S is sourced from Pipeline Material Master." : "ENGINEERING_REVIEW_REQUIRED: select a Pipeline Material Master allowable stress.")
       : "Derived from SMYS for B31.4/B31.8 pipeline formulas.";
     $("#pipelineMaterialStressSource").text(source);
   }

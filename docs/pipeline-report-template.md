@@ -161,6 +161,6 @@ Examples:
 
 - `API 570 inspection practice / Medium / PARTIALLY_VERIFIED`
 - `ASME B31.4 / High / VERIFIED`
-- `Pipeline MVP matrix pending licensed API 581 matrix confirmation / Low / TODO_ENGINEERING_CONFIRMATION`
+- `Shared pressure-vessel risk matrix thresholds / High / VERIFIED`
 
 Do not claim API/RBI origin for a recommendation unless the rule has a verified source. System-generated recommendations must remain identified as system advisory rules.

@@ -12,6 +12,13 @@ func PipelineOilMasterDataTables(db *sql.DB) {
 	addPipelineColumn(db, "pipeline_materials", "notes", "TEXT")
 	addPipelineColumn(db, "pipeline_materials", "is_active", "INTEGER NOT NULL DEFAULT 1")
 	addPipelineColumn(db, "pipeline_materials", "updated_at", "DATETIME")
+	addPipelineColumn(db, "pipeline_materials", "stress_source", "TEXT NOT NULL DEFAULT 'pipeline_specific_dataset'")
+	addPipelineColumn(db, "pipeline_materials", "stress_dataset_version", "TEXT NOT NULL DEFAULT 'pipeline-b31-material-stress-v1'")
+	addPipelineColumn(db, "pipeline_materials", "governing_code", "TEXT")
+	addPipelineColumn(db, "pipeline_materials", "code_edition", "TEXT")
+	addPipelineColumn(db, "pipeline_materials", "product_form", "TEXT")
+	addPipelineColumn(db, "pipeline_materials", "temperature_min_f", "REAL")
+	addPipelineColumn(db, "pipeline_materials", "temperature_max_f", "REAL")
 	if _, err := db.Exec(`UPDATE pipeline_materials SET material_specification = name WHERE material_specification IS NULL OR material_specification = ''`); err != nil {
 		log.Fatalf("Error backfilling pipeline_materials material_specification: %v", err)
 	}

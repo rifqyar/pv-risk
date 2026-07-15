@@ -86,7 +86,7 @@ The following areas intentionally retain current behavior and are marked as TODO
 
 - Neutral placeholder factor maps for depth, patrol, ROW, soil, coating condition, CP, class location, pH, inhibitor, coating damage, insulation damage, confidence weighting, weld cracking, PWHT, one-call, H2S ppm, flow velocity, solids, external cracking environment, and fatigue cycle thresholds.
 - Pipeline-specific inspection interval multipliers.
-- Pipeline MVP risk matrix thresholds versus licensed API 581 matrix detail.
+- Detailed API 581 damage-factor table values beyond the current approved Pipeline screening inputs.
 - Liquid spill consequence factors and environmental adjustment.
 - Gas PIR consequence category thresholds and building count category thresholds.
 - Coating degradation, localized corrosion, erosion, erosion-corrosion, SCC, fatigue, chemical damage, and third-party damage modifiers.

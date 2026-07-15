@@ -34,8 +34,8 @@ PDF/display layout labels, prepared/validated-by display fields, and historical 
 CONFIG_REFERENCE:
 Pipeline damage mechanism option list and factor option maps for depth, patrol, ROW, soil, coating, CP, internal corrosion, and environmental sensitivity.
 
-TODO_ENGINEERING_CONFIRMATION:
-Exact API 581 GFF tables, detailed API 581 damage-factor tables, detailed CoF thresholds, and the calculation impact of selected Pipeline damage mechanism metadata.
+Engineering note:
+Pipeline risk and CoF category thresholds now reuse the approved pressure-vessel threshold source. Exact API 581 GFF and detailed damage-factor lookup tables remain outside the workbook implementation unless supplied as approved licensed data.
 
 ## Recommendation Source
 
