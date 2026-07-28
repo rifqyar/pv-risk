@@ -1428,6 +1428,10 @@ func calculatePipelineInspectionPlanResults(input PipelineOilInput, mechanisms [
 			}
 		}
 		intEff := pipelineMethodEffectivity(plan.IntrusiveMethod)
+		if mechanism.Severity == "NOT" {
+			nonEff = ""
+			intEff = ""
+		}
 		results = append(results, PipelineInspectionPlanResult{
 			Code:                       mechanism.Code,
 			Label:                      mechanism.Label,
@@ -1527,6 +1531,9 @@ func calculatePipelineDamageMechanismResults(input PipelineOilInput) []PipelineD
 			dmResult.formula = "Mechanism not implemented"
 		}
 		effectivity := pipelineDamageMechanismEffectivity(input, option.Code)
+		if dmResult.severity == "NOT" {
+			effectivity = ""
+		}
 		metadata := PipelineDamageMechanismMetadata(option.Code)
 		results = append(results, PipelineDamageMechanismResult{
 			Code:                  option.Code,
@@ -3433,6 +3440,11 @@ func DeactivatePipelineMaterial(db *sql.DB, id int) error {
 	return err
 }
 
+func ActivatePipelineMaterial(db *sql.DB, id int) error {
+	_, err := db.Exec(`UPDATE pipeline_materials SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, id)
+	return err
+}
+
 type PipelineInspectionMethod struct {
 	ID          int
 	Name        string
@@ -3485,6 +3497,11 @@ func SavePipelineInspectionMethod(db *sql.DB, method PipelineInspectionMethod) e
 
 func DeactivatePipelineInspectionMethod(db *sql.DB, id int) error {
 	_, err := db.Exec(`UPDATE pipeline_inspection_methods SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, id)
+	return err
+}
+
+func ActivatePipelineInspectionMethod(db *sql.DB, id int) error {
+	_, err := db.Exec(`UPDATE pipeline_inspection_methods SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, id)
 	return err
 }
 

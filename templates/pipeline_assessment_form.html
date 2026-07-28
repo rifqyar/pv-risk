@@ -614,7 +614,7 @@
                            <div class="col-12 pipeline-compact-fields">
                            <h6 class="fw-bold text-primary"><i class="mdi mdi-chart-bell-curve-cumulative"></i>Probability Inputs</h6>
                            <div class="alert alert-light border small mb-3">
-                             <strong>Source:</strong> Pipeline probability master choices are the Stage 2 calibrated defaults for this module. GFF/FMS relation follows the public API 581 methodology summary used in the formula trace; damage base-score choices are Pipeline MVP calibration factors pending licensed table mapping.
+                             <strong>Source:</strong> Pipeline probability master choices are the Stage 2 calibrated defaults for this module. Probability basis follows the public API 581 methodology summary used in the formula trace; damage mechanism screening uses Pipeline MVP calibration pending licensed table mapping.
                            </div>
                            <label class="form-label">Generic Failure Frequency</label>
                            <select class="form-select mb-3" name="generic_failure_frequency">
@@ -729,7 +729,7 @@
                                           <span class="small text-danger">Next Inspection period:</span>
                                           <span class="small fw-bold text-danger pipeline-inspection-period" data-dm-code="{{ .Code }}" data-scope="nonintrusive">-</span>
                                         </div>
-                                        <div class="text-end small pipeline-inspection-effectivity" data-dm-code="{{ .Code }}" data-scope="nonintrusive">Effectivity: -</div>
+                                        <div class="text-end fw-bold pipeline-inspection-effectivity" data-dm-code="{{ .Code }}" data-scope="nonintrusive">Effectivity: -</div>
                                       </td>
                                     </tr>
                                     {{ end }}
@@ -882,7 +882,7 @@
                       <div class="card-body">
                         <div class="row g-3 align-items-start">
                           <div class="col-lg-8"><ul class="list-group list-group-flush small" id="pipelinePofBreakdown"></ul></div>
-                          <div class="col-lg-4"><div class="alert alert-light border small mb-0">PoF uses GFF x governing damage mechanism score x FMS. Damage mechanism rows show the governing input result instead of only raw factors.</div></div>
+                          <div class="col-lg-4"><div class="alert alert-light border small mb-0">PoF is calculated from pipeline probability inputs and the governing damage mechanism. Damage mechanism rows show the governing input result instead of only raw factors.</div></div>
                         </div>
                       </div>
                     </div>

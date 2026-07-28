@@ -3,6 +3,7 @@ package main
 import (
 	// "context"
 
+	"context"
 	"embed"
 	"encoding/json"
 	"html/template"
@@ -121,8 +122,10 @@ func main() {
 		pipelineRoute.GET("/gas", pipelineController.ShowGasComingSoon)
 		pipelineRoute.GET("/master-data", pipelineController.ShowPipelineMasterData)
 		pipelineRoute.POST("/master-data/material/save", pipelineController.SavePipelineMaterial)
+		pipelineRoute.POST("/master-data/material/activate/:id", pipelineController.ActivatePipelineMaterial)
 		pipelineRoute.POST("/master-data/material/deactivate/:id", pipelineController.DeactivatePipelineMaterial)
 		pipelineRoute.POST("/master-data/inspection-method/save", pipelineController.SavePipelineInspectionMethod)
+		pipelineRoute.POST("/master-data/inspection-method/activate/:id", pipelineController.ActivatePipelineInspectionMethod)
 		pipelineRoute.POST("/master-data/inspection-method/deactivate/:id", pipelineController.DeactivatePipelineInspectionMethod)
 	}
 
@@ -130,35 +133,35 @@ func main() {
 	r.GET("/api/assessment-detail/:id", controller.GetAssessmentByID)
 
 	// === DEV ===
-	r.Run(":8080")
+	// r.Run(":8080")
 
 	// ================= SERVER =================
-	// srv := &http.Server{
-	// 	Addr:    ":" + port,
-	// 	Handler: r,
-	// }
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: r,
+	}
 
-	// go func() {
-	// 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-	// 		log.Fatalf("server error: %v", err)
-	// 	}
-	// }()
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("server error: %v", err)
+		}
+	}()
 
-	// // ================= WAIT SERVER READY =================
-	// waitForServer(baseURL)
+	// ================= WAIT SERVER READY =================
+	waitForServer(baseURL)
 
-	// // ================= RUN DESKTOP =================
-	// runWebview(baseURL)
+	// ================= RUN DESKTOP =================
+	runWebview(baseURL)
 
-	// // ================= SHUTDOWN =================
-	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	// defer cancel()
+	// ================= SHUTDOWN =================
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	// if err := srv.Shutdown(ctx); err != nil {
-	// 	log.Println("shutdown error:", err)
-	// }
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Println("shutdown error:", err)
+	}
 
-	// log.Println("app closed cleanly")
+	log.Println("app closed cleanly")
 }
 
 func appTemplateFuncs() template.FuncMap {

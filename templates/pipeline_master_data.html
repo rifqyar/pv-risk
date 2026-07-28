@@ -29,7 +29,7 @@
       <div class="tab-content p-0 bg-transparent shadow-none">
         <div class="tab-pane fade show active" id="pipeline-material-master" role="tabpanel">
           <div class="card shadow-sm">
-          <div class="card-header">
+          <div class="card-header" id="pipelineMaterialForm">
             <h5 class="mb-1">Pipeline Material Master</h5>
             <p class="text-muted small mb-0">Material specification, SMYS, allowable stress, grade, and notes for pipeline calculations.</p>
           </div>
@@ -42,7 +42,7 @@
               <div class="col-md-2"><label class="form-label">SMYS</label><input type="text" inputmode="decimal" class="form-control" name="smys" id="pipelineMaterialSMYS" required></div>
               <div class="col-md-2"><label class="form-label">Allowable Stress</label><input type="text" inputmode="decimal" class="form-control" name="allowable_stress" id="pipelineMaterialAllowable"></div>
               <div class="col-md-10"><label class="form-label">Notes</label><input class="form-control" name="notes" id="pipelineMaterialNotes"></div>
-              <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-primary w-100"><i class="mdi mdi-content-save-outline me-1"></i> Save</button></div>
+              <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-primary w-100"><i class="mdi mdi-content-save-outline me-1"></i> Save / Activate</button></div>
             </form>
             <div class="table-responsive">
               <table class="table table-sm align-middle">
@@ -56,8 +56,12 @@
                     <td>{{ .AllowableStress }}</td>
                     <td>{{ if .IsActive }}<span class="badge bg-label-success">Active</span>{{ else }}<span class="badge bg-label-secondary">Inactive</span>{{ end }}</td>
                     <td class="text-end">
-                      <button type="button" class="btn btn-sm btn-outline-primary edit-pipeline-material" data-id="{{ .ID }}" data-name="{{ .Name }}" data-spec="{{ .MaterialSpecification }}" data-grade="{{ .Grade }}" data-smys="{{ .SMYS }}" data-allowable="{{ .AllowableStress }}" data-notes="{{ .Notes }}"><i class="mdi mdi-pencil-outline"></i></button>
-                      {{ if .IsActive }}<form action="/assessment-pipeline/master-data/material/deactivate/{{ .ID }}" method="POST" class="d-inline"><button type="submit" class="btn btn-sm btn-outline-warning"><i class="mdi mdi-close-circle-outline"></i></button></form>{{ end }}
+                      <button type="button" class="btn btn-sm btn-outline-primary edit-pipeline-material" title="Edit" data-id="{{ .ID }}" data-name="{{ .Name }}" data-spec="{{ .MaterialSpecification }}" data-grade="{{ .Grade }}" data-smys="{{ .SMYS }}" data-allowable="{{ .AllowableStress }}" data-notes="{{ .Notes }}"><i class="mdi mdi-pencil-outline"></i></button>
+                      {{ if .IsActive }}
+                      <form action="/assessment-pipeline/master-data/material/deactivate/{{ .ID }}" method="POST" class="d-inline"><button type="submit" class="btn btn-sm btn-outline-warning" title="Set inactive"><i class="mdi mdi-close-circle-outline"></i></button></form>
+                      {{ else }}
+                      <form action="/assessment-pipeline/master-data/material/activate/{{ .ID }}" method="POST" class="d-inline"><button type="submit" class="btn btn-sm btn-outline-success" title="Set active"><i class="mdi mdi-check-circle-outline"></i></button></form>
+                      {{ end }}
                     </td>
                   </tr>
                   {{ end }}
@@ -75,13 +79,13 @@
             <p class="text-muted small mb-0">Inspection method choices and effectivity used by damage-mechanism inspection planning.</p>
           </div>
           <div class="card-body">
-            <form action="/assessment-pipeline/master-data/inspection-method/save" method="POST" class="row g-3 mb-4">
+            <form action="/assessment-pipeline/master-data/inspection-method/save" method="POST" class="row g-3 mb-4" id="pipelineMethodForm">
               <input type="hidden" name="id" id="pipelineMethodId">
               <div class="col-md-4"><label class="form-label">Method</label><input class="form-control" name="name" id="pipelineMethodName" required></div>
               <div class="col-md-2"><label class="form-label">Scope</label><select class="form-select" name="scope" id="pipelineMethodScope"><option value="nonintrusive">Non-Intrusive</option><option value="intrusive">Intrusive</option></select></div>
               <div class="col-md-2"><label class="form-label">Effectivity</label><select class="form-select" name="effectivity" id="pipelineMethodEffectivity"><option>High</option><option>Medium</option><option>Low</option><option>None</option></select></div>
               <div class="col-md-2"><label class="form-label">Notes</label><input class="form-control" name="notes" id="pipelineMethodNotes"></div>
-              <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-primary w-100"><i class="mdi mdi-content-save-outline me-1"></i> Save</button></div>
+              <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-primary w-100"><i class="mdi mdi-content-save-outline me-1"></i> Save / Activate</button></div>
             </form>
             <div class="table-responsive">
               <table class="table table-sm align-middle">
@@ -94,8 +98,12 @@
                     <td>{{ .Effectivity }}</td>
                     <td>{{ if .IsActive }}<span class="badge bg-label-success">Active</span>{{ else }}<span class="badge bg-label-secondary">Inactive</span>{{ end }}</td>
                     <td class="text-end">
-                      <button type="button" class="btn btn-sm btn-outline-primary edit-pipeline-method" data-id="{{ .ID }}" data-name="{{ .Name }}" data-scope="{{ .Scope }}" data-effectivity="{{ .Effectivity }}" data-notes="{{ .Notes }}"><i class="mdi mdi-pencil-outline"></i></button>
-                      {{ if .IsActive }}<form action="/assessment-pipeline/master-data/inspection-method/deactivate/{{ .ID }}" method="POST" class="d-inline"><button type="submit" class="btn btn-sm btn-outline-warning"><i class="mdi mdi-close-circle-outline"></i></button></form>{{ end }}
+                      <button type="button" class="btn btn-sm btn-outline-primary edit-pipeline-method" title="Edit" data-id="{{ .ID }}" data-name="{{ .Name }}" data-scope="{{ .Scope }}" data-effectivity="{{ .Effectivity }}" data-notes="{{ .Notes }}"><i class="mdi mdi-pencil-outline"></i></button>
+                      {{ if .IsActive }}
+                      <form action="/assessment-pipeline/master-data/inspection-method/deactivate/{{ .ID }}" method="POST" class="d-inline"><button type="submit" class="btn btn-sm btn-outline-warning" title="Set inactive"><i class="mdi mdi-close-circle-outline"></i></button></form>
+                      {{ else }}
+                      <form action="/assessment-pipeline/master-data/inspection-method/activate/{{ .ID }}" method="POST" class="d-inline"><button type="submit" class="btn btn-sm btn-outline-success" title="Set active"><i class="mdi mdi-check-circle-outline"></i></button></form>
+                      {{ end }}
                     </td>
                   </tr>
                   {{ end }}
@@ -110,22 +118,37 @@
   </div>
 </div>
 <script>
-$(function () {
-  $(".edit-pipeline-material").on("click", function () {
-    $("#pipelineMaterialId").val($(this).data("id"));
-    $("#pipelineMaterialName").val($(this).data("name"));
-    $("#pipelineMaterialSpec").val($(this).data("spec"));
-    $("#pipelineMaterialGrade").val($(this).data("grade"));
-    $("#pipelineMaterialSMYS").val($(this).data("smys"));
-    $("#pipelineMaterialAllowable").val($(this).data("allowable"));
-    $("#pipelineMaterialNotes").val($(this).data("notes"));
+document.addEventListener("DOMContentLoaded", function () {
+  function scrollToMasterForm(formId) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+    form.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  document.querySelectorAll(".edit-pipeline-material").forEach(function (button) {
+    button.addEventListener("click", function () {
+      document.getElementById("pipelineMaterialId").value = button.getAttribute("data-id") || "";
+      document.getElementById("pipelineMaterialName").value = button.getAttribute("data-name") || "";
+      document.getElementById("pipelineMaterialSpec").value = button.getAttribute("data-spec") || "";
+      document.getElementById("pipelineMaterialGrade").value = button.getAttribute("data-grade") || "";
+      document.getElementById("pipelineMaterialSMYS").value = button.getAttribute("data-smys") || "";
+      document.getElementById("pipelineMaterialAllowable").value = button.getAttribute("data-allowable") || "";
+      document.getElementById("pipelineMaterialNotes").value = button.getAttribute("data-notes") || "";
+      scrollToMasterForm("pipelineMaterialForm");
+      document.getElementById("pipelineMaterialName").focus();
+    });
   });
-  $(".edit-pipeline-method").on("click", function () {
-    $("#pipelineMethodId").val($(this).data("id"));
-    $("#pipelineMethodName").val($(this).data("name"));
-    $("#pipelineMethodScope").val($(this).data("scope"));
-    $("#pipelineMethodEffectivity").val($(this).data("effectivity"));
-    $("#pipelineMethodNotes").val($(this).data("notes"));
+
+  document.querySelectorAll(".edit-pipeline-method").forEach(function (button) {
+    button.addEventListener("click", function () {
+      document.getElementById("pipelineMethodId").value = button.getAttribute("data-id") || "";
+      document.getElementById("pipelineMethodName").value = button.getAttribute("data-name") || "";
+      document.getElementById("pipelineMethodScope").value = button.getAttribute("data-scope") || "nonintrusive";
+      document.getElementById("pipelineMethodEffectivity").value = button.getAttribute("data-effectivity") || "Medium";
+      document.getElementById("pipelineMethodNotes").value = button.getAttribute("data-notes") || "";
+      scrollToMasterForm("pipelineMethodForm");
+      document.getElementById("pipelineMethodName").focus();
+    });
   });
 });
 </script>

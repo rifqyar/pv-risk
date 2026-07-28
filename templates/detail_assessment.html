@@ -13,18 +13,56 @@
   /* --- STYLING UNTUK PDF VIEW (REPORT A4) --- */
   #pdf-view-container {
     display: none; /* Sembunyikan dari UI, hanya muncul saat PDF di-generate */
-    font-family: 'Times New Roman', Times, serif;
-    background-color: #fff;
-    color: #000;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #eef1f5;
+    color: #172033;
   }
-  .pdf-page { width: 210mm; min-height: 297mm; padding: 15mm; margin: 0 auto; background: #fff; }
-  .pdf-header { border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-  .pdf-title { font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 5px; }
-  .pdf-subtitle { font-size: 10pt; text-align: center; color: #555; margin-bottom: 20px; }
-  .section-title { font-size: 11pt; font-weight: bold; background-color: #d9d9d9; padding: 5px 10px; margin-top: 20px; margin-bottom: 10px; border: 1px solid #000; }
-  .report-table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 15px; }
-  .report-table th, .report-table td { border: 1px solid #000; padding: 6px 8px; }
-  .report-table th { background-color: #f2f2f2; text-align: left; width: 25%; }
+  .pdf-page { width: 210mm; min-height: 297mm; padding: 10.5mm 11mm 11mm; margin: 0 auto; background: #fff; }
+  .pdf-header {
+    border: 1px solid #b7c0cc;
+    border-top: 5px solid #12365f;
+    margin-bottom: 10px;
+    padding: 9px 10px;
+  }
+  .pdf-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .pdf-brand { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .pdf-logo { width: 38px; height: 38px; object-fit: contain; }
+  .pdf-title { font-size: 15pt; line-height: 1.15; font-weight: 800; color: #12365f; letter-spacing: .02em; margin-bottom: 0; }
+  .pdf-subtitle { font-size: 8pt; color: #5c6877; margin-top: 2px; margin-bottom: 0; }
+  .pdf-meta { width: 34%; border-collapse: collapse; font-size: 7.4pt; color: #172033; }
+  .pdf-meta th, .pdf-meta td { border: 1px solid #c8d0da; padding: 3px 5px; vertical-align: top; }
+  .pdf-meta th { width: 38%; background: #eef2f6; color: #465568; text-align: left; font-weight: 700; }
+  .section-title {
+    font-size: 9pt;
+    font-weight: 800;
+    background-color: #12365f;
+    color: #fff;
+    padding: 5px 8px;
+    margin-top: 9px;
+    margin-bottom: 0;
+    border: 1px solid #12365f;
+    letter-spacing: .02em;
+  }
+  .report-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 7.35pt; line-height: 1.28; margin-bottom: 8px; border: 1px solid #b7c0cc; }
+  .report-table th, .report-table td { border: 1px solid #c8d0da; padding: 4px 5px; vertical-align: top; overflow-wrap: anywhere; }
+  .report-table th { background-color: #eef2f6; color: #334155; text-align: left; font-weight: 700; width: 25%; }
+  .report-table tr:nth-child(even) td { background: #fbfcfe; }
+  .report-table tr:first-child th { background: #dfe7f0; color: #12365f; }
+  .pv-inspection-plan-table { break-before: avoid; page-break-before: avoid; }
+  .pv-inspection-plan-table thead { display: table-header-group; break-inside: avoid; page-break-inside: avoid; }
+  .pv-inspection-plan-table tbody { break-inside: auto; page-break-inside: auto; }
+  .pv-pdf-note { color: #465568; font-size: 7.6pt; margin: 7px 0 5px; }
+  .pv-pdf-chip { background-color: #fff1f2; padding: 2px 8px; border: 1px solid #c2410c; color: #b42318; font-weight: 800; border-radius: 3px; }
+  .pv-pdf-signatures { border-top: 1px solid #b7c0cc; display: flex; justify-content: space-between; gap: 18mm; margin-top: 18px; padding-top: 12px; font-size: 8pt; }
+  .pv-pdf-signature { flex: 1; min-height: 72px; }
+  .pv-pdf-signature-title { color: #465568; font-weight: 700; margin-bottom: 30px; text-transform: uppercase; }
+  .pv-pdf-signature-line { border-top: 1px solid #172033; padding-top: 4px; font-weight: 700; }
+  .pv-pdf-signature-meta { color: #6b7787; margin-top: 3px; }
+  .pv-pdf-footnote { color: #6b7787; font-size: 6.8pt; margin-top: 8px; text-align: right; }
+  .pv-pdf-block { break-inside: avoid; page-break-inside: avoid; }
+  .section-title { break-after: avoid; page-break-after: avoid; }
+  .report-table tr { break-inside: avoid; page-break-inside: avoid; }
+  .report-table thead { display: table-header-group; }
 </style>
 
 <div class="content-wrapper">
@@ -312,18 +350,24 @@
 
     <div id="pdf-view-container">
       <div class="pdf-page">
-        <div class="pdf-header d-flex justify-content-between align-items-end">
-          <div style="width: 70%;">
-            <div class="pdf-title" style="text-align: left; color: #003366;">EXECUTIVE SUMMARY REPORT ASSESSMENT</div>
-            <div class="pdf-subtitle" style="text-align: left; margin-bottom: 0;">Pressure vessel integrity</div>
+        <div class="pdf-header">
+          <div class="pdf-brand-row">
+          <div class="pdf-brand" style="width: 62%;">
+            <img class="pdf-logo" src="/assets/logo.png" alt="FIRE">
+            <div>
+              <div class="pdf-title">EXECUTIVE SUMMARY REPORT ASSESSMENT</div>
+              <div class="pdf-subtitle">Pressure vessel integrity</div>
+            </div>
           </div>
-          <div style="text-align: right; font-size: 9pt; color: #333; width: 30%;">
-            <strong>Tag No:</strong> {{ .Detail.TagNumber }}<br>
-            <strong>Report ID:</strong> PV-{{ .Detail.AssessmentID }}<br>
-            <strong>Date:</strong> {{ .Detail.AssessmentDate }}
+          <table class="pdf-meta">
+            <tr><th>Tag No</th><td>{{ .Detail.TagNumber }}</td></tr>
+            <tr><th>Report ID</th><td>PV-{{ .Detail.AssessmentID }}</td></tr>
+            <tr><th>Date</th><td>{{ .Detail.AssessmentDate }}</td></tr>
+          </table>
           </div>
         </div>
 
+        <div class="pv-pdf-block">
         <div class="section-title">I. EQUIPMENT GENERAL INFORMATION</div>
         <table class="report-table">
           <tr>
@@ -347,7 +391,9 @@
             <th>Data Reference</th><td>{{ .Detail.DataReference }}</td>
           </tr>
         </table>
+        </div>
 
+        <div class="pv-pdf-block">
         <div class="section-title">II. PROCESS, ENVIRONMENT & CONDITIONS</div>
         <table class="report-table">
           <tr>
@@ -371,11 +417,13 @@
             <th>Insulation</th><td>{{ .Detail.Insulation }}</td>
           </tr>
         </table>
+        </div>
 
+        <div class="pv-pdf-block">
         <div class="section-title">III. THICKNESS & LIFE CALCULATION</div>
-        <p style="font-size: 9pt; margin-bottom: 5px;">
+        <p class="pv-pdf-note">
           <strong>Governing Component:</strong> 
-          <span style="background-color: #ffe6e6; padding: 2px 8px; border: 1px solid #cc0000; color: #cc0000; font-weight: bold; border-radius: 3px;">
+          <span class="pv-pdf-chip">
             {{ .Detail.GoverningComponent }}
           </span>
         </p>
@@ -437,8 +485,10 @@
             <td style="color: #008000;">{{ .Detail.NozRL }} Years</td>
           </tr>
         </table>
+        </div>
 
-        <p style="font-size: 9pt; margin-bottom: 5px;">
+        <div class="pv-pdf-block">
+        <p class="pv-pdf-note">
           <strong>Cladding Data:</strong> 
         </p>
         <table class="report-table text-center">
@@ -479,8 +529,9 @@
             <td>{{ .Detail.CladdingData.Nozzle.Status }}</td>
           </tr>
         </table>
+        </div>
 
-        <div class="html2pdf__page-break"></div>
+        <div class="pv-pdf-block">
         <div class="section-title">IV. DAMAGE MECHANISM SCREENING</div>
         <table class="report-table text-center">
           <tr>
@@ -511,7 +562,9 @@
             </td>
           </tr>
         </table>
+        </div>
 
+        <div class="pv-pdf-block">
         <div class="section-title">V. STRATEGY & RECOMMENDATION</div>
         <table class="report-table">
           <tr>
@@ -532,13 +585,18 @@
             <th>Recommended Method</th><td colspan="3" style="font-weight: bold;">{{ .Detail.RecommendedMethod }}</td>
           </tr>
         </table>
+        </div>
 
+        <div class="pv-pdf-block pv-pdf-section-intro">
         <div class="section-title">VI. DETAILED INSPECTION PLAN</div>
-        <table class="report-table">
-          <tr style="background-color: #f2f2f2;">
+        <table class="report-table pv-inspection-plan-table">
+          <thead>
+          <tr>
             <th style="text-align: center; width: 30%;">Damage Mechanism</th>
             <th style="text-align: center; width: 70%;">Recommended Scope, Method & Interval</th>
           </tr>
+          </thead>
+          <tbody>
           {{ range $k, $v := .Detail.InspectionPlan }}
           <tr>
             <td style="font-weight: bold;">{{ $k }}</td>
@@ -547,32 +605,23 @@
           {{ else }}
           <tr><td colspan="2" style="text-align: center;">No data available</td></tr>
           {{ end }}
+          </tbody>
         </table>
-
-        <div style="margin-top: 60px;">
-          <table style="width: 100%; border-collapse: collapse; border: none; text-align: center; font-size: 10pt;">
-            <tr>
-              <td style="width: 50%; border: none; padding-bottom: 70px; vertical-align: bottom;">
-                <span style="font-weight: bold; color: #003366;">Assessed By,</span>
-              </td>
-              <td style="width: 50%; border: none; padding-bottom: 70px; vertical-align: bottom;">
-                <span style="font-weight: bold; color: #003366;">Validated By,</span>
-              </td>
-            </tr>
-            <tr>
-              <td style="border: none; line-height: 1.8;">
-                <div style="width: 70%; margin: 0 auto; border-bottom: 1px solid #333; text-align: left;"></div>
-                <b>{{ .Detail.AssessmentBy }}</b> <br>
-                {{ .Detail.AssessmentDate }}
-              </td>
-              <td style="border: none; line-height: 1.8;">
-                <div style="width: 70%; margin: 0 auto; border-bottom: 1px solid #333;"></div>
-                <span id="pdf_validated_by">_____________________</span><br>
-                _____________________
-              </td>
-            </tr>
-          </table>
         </div>
+
+        <div class="pv-pdf-signatures">
+          <div class="pv-pdf-signature">
+            <div class="pv-pdf-signature-title">Assessed By</div>
+            <div class="pv-pdf-signature-line">{{ .Detail.AssessmentBy }}</div>
+            <div class="pv-pdf-signature-meta">{{ .Detail.AssessmentDate }}</div>
+          </div>
+          <div class="pv-pdf-signature">
+            <div class="pv-pdf-signature-title">Validated By</div>
+            <div class="pv-pdf-signature-line"><span id="pdf_validated_by">_____________________</span></div>
+            <div class="pv-pdf-signature-meta">_____________________</div>
+          </div>
+        </div>
+        <div class="pv-pdf-footnote">Pressure Vessel Integrity Report | Report ID PV-{{ .Detail.AssessmentID }}</div>
       </div>
     </div>
 
@@ -662,7 +711,7 @@
               image:        { type: 'jpeg', quality: 1.0 },
               html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
               jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-              pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+              pagebreak:    { mode: ['css', 'legacy'], avoid: ['.pv-pdf-block', '.pv-pdf-section-intro'] }
             };
 
             // Generate dan sembunyikan lagi

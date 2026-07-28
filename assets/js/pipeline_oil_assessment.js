@@ -304,7 +304,7 @@ $(function () {
       nearby_sensitive_receptor: $("input[name='nearby_sensitive_receptor']").is(":checked"),
       isolation_valve_available: $("input[name='isolation_valve_available']").is(":checked"),
       consequence_basis: "Pipeline MVP index-based CoF",
-      probability_basis: "PoF = GFF x governing DM score x FMS",
+      probability_basis: "PoF category is calculated from pipeline probability inputs and the governing damage mechanism.",
       engineering_notes: $("textarea[name='engineering_notes']").val(),
       requires_confirmation: false,
       confirmation_todo_reason: "",
@@ -370,7 +370,7 @@ $(function () {
     $("#pipelineRiskLevel")
       .attr("class", `badge rounded-pill px-3 py-2 ${riskBadgeClass(result.final_risk_level)}`)
       .text(normalizeRiskLevel(result.final_risk_level));
-    $("#pipelineRiskExplanation").text(`Risk drivers: Governing DM ${result.governing_damage_mechanism || "-"} (score ${fmt(result.governing_damage_factor)}), PoF ${result.pof || "-"} from GFF ${fmt(result.generic_failure_frequency)} x DM score x FMS ${fmt(result.management_system_factor)}, and CoF ${result.cof || "-"}. Final matrix cell ${result.final_risk_code || "-"} maps to ${normalizeRiskLevel(result.final_risk_level)}.`);
+    $("#pipelineRiskExplanation").text(`Risk drivers: Governing DM ${result.governing_damage_mechanism || "-"}, PoF ${result.pof || "-"}, and CoF ${result.cof || "-"}. Final matrix cell ${result.final_risk_code || "-"} maps to ${normalizeRiskLevel(result.final_risk_level)}.`);
     $("#pipelineRiskMatrix").html(buildRiskMatrix(result.final_risk_code));
     $("#pipelineThicknessResult").html(buildThicknessResult(result.point_results || []));
     $("#pipelineRealtimeThicknessResult").html(buildRealtimeThicknessResult(result.point_results || []));
@@ -383,7 +383,7 @@ $(function () {
       ["Governing Damage Mechanism", governingDamageMechanismSummary(result)],
       ["Main Failure Driver", result.governing_damage_mechanism],
       ["GFF Basis", selectedOptionLabel("generic_failure_frequency") || fmt(result.generic_failure_frequency)],
-      ["Management System Basis", `${selectedOptionLabel("management_system_score") || "-"} -> FMS ${fmt(result.management_system_factor)}`],
+      ["Management System Basis", selectedOptionLabel("management_system_score") || "-"],
       ["Final PoF", fmt(result.pof_value)],
       ["PoF Category", result.pof],
     ]));
@@ -574,7 +574,7 @@ $(function () {
         .text(item.severity || "NOT");
       $(`.pipeline-dm-effectivity-badge[data-dm-code='${item.code}']`)
         .attr("class", `badge pipeline-dm-effectivity-badge ${badgeClass}`)
-        .text(`${item.severity || "NOT"} / ${item.inspection_effectivity || "Medium"}`);
+        .text(item.severity === "NOT" ? "NOT" : `${item.severity || "NOT"}`);
     });
   }
 
@@ -582,8 +582,12 @@ $(function () {
     results.forEach((item) => {
       $(`.pipeline-inspection-period[data-dm-code='${item.code}'][data-scope='nonintrusive']`).text(`${item.non_intrusive_interval_months || "-"} months`);
       $(`.pipeline-inspection-period[data-dm-code='${item.code}'][data-scope='intrusive']`).text(`${item.intrusive_interval_months || "-"} months`);
-      $(`.pipeline-inspection-effectivity[data-dm-code='${item.code}'][data-scope='nonintrusive']`).text(`Effectivity: ${item.non_intrusive_effectivity || "-"}`);
-      $(`.pipeline-inspection-effectivity[data-dm-code='${item.code}'][data-scope='intrusive']`).text(`Effectivity: ${item.intrusive_effectivity || "-"}`);
+      $(`.pipeline-inspection-effectivity[data-dm-code='${item.code}'][data-scope='nonintrusive']`)
+        .toggleClass("d-none", item.severity === "NOT")
+        .text(item.severity === "NOT" ? "" : `Effectivity: ${item.non_intrusive_effectivity || "-"}`);
+      $(`.pipeline-inspection-effectivity[data-dm-code='${item.code}'][data-scope='intrusive']`)
+        .toggleClass("d-none", item.severity === "NOT")
+        .text(item.severity === "NOT" ? "" : `Effectivity: ${item.intrusive_effectivity || "-"}`);
     });
   }
 
@@ -1115,8 +1119,8 @@ $(function () {
       const plan = plans[item.code] || {};
       const nonMethod = plan.non_intrusive_method || defaultNonIntrusiveMethod(item.code);
       const intMethod = plan.intrusive_method || defaultIntrusiveMethod(item.code);
-      const nonEff = methodEffectivity(nonMethod);
-      const intEff = methodEffectivity(intMethod);
+      const nonEff = item.severity === "NOT" ? "" : methodEffectivity(nonMethod);
+      const intEff = item.severity === "NOT" ? "" : methodEffectivity(intMethod);
       item.inspection_effectivity = nonEff;
       return {
         code: item.code,

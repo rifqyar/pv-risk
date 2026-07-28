@@ -361,6 +361,14 @@ func (ctrl *NewPipelineController) DeactivatePipelineMaterial(c *gin.Context) {
 	redirectPipelineMasterData(c, err)
 }
 
+func (ctrl *NewPipelineController) ActivatePipelineMaterial(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err == nil {
+		err = models.ActivatePipelineMaterial(config.DB, id)
+	}
+	redirectPipelineMasterData(c, err)
+}
+
 func (ctrl *NewPipelineController) SavePipelineInspectionMethod(c *gin.Context) {
 	id, _ := strconv.Atoi(c.PostForm("id"))
 	err := models.SavePipelineInspectionMethod(config.DB, models.PipelineInspectionMethod{
@@ -377,6 +385,14 @@ func (ctrl *NewPipelineController) DeactivatePipelineInspectionMethod(c *gin.Con
 	id, err := strconv.Atoi(c.Param("id"))
 	if err == nil {
 		err = models.DeactivatePipelineInspectionMethod(config.DB, id)
+	}
+	redirectPipelineMasterData(c, err)
+}
+
+func (ctrl *NewPipelineController) ActivatePipelineInspectionMethod(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err == nil {
+		err = models.ActivatePipelineInspectionMethod(config.DB, id)
 	}
 	redirectPipelineMasterData(c, err)
 }

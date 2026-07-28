@@ -434,6 +434,35 @@ func TestPipelineInspectionMethodSelectionUpdatesEffectivityAndInterval(t *testi
 	}
 }
 
+func TestPipelineNotSeveritySuppressesInspectionEffectivity(t *testing.T) {
+	in := samplePipelineOilInput()
+	in.RiskInput.InspectionEffectivityByDM = map[string]string{"chemical_damage": "High"}
+	in.RiskInput.InspectionPlanByDM = map[string]PipelineInspectionPlanInput{
+		"chemical_damage": {
+			NonIntrusiveMethod: "VIE + Wall Thickness measurement by UT",
+			IntrusiveMethod:    "Direct examination",
+		},
+	}
+
+	result, errs := CalculatePipelineOil(in)
+	if len(errs) > 0 {
+		t.Fatalf("unexpected validation errors: %+v", errs)
+	}
+
+	dm := pipelineDMResultByCode(t, result, "chemical_damage")
+	if dm.Severity != "NOT" {
+		t.Fatalf("expected chemical damage severity NOT, got %q", dm.Severity)
+	}
+	if dm.InspectionEffectivity != "" {
+		t.Fatalf("expected NOT severity DM effectivity to be hidden, got %q", dm.InspectionEffectivity)
+	}
+
+	plan := pipelinePlanResultByCode(t, result, "chemical_damage")
+	if plan.NonIntrusiveEffectivity != "" || plan.IntrusiveEffectivity != "" {
+		t.Fatalf("expected NOT severity plan effectivity to be hidden, got non=%q intrusive=%q", plan.NonIntrusiveEffectivity, plan.IntrusiveEffectivity)
+	}
+}
+
 func TestPipelineInspectionEffectivityDoesNotChangeDMSeverity(t *testing.T) {
 	low := samplePipelineOilInput()
 	low.RiskInput.InspectionEffectivityByDM = map[string]string{"internal_corrosion": "Low"}

@@ -30,16 +30,47 @@
   .pipeline-acceptance-badge.acceptable { background: #e8fadf; color: #3a7d14; }
   .pipeline-acceptance-badge.conditional { background: #fff2d6; color: #a66a00; }
   .pipeline-acceptance-badge.not-acceptable { background: #ffe5df; color: #c93314; }
-  #pipeline-pdf-report { display: none; font-family: 'Times New Roman', Times, serif; background: #fff; color: #000; }
-  .pipeline-pdf-page { width: 210mm; min-height: 297mm; padding: 12mm; margin: 0 auto; background: #fff; }
-  .pipeline-pdf-header { border-bottom: 3px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
-  .pipeline-pdf-title { font-size: 16pt; font-weight: bold; color: #003366; }
-  .pipeline-pdf-subtitle { font-size: 10pt; color: #555; }
-  .pipeline-pdf-section { font-size: 10.5pt; font-weight: bold; background: #d9d9d9; padding: 4px 8px; margin: 11px 0 6px; border: 1px solid #000; }
-  .pipeline-pdf-table { width: 100%; border-collapse: collapse; font-size: 8pt; margin-bottom: 7px; }
-  .pipeline-pdf-table th, .pipeline-pdf-table td { border: 1px solid #000; padding: 4px 5px; vertical-align: top; }
-  .pipeline-pdf-table th { background: #f2f2f2; text-align: left; }
+  #pipeline-pdf-report { display: none; font-family: Arial, Helvetica, sans-serif; background: #eef1f5; color: #172033; }
+  .pipeline-pdf-page { width: 210mm; min-height: 297mm; padding: 10.5mm 11mm 11mm; margin: 0 auto; background: #fff; }
+  .pipeline-pdf-header {
+    border: 1px solid #b7c0cc;
+    border-top: 5px solid #12365f;
+    margin-bottom: 10px;
+    padding: 9px 10px;
+  }
+  .pipeline-pdf-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .pipeline-pdf-brand { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .pipeline-pdf-logo { width: 38px; height: 38px; object-fit: contain; }
+  .pipeline-pdf-title { font-size: 15pt; line-height: 1.15; font-weight: 800; color: #12365f; letter-spacing: .02em; }
+  .pipeline-pdf-subtitle { font-size: 8pt; color: #5c6877; margin-top: 2px; }
+  .pipeline-pdf-meta { width: 34%; border-collapse: collapse; font-size: 7.4pt; color: #172033; }
+  .pipeline-pdf-meta th, .pipeline-pdf-meta td { border: 1px solid #c8d0da; padding: 3px 5px; vertical-align: top; }
+  .pipeline-pdf-meta th { width: 38%; background: #eef2f6; color: #465568; text-align: left; font-weight: 700; }
+  .pipeline-pdf-section {
+    font-size: 9pt;
+    font-weight: 800;
+    background: #12365f;
+    color: #fff;
+    padding: 5px 8px;
+    margin: 9px 0 0;
+    border: 1px solid #12365f;
+    letter-spacing: .02em;
+  }
+  .pipeline-pdf-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 7.35pt; line-height: 1.28; margin-bottom: 8px; border: 1px solid #b7c0cc; }
+  .pipeline-pdf-table th, .pipeline-pdf-table td { border: 1px solid #c8d0da; padding: 4px 5px; vertical-align: top; overflow-wrap: anywhere; }
+  .pipeline-pdf-table th { background: #eef2f6; color: #334155; text-align: left; font-weight: 700; }
+  .pipeline-pdf-table thead th { background: #dfe7f0; color: #12365f; text-align: center; }
+  .pipeline-pdf-table tr:nth-child(even) td { background: #fbfcfe; }
   .pipeline-pdf-preline { white-space: pre-line; }
+  .pipeline-pdf-signatures { border-top: 1px solid #b7c0cc; display: flex; justify-content: space-between; gap: 18mm; margin-top: 18px; padding-top: 12px; font-size: 8pt; }
+  .pipeline-pdf-signature { flex: 1; min-height: 72px; }
+  .pipeline-pdf-signature-title { color: #465568; font-weight: 700; margin-bottom: 30px; text-transform: uppercase; }
+  .pipeline-pdf-signature-line { border-top: 1px solid #172033; padding-top: 4px; font-weight: 700; }
+  .pipeline-pdf-footnote { color: #6b7787; font-size: 6.8pt; margin-top: 8px; text-align: right; }
+  .pipeline-pdf-block { break-inside: avoid; page-break-inside: avoid; }
+  .pipeline-pdf-section { break-after: avoid; page-break-after: avoid; }
+  .pipeline-pdf-table tr { break-inside: avoid; page-break-inside: avoid; }
+  .pipeline-pdf-table thead { display: table-header-group; }
 </style>
 
 <div class="content-wrapper">
@@ -171,8 +202,7 @@
           <div class="card-header bg-transparent border-bottom pt-3 pb-2"><h6 class="fw-bold mb-0 text-warning"><i class="mdi mdi-chart-bell-curve-cumulative me-2"></i>Probability of Failure</h6></div>
           <ul class="list-group list-group-flush small">
             <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">GFF</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.GenericFailureFrequency }}</span></li>
-            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">FMS</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.ManagementSystemFactor }}</span></li>
-            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Governing DM Score</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.GoverningDamageFactor }}</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Governing DM</span><span class="fw-bold text-end">{{ .Assessment.Result.GoverningDamageMechanism }}</span></li>
             <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Final PoF</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.PoFValue }}</span></li>
             {{ if isPipelineGasService .Assessment.Input.Service }}
             <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">PIR</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.PIRFeet }} ft</span></li>
@@ -238,8 +268,8 @@
                     <td class="fw-bold text-muted ps-4">{{ .Label }}</td>
                     <td><span class="badge bg-label-secondary">{{ .Severity }}</span></td>
                     <td>
-                      <div><strong>Non intrusive:</strong> {{ .NonIntrusiveMethod }} every {{ .NonIntrusiveIntervalMonths }} months <span class="text-muted small">({{ .NonIntrusiveEffectivity }})</span></div>
-                      <div><strong>Intrusive:</strong> {{ .IntrusiveMethod }} every {{ .IntrusiveIntervalMonths }} months <span class="text-muted small">({{ .IntrusiveEffectivity }})</span></div>
+                      <div><strong>Non intrusive:</strong> {{ .NonIntrusiveMethod }} every {{ .NonIntrusiveIntervalMonths }} months {{ if ne .Severity "NOT" }}<span class="text-muted small">({{ .NonIntrusiveEffectivity }})</span>{{ end }}</div>
+                      <div><strong>Intrusive:</strong> {{ .IntrusiveMethod }} every {{ .IntrusiveIntervalMonths }} months {{ if ne .Severity "NOT" }}<span class="text-muted small">({{ .IntrusiveEffectivity }})</span>{{ end }}</div>
                     </td>
                   </tr>
                   {{ else }}
@@ -353,18 +383,24 @@
 {{ if .Assessment.Result }}
 <div id="pipeline-pdf-report">
   <div class="pipeline-pdf-page">
-    <div class="pipeline-pdf-header d-flex justify-content-between align-items-end">
-      <div style="width: 68%;">
-        <div class="pipeline-pdf-title">PIPELINE RISK ASSESSMENT REPORT</div>
-        <div class="pipeline-pdf-subtitle">Pipeline integrity and RiskInput summary</div>
+    <div class="pipeline-pdf-header">
+      <div class="pipeline-pdf-brand-row">
+      <div class="pipeline-pdf-brand" style="width: 62%;">
+        <img class="pipeline-pdf-logo" src="/assets/logo.png" alt="FIRE">
+        <div>
+          <div class="pipeline-pdf-title">PIPELINE RISK ASSESSMENT REPORT</div>
+          <div class="pipeline-pdf-subtitle">Pipeline integrity and RiskInput summary</div>
+        </div>
       </div>
-      <div style="width: 32%; text-align: right; font-size: 9pt;">
-        <strong>Tag No:</strong> {{ .Assessment.Input.ReportNo }}<br>
-        <strong>Record ID:</strong> PL-{{ .Assessment.ID }}<br>
-        <strong>Date:</strong> {{ .Assessment.UpdatedAt }}
+      <table class="pipeline-pdf-meta">
+        <tr><th>Tag No</th><td>{{ .Assessment.Input.ReportNo }}</td></tr>
+        <tr><th>Record ID</th><td>PL-{{ .Assessment.ID }}</td></tr>
+        <tr><th>Date</th><td>{{ .Assessment.UpdatedAt }}</td></tr>
+      </table>
       </div>
     </div>
 
+    <div class="pipeline-pdf-block">
     <div class="pipeline-pdf-section">I. GENERAL INFORMATION</div>
     <table class="pipeline-pdf-table">
       <tr><th width="20%">Tag Number</th><td width="30%">{{ .Assessment.Input.ReportNo }}</td><th width="20%">Fluid Type</th><td width="30%">{{ .Assessment.Input.Service }}</td></tr>
@@ -375,7 +411,9 @@
       <tr><th>Material</th><td>{{ .Assessment.Input.MaterialSpecification }}</td><th>Installation</th><td>{{ .Assessment.Input.TypeOfInstallation }}</td></tr>
       <tr><th>Pipe Size</th><td>{{ .Assessment.Input.PipeSize }}</td><th>Previous SKPP / Expiry</th><td>{{ .Assessment.Input.PreviousSKPP }} / {{ .Assessment.Input.ExpirationDate }}</td></tr>
     </table>
+    </div>
 
+    <div class="pipeline-pdf-block">
     <div class="pipeline-pdf-section">II. DESIGN AND OPERATING DATA</div>
     <table class="pipeline-pdf-table">
       <tr><th>Outside Diameter</th><td>{{ fmtNum .Assessment.Input.OutsideDiameterIn }} in</td><th>Nominal Thickness</th><td>{{ fmtNum .Assessment.Input.NominalWallThicknessMM }} mm</td></tr>
@@ -390,6 +428,7 @@
       <tr><th>ROW Width</th><td>{{ if .Assessment.Input.RightOfWay }}{{ .Assessment.Input.RightOfWay }} m{{ else }}-{{ end }}</td><th>Area Classification</th><td>{{ .Assessment.Input.AreaClassification }}</td></tr>
       <tr><th>Safety Devices</th><td>{{ .Assessment.Input.SafetyDevice }}</td><th>Inspection Period</th><td>{{ .Assessment.Input.InspectionPeriod }}</td></tr>
     </table>
+    </div>
 
     <table class="pipeline-pdf-table">
       <thead><tr><th>Inspection Point</th><th>Location Class</th><th>Installation</th><th>Nominal WT</th><th>Required WT</th><th>Actual WT</th><th>Measured Year</th></tr></thead>
@@ -408,6 +447,7 @@
       </tbody>
     </table>
 
+    <div class="pipeline-pdf-block">
     <div class="pipeline-pdf-section">III. SAVED RISK INPUTS</div>
     <table class="pipeline-pdf-table">
       <tr><th>GFF</th><td>{{ fmtNum .Assessment.Input.RiskInput.GenericFailureFrequency }}</td><th>Management Score</th><td>{{ fmtNum .Assessment.Input.RiskInput.ManagementSystemScore }}</td></tr>
@@ -421,7 +461,9 @@
       <tr><th>Oil/Liquid Inputs</th><td>Flow {{ fmtNum .Assessment.Input.RiskInput.FlowRate }} bbl/hr, Detection {{ fmtNum .Assessment.Input.RiskInput.DetectionTimeHours }} hr</td><th>Segment / Environment</th><td>{{ fmtNum .Assessment.Input.RiskInput.SegmentLengthBetweenValvesM }} m / {{ .Assessment.Input.RiskInput.EnvironmentalSensitivity }}</td></tr>
       <tr><th>Sensitive Receptor / Isolation Valve</th><td>{{ .Assessment.Input.RiskInput.NearbySensitiveReceptor }} / {{ .Assessment.Input.RiskInput.IsolationValveAvailable }}</td><th>Assessment By</th><td>{{ .Assessment.Input.AssessmentBy }}</td></tr>
     </table>
+    </div>
 
+    <div class="pipeline-pdf-block">
     <div class="pipeline-pdf-section">IV. RISK RESULT</div>
     <table class="pipeline-pdf-table">
       <tr><th>Risk Code</th><td>{{ .Assessment.Result.FinalRiskCode }}</td><th>Risk Level</th><td>{{ .Assessment.Result.FinalRiskLevel }}</td></tr>
@@ -434,7 +476,9 @@
       <tr><th>Spill Volume</th><td>{{ fmtNum .Assessment.Result.SpillVolume }}</td><th>Adjusted Spill Volume</th><td>{{ fmtNum .Assessment.Result.AdjustedSpillVolume }}</td></tr>
       {{ end }}
     </table>
+    </div>
 
+    <div class="pipeline-pdf-block">
     <div class="pipeline-pdf-section">V. MECHANICAL APPRAISAL</div>
     <table class="pipeline-pdf-table">
       <tr><th>Required Thickness</th><td>{{ fmtNum .Assessment.Result.SummaryRequiredThicknessMM }} mm</td><th>Remaining Life</th><td>{{ fmtNum .Assessment.Result.RemainingLifeYears }} years</td></tr>
@@ -442,6 +486,7 @@
       <tr><th>Inspection Result</th><td>{{ .Assessment.Result.InspectionResult }}</td><th>MAOP Status</th><td>{{ .Assessment.Result.MAOPStatus }}</td></tr>
       <tr><th>Thickness Status</th><td>{{ .Assessment.Result.RequiredThicknessStatus }}</td><th>Hoop Stress Status</th><td>{{ .Assessment.Result.HoopStressStatus }}</td></tr>
     </table>
+    </div>
 
     <table class="pipeline-pdf-table">
       <thead><tr><th>Point</th><th>Nominal</th><th>Actual</th><th>CR</th><th>Remaining Life</th><th>Hoop Stress</th><th>MAOP</th><th>Status</th></tr></thead>
@@ -455,25 +500,30 @@
       </tbody>
     </table>
 
+    <div class="pipeline-pdf-block">
     <div class="pipeline-pdf-section">VI. DAMAGE MECHANISM AND INSPECTION PLAN</div>
     <table class="pipeline-pdf-table">
-      <thead><tr><th>Category</th><th>Damage Mechanism</th><th>Severity</th><th>Score</th><th>Effectivity</th><th>Source / Status</th></tr></thead>
+      <thead><tr><th>Category</th><th>Damage Mechanism</th><th>Severity</th><th>Effectivity</th></tr></thead>
       <tbody>
         {{ range .Assessment.Result.DamageMechanismResults }}
-        <tr><td>{{ .Category }}</td><td>{{ .Label }}</td><td>{{ .Severity }}</td><td>{{ printf "%.1f" .Score }}</td><td>{{ .InspectionEffectivity }}</td><td>{{ .SourceStandard }} / {{ .RuleStatus }}</td></tr>
+        <tr><td>{{ .Category }}</td><td>{{ .Label }}</td><td>{{ .Severity }}</td><td>{{ if ne .Severity "NOT" }}{{ .InspectionEffectivity }}{{ end }}</td></tr>
         {{ end }}
       </tbody>
     </table>
+    </div>
 
     <table class="pipeline-pdf-table">
       <thead><tr><th>Damage Mechanism</th><th>Recommended Method</th><th>Interval</th></tr></thead>
       <tbody>
         {{ range .Assessment.Result.InspectionPlanResults }}
+        {{ if ne .Severity "NOT" }}
         <tr><td>{{ .Label }}</td><td>{{ .NonIntrusiveMethod }}</td><td>{{ .NonIntrusiveIntervalMonths }} months</td></tr>
+        {{ end }}
         {{ end }}
       </tbody>
     </table>
 
+    <div class="pipeline-pdf-block">
     <div class="pipeline-pdf-section">VII. RECOMMENDATION</div>
     <table class="pipeline-pdf-table">
       <tr><th style="width: 28%;">Immediate Actions</th><td>{{ range .Assessment.Result.RecommendationGroups.ImmediateActions }}{{ . }}<br>{{ end }}</td></tr>
@@ -483,13 +533,17 @@
       <tr><th>Confidence</th><td>{{ .Assessment.Result.RecommendationConfidence }}</td></tr>
       <tr><th>Advisory</th><td>{{ .Assessment.Result.Recommendation }}</td></tr>
     </table>
+    </div>
     {{ if .Assessment.Input.RiskInput.EngineeringNotes }}
+    <div class="pipeline-pdf-block">
     <div class="pipeline-pdf-section">Engineering Notes</div>
     <table class="pipeline-pdf-table">
       <tr><td class="pipeline-pdf-preline">{{ .Assessment.Input.RiskInput.EngineeringNotes }}</td></tr>
     </table>
+    </div>
     {{ end }}
 
+    <div class="pipeline-pdf-block">
     <div class="pipeline-pdf-section">VIII. AUDIT INFORMATION</div>
     <table class="pipeline-pdf-table">
       <thead><tr><th>Time</th><th>Action</th><th>User</th><th>Note</th></tr></thead>
@@ -497,11 +551,19 @@
         {{ range .AuditEvents }}<tr><td>{{ .CreatedAt }}</td><td>{{ .Action }}</td><td>{{ .Actor }}</td><td>{{ .Note }}</td></tr>{{ end }}
       </tbody>
     </table>
-
-    <div style="margin-top: 28px; display: flex; justify-content: space-between; font-size: 9pt;">
-      <div>Prepared By:<br><br><br><strong>{{ .Assessment.Input.AssessmentBy }}</strong></div>
-      <div>Validated By:<br><br><br><strong id="pipeline_pdf_validated_by">_____________________</strong></div>
     </div>
+
+    <div class="pipeline-pdf-signatures">
+      <div class="pipeline-pdf-signature">
+        <div class="pipeline-pdf-signature-title">Prepared By</div>
+        <div class="pipeline-pdf-signature-line">{{ .Assessment.Input.AssessmentBy }}</div>
+      </div>
+      <div class="pipeline-pdf-signature">
+        <div class="pipeline-pdf-signature-title">Validated By</div>
+        <div class="pipeline-pdf-signature-line"><span id="pipeline_pdf_validated_by">_____________________</span></div>
+      </div>
+    </div>
+    <div class="pipeline-pdf-footnote">Pipeline Risk Assessment Report | Record ID PL-{{ .Assessment.ID }}</div>
   </div>
 </div>
 {{ end }}
@@ -546,7 +608,7 @@ function generatePipelinePDF() {
       image: { type: "jpeg", quality: 1.0 },
       html2canvas: { scale: 2, useCORS: true, letterRendering: true },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["avoid-all", "css", "legacy"] }
+      pagebreak: { mode: ["css", "legacy"], avoid: [".pipeline-pdf-block"] }
     };
     html2pdf().set(opt).from(element).save().then(() => {
       element.style.display = "none";
