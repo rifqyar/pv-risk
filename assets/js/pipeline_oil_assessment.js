@@ -653,14 +653,14 @@ $(function () {
 
   function scheduleRealtimePipelineCalculationIfActive() {
     const stepID = activePipelineStepID();
-    if (["pipeline-step-4", "pipeline-step-5", "pipeline-step-6"].includes(stepID)) {
+    if (["pipeline-step-1","pipeline-step-2","pipeline-step-3", "pipeline-step-4", "pipeline-step-5", "pipeline-step-6"].includes(stepID)) {
       scheduleRealtimePipelineCalculation();
     }
   }
 
   function runRealtimePipelineCalculationIfActive() {
     const stepID = activePipelineStepID();
-    if (["pipeline-step-4", "pipeline-step-5", "pipeline-step-6"].includes(stepID)) {
+    if (["pipeline-step-1","pipeline-step-2","pipeline-step-3", "pipeline-step-4", "pipeline-step-5", "pipeline-step-6"].includes(stepID)) {
       runRealtimePipelineCalculation();
     }
   }
