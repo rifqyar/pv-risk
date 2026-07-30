@@ -50,6 +50,41 @@ func samplePipelineOilInput() PipelineOilInput {
 	}
 }
 
+func TestPipelineOilInputJSONUsesCanonicalRiskInput(t *testing.T) {
+	var input PipelineOilInput
+	payload := []byte(`{"report_no":"P-001","risk_input":{"co2_content":20,"h2s_content":30,"h2o_content":10}}`)
+	if err := json.Unmarshal(payload, &input); err != nil {
+		t.Fatalf("unmarshal pipeline input: %v", err)
+	}
+	if input.RiskInput.CO2Content != 20 || input.RiskInput.H2SContent != 30 || input.RiskInput.H2OContent != 10 {
+		t.Fatalf("risk input did not bind from canonical JSON: co2=%.2f h2s=%.2f h2o=%.2f", input.RiskInput.CO2Content, input.RiskInput.H2SContent, input.RiskInput.H2OContent)
+	}
+}
+
+func TestPipelinePreviousConditionDamageLevelsOnlyApplyWhenDamaged(t *testing.T) {
+	input := samplePipelineOilInput()
+	input.RiskInput.InsulationCondition = "Good"
+	input.RiskInput.InsulationDamageLevel = "Severe"
+	input.RiskInput.ExtCoatingCondition = "Not Inspectable"
+	input.RiskInput.ExtCoatingDamageLevel = "Large"
+
+	applyPipelineOilDefaults(&input)
+
+	if input.RiskInput.InsulationDamageLevel != "" || input.RiskInput.ExtCoatingDamageLevel != "" {
+		t.Fatalf("non-damaged condition levels should be ignored, got insulation=%q ext_coating=%q", input.RiskInput.InsulationDamageLevel, input.RiskInput.ExtCoatingDamageLevel)
+	}
+	if errs := ValidatePipelineOilCalculation(input); len(errs) > 0 {
+		t.Fatalf("hidden damage levels should not fail validation: %v", errs)
+	}
+
+	input.RiskInput.InsulationCondition = "Damaged"
+	input.RiskInput.ExtCoatingCondition = "Damaged"
+	applyPipelineOilDefaults(&input)
+	if input.RiskInput.InsulationDamageLevel != "Small" || input.RiskInput.ExtCoatingDamageLevel != "Small" {
+		t.Fatalf("damaged conditions should default blank levels to Small, got insulation=%q ext_coating=%q", input.RiskInput.InsulationDamageLevel, input.RiskInput.ExtCoatingDamageLevel)
+	}
+}
+
 func newPipelineTestDB(t *testing.T) *sql.DB {
 	t.Helper()
 	db, err := sql.Open("sqlite", ":memory:")

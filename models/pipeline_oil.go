@@ -2654,8 +2654,12 @@ func ValidatePipelineOilCalculation(input PipelineOilInput) []PipelineOilValidat
 	validPhase := map[string]float64{"": 1, "Single-phase": 1, "Two-phase": 1, "Multi-phase": 1}
 	validateOption("RiskInput.fluida", input.RiskInput.Fluida, validFluida)
 	validateOption("RiskInput.phase", input.RiskInput.Phase, validPhase)
-	validateOption("RiskInput.insulation_damage_level", input.RiskInput.InsulationDamageLevel, map[string]float64{"Small": 1, "Medium": 1, "Large": 1, "Severe": 1})
-	validateOption("RiskInput.ext_coating_damage_level", input.RiskInput.ExtCoatingDamageLevel, map[string]float64{"Small": 1, "Medium": 1, "Large": 1, "Severe": 1})
+	if input.RiskInput.InsulationCondition == "Damaged" {
+		validateOption("RiskInput.insulation_damage_level", input.RiskInput.InsulationDamageLevel, map[string]float64{"Small": 1, "Medium": 1, "Large": 1, "Severe": 1})
+	}
+	if input.RiskInput.ExtCoatingCondition == "Damaged" {
+		validateOption("RiskInput.ext_coating_damage_level", input.RiskInput.ExtCoatingDamageLevel, map[string]float64{"Small": 1, "Medium": 1, "Large": 1, "Severe": 1})
+	}
 	validateOption("RiskInput.env_ext_cracking", input.RiskInput.EnvExtCracking, map[string]float64{"None": 1, "H2S": 1, "Chloride": 1, "Hydrogen": 1, "Marine": 1})
 	if isGasService(input.Service) {
 		if input.RiskInput.BuildingCountInsidePIR < 0 {
@@ -2811,10 +2815,14 @@ func applyPipelineOilDefaults(input *PipelineOilInput) {
 	if input.RiskInput.ExtCoatingCondition == "" {
 		input.RiskInput.ExtCoatingCondition = "Good"
 	}
-	if input.RiskInput.ExtCoatingDamageLevel == "" {
+	if input.RiskInput.ExtCoatingCondition != "Damaged" {
+		input.RiskInput.ExtCoatingDamageLevel = ""
+	} else if input.RiskInput.ExtCoatingDamageLevel == "" {
 		input.RiskInput.ExtCoatingDamageLevel = "Small"
 	}
-	if input.RiskInput.InsulationDamageLevel == "" {
+	if input.RiskInput.InsulationCondition != "Damaged" {
+		input.RiskInput.InsulationDamageLevel = ""
+	} else if input.RiskInput.InsulationDamageLevel == "" {
 		input.RiskInput.InsulationDamageLevel = "Small"
 	}
 	if input.RiskInput.PrevIntCracking == "" {

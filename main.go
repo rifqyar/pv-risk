@@ -3,7 +3,6 @@ package main
 import (
 	// "context"
 
-	"context"
 	"embed"
 	"encoding/json"
 	"html/template"
@@ -133,35 +132,35 @@ func main() {
 	r.GET("/api/assessment-detail/:id", controller.GetAssessmentByID)
 
 	// === DEV ===
-	// r.Run(":8080")
+	r.Run(":8080")
 
 	// ================= SERVER =================
-	srv := &http.Server{
-		Addr:    ":" + port,
-		Handler: r,
-	}
+	// srv := &http.Server{
+	// 	Addr:    ":" + port,
+	// 	Handler: r,
+	// }
 
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server error: %v", err)
-		}
-	}()
+	// go func() {
+	// 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	// 		log.Fatalf("server error: %v", err)
+	// 	}
+	// }()
 
-	// ================= WAIT SERVER READY =================
-	waitForServer(baseURL)
+	// // ================= WAIT SERVER READY =================
+	// waitForServer(baseURL)
 
-	// ================= RUN DESKTOP =================
-	runWebview(baseURL)
+	// // ================= RUN DESKTOP =================
+	// runWebview(baseURL)
 
-	// ================= SHUTDOWN =================
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	// // ================= SHUTDOWN =================
+	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Println("shutdown error:", err)
-	}
+	// if err := srv.Shutdown(ctx); err != nil {
+	// 	log.Println("shutdown error:", err)
+	// }
 
-	log.Println("app closed cleanly")
+	// log.Println("app closed cleanly")
 }
 
 func appTemplateFuncs() template.FuncMap {
@@ -184,6 +183,7 @@ func appTemplateFuncs() template.FuncMap {
 			return template.JS(b)
 		},
 		"fmtNum":               formatTemplateNumber,
+		"fmtEng":               formatTemplateEngineeringNumber,
 		"isPipelineGasService": isPipelineGasService,
 	}
 }
@@ -198,6 +198,35 @@ func isPipelineGasService(service string) bool {
 }
 
 func formatTemplateNumber(value interface{}) string {
+	numeric, ok := templateNumericValue(value)
+	if !ok {
+		return ""
+	}
+	if isTemplateInteger(value) {
+		return strconv.FormatInt(int64(numeric), 10)
+	}
+	return trimTemplateFloat(numeric, 4)
+}
+
+func formatTemplateEngineeringNumber(value interface{}) string {
+	numeric, ok := templateNumericValue(value)
+	if !ok {
+		return ""
+	}
+	if isTemplateInteger(value) {
+		return strconv.FormatInt(int64(numeric), 10)
+	}
+	abs := numeric
+	if abs < 0 {
+		abs = -abs
+	}
+	if abs > 0 && abs < 1 {
+		return trimTemplateFloat(numeric, 8)
+	}
+	return trimTemplateFloat(numeric, 4)
+}
+
+func templateNumericValue(value interface{}) (float64, bool) {
 	var numeric float64
 	switch v := value.(type) {
 	case float64:
@@ -205,21 +234,34 @@ func formatTemplateNumber(value interface{}) string {
 	case float32:
 		numeric = float64(v)
 	case int:
-		return strconv.Itoa(v)
+		numeric = float64(v)
 	case int64:
-		return strconv.FormatInt(v, 10)
+		numeric = float64(v)
 	case int32:
-		return strconv.FormatInt(int64(v), 10)
+		numeric = float64(v)
 	case uint:
-		return strconv.FormatUint(uint64(v), 10)
+		numeric = float64(v)
 	case uint64:
-		return strconv.FormatUint(v, 10)
+		numeric = float64(v)
 	case uint32:
-		return strconv.FormatUint(uint64(v), 10)
+		numeric = float64(v)
 	default:
-		return ""
+		return 0, false
 	}
-	formatted := strconv.FormatFloat(numeric, 'f', 4, 64)
+	return numeric, true
+}
+
+func isTemplateInteger(value interface{}) bool {
+	switch value.(type) {
+	case int, int64, int32, uint, uint64, uint32:
+		return true
+	default:
+		return false
+	}
+}
+
+func trimTemplateFloat(numeric float64, precision int) string {
+	formatted := strconv.FormatFloat(numeric, 'f', precision, 64)
 	formatted = strings.TrimRight(formatted, "0")
 	formatted = strings.TrimRight(formatted, ".")
 	if formatted == "-0" {

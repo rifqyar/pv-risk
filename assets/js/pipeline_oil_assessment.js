@@ -6,6 +6,7 @@ $(function () {
   let resultIsStale = false;
   let isProgrammaticUpdate = false;
   let isRealtimeCalculating = false;
+  let pendingRealtimeCalculation = false;
   let isSavingAssessment = false;
   let realtimeTimer = null;
 
@@ -18,6 +19,7 @@ $(function () {
 
   syncApplicableCodeAndMaterialStress(false);
   updateConsequenceFields();
+  updatePreviousConditionDamageLevelVisibility();
   applySavedInspectionPlan();
   updateReviewSummary();
   setTimeout(() => {
@@ -65,6 +67,7 @@ $(function () {
       syncApplicableCodeAndMaterialStress(false);
     }
     updateConsequenceFields();
+    updatePreviousConditionDamageLevelVisibility();
     updateReviewSummary();
     scheduleRealtimePipelineCalculationIfActive();
     markResultStaleIfNeeded();
@@ -142,7 +145,7 @@ $(function () {
         resultSignature = calculationSignature(payload);
         resultIsStale = false;
         renderCalculationResult(currentResult);
-        updateAutoCalcDisplay(payload.RiskInput || {}, payload);
+        updateAutoCalcDisplay(riskInputOf(payload), payload);
         updateSaveState();
         if (showSuccess) {
           Swal.fire("Calculation ready", "Review the risk result before saving this assessment.", "success");
@@ -242,7 +245,7 @@ $(function () {
     data.applicable_code = normalizeApplicableCode(data.applicable_code || codeForService(data.service));
     data.material_stress_psi = derivedMaterialStress(data);
 
-    data.RiskInput = {
+    data.risk_input = {
       damage_mechanism: includeGoverningDamageMechanism ? governingDamageMechanismCode() : "internal_corrosion",
       inspection_effectivity: $("[name='inspection_effectivity']").val() || "Representative",
       inspection_effectivity_by_damage_mechanism: collectInspectionEffectivityByDM(),
@@ -289,8 +292,8 @@ $(function () {
       conf_int_thinning: $("[name='conf_int_thinning']").val(),
       conf_int_cracking: $("[name='conf_int_cracking']").val(),
       conf_loc_int_corrosion: $("[name='conf_loc_int_corrosion']").val(),
-      insulation_damage_level: $("[name='insulation_damage_level']").val(),
-      ext_coating_damage_level: $("[name='ext_coating_damage_level']").val(),
+      insulation_damage_level: selectedDamageLevel("insulation_condition", "insulation_damage_level"),
+      ext_coating_damage_level: selectedDamageLevel("ext_coating_condition", "ext_coating_damage_level"),
       fluida: $("[name='fluida']").val(),
       phase: $("[name='phase']").val(),
       pressure_cycle_count: numberValue($("input[name='pressure_cycle_count']").val()),
@@ -344,22 +347,44 @@ $(function () {
         measured_year: measuredYear,
       });
     });
-    data.RiskInput.co2_partial_pressure_psig = calculateCO2PartialPressureJS(data.RiskInput, data);
-    data.RiskInput.h2s_partial_pressure_psig = calculateH2SPartialPressureJS(data.RiskInput, data);
-    data.RiskInput.wall_thickness_ratio = calculateWallThicknessRatioJS(data);
-    data.RiskInput.smys_utilization_pct = calculateSMYSUtilizationPctJS(data);
+    data.risk_input.co2_partial_pressure_psig = calculateCO2PartialPressureJS(data.risk_input, data);
+    data.risk_input.h2s_partial_pressure_psig = calculateH2SPartialPressureJS(data.risk_input, data);
+    data.risk_input.wall_thickness_ratio = calculateWallThicknessRatioJS(data);
+    data.risk_input.smys_utilization_pct = calculateSMYSUtilizationPctJS(data);
     return data;
   }
 
+  function riskInputOf(payload) {
+    return (payload && (payload.risk_input || payload.RiskInput)) || {};
+  }
+
+  function selectedDamageLevel(conditionName, levelName) {
+    return $(`[name='${conditionName}']`).val() === "Damaged" ? $(`[name='${levelName}']`).val() : "";
+  }
+
+  function updatePreviousConditionDamageLevelVisibility() {
+    toggleDamageLevelField("insulation_condition", "insulation_damage_level");
+    toggleDamageLevelField("ext_coating_condition", "ext_coating_damage_level");
+  }
+
+  function toggleDamageLevelField(conditionName, levelName) {
+    const shouldShow = $(`[name='${conditionName}']`).val() === "Damaged";
+    const $field = $(`[name='${levelName}']`);
+    const $wrap = $field.closest("[data-damage-level-field]");
+    $wrap.toggleClass("d-none", !shouldShow);
+    $field.prop("disabled", !shouldShow);
+  }
+
   function updateAutoCalcDisplay(input, riskData) {
+    var test = calculateH2SPartialPressureJS(input || {}, riskData || {});
     var pCO2 = numberValue(input.co2_partial_pressure_psig) || calculateCO2PartialPressureJS(input || {}, riskData || {});
     var pH2S = numberValue(input.h2s_partial_pressure_psig) || calculateH2SPartialPressureJS(input || {}, riskData || {});
     var wtr = numberValue(input.wall_thickness_ratio) || calculateWallThicknessRatioJS(riskData || {});
     var smysPct = numberValue(input.smys_utilization_pct) || calculateSMYSUtilizationPctJS(riskData || {});
-    $("#autoPCO2").text(pCO2 > 0 ? fmt(pCO2) : "-");
-    $("#autoPH2S").text(pH2S > 0 ? fmt(pH2S) : "-");
-    $("#autoWTR").text(wtr > 0 ? fmt(wtr) : "-");
-    $("#autoSMYS").text(smysPct > 0 ? fmt(smysPct) + "%" : "-");
+    $("#autoPCO2").text(pCO2 > 0 ? fmtRate(pCO2) : "-");
+    $("#autoPH2S").text(pH2S > 0 ? fmtRate(pH2S) : "-");
+    $("#autoWTR").text(wtr > 0 ? fmtRate(wtr) : "-");
+    $("#autoSMYS").text(smysPct > 0 ? fmtRate(smysPct) + "%" : "-");
   }
 
   function renderCalculationResult(result) {
@@ -382,9 +407,9 @@ $(function () {
       ["Internal Corrosion Result", damageMechanismSummary(result, "internal_corrosion", result.internal_corrosion_factor)],
       ["Governing Damage Mechanism", governingDamageMechanismSummary(result)],
       ["Main Failure Driver", result.governing_damage_mechanism],
-      ["GFF Basis", selectedOptionLabel("generic_failure_frequency") || fmt(result.generic_failure_frequency)],
+      ["GFF Basis", selectedOptionLabel("generic_failure_frequency") || fmtEngineering(result.generic_failure_frequency)],
       ["Management System Basis", selectedOptionLabel("management_system_score") || "-"],
-      ["Final PoF", fmt(result.pof_value)],
+      ["Final PoF", fmtEngineering(result.pof_value)],
       ["PoF Category", result.pof],
     ]));
     $("#pipelineCofBreakdown").html(buildCofBreakdown(result));
@@ -612,25 +637,42 @@ $(function () {
     $("#pipelineSummaryLowestMAOP").text(Number.isFinite(lowestMAOP) ? `${fmt(lowestMAOP)} psi` : "-");
   }
 
-  function runRealtimePipelineCalculation() {
-    if (isRealtimeCalculating) return;
+  async function runRealtimePipelineCalculation() {
+    if (isRealtimeCalculating) {
+      pendingRealtimeCalculation = true;
+      return;
+    }
     isRealtimeCalculating = true;
     try {
       const payload = collectPayload();
-      const result = calculatePipelineRealtime(payload);
-      if (!result) {
-        updateAutoCalcDisplay(payload.RiskInput || {}, payload);
+      updateAutoCalcDisplay(riskInputOf(payload), payload);
+      if (!hasMinimumRealtimeInputs(payload)) {
         return;
       }
+      const preview = await backendPreview(payload);
+      const result = preview.result;
       currentResult = result;
       resultSignature = calculationSignature(payload);
       resultIsStale = false;
       renderCalculationResult(result);
-      updateAutoCalcDisplay(payload.RiskInput || {}, payload);
+      updateAutoCalcDisplay(riskInputOf(payload), payload);
+      updateSaveState();
+    } catch (err) {
       updateSaveState();
     } finally {
       isRealtimeCalculating = false;
+      if (pendingRealtimeCalculation) {
+        pendingRealtimeCalculation = false;
+        scheduleRealtimePipelineCalculation();
+      }
     }
+  }
+
+  function hasMinimumRealtimeInputs(payload) {
+    return (payload.inspection_points || []).length > 0 &&
+      numberValue(payload.outside_diameter_in) > 0 &&
+      numberValue(payload.internal_design_pressure_psi) > 0 &&
+      numberValue(payload.smys_psi) > 0;
   }
 
   function refreshReviewCalculationIfActive() {
@@ -949,7 +991,7 @@ $(function () {
     const h2s = numberValue(risk.h2s_content);
     const opPressure = numberValue(input.operating_pressure_psi);
     if (h2s <= 0 || opPressure <= 0) return 0;
-    return (h2s / 1000000) * opPressure;
+    return (h2s * opPressure) / 1000000;
   }
 
   function calculateWallThicknessRatioJS(input) {
@@ -1014,7 +1056,7 @@ $(function () {
     if (!points.length || numberValue(input.outside_diameter_in) <= 0 || numberValue(input.internal_design_pressure_psi) <= 0 || numberValue(input.smys_psi) <= 0) {
       return null;
     }
-    const risk = input.RiskInput || {};
+    const risk = riskInputOf(input);
     const requiredIn = requiredThicknessIn(input);
     const pointResults = points.map((point, index) => {
       const actualIn = numberValue(point.actual_thickness_mm) / 25.4;
@@ -1051,6 +1093,7 @@ $(function () {
     input.wall_thickness_ratio = calculateWallThicknessRatioJS(input);
     input.smys_utilization_pct = calculateSMYSUtilizationPctJS(input);
 
+    console.log(input)
     // Gate-Modifier-Escalation scoring
     const internalResult = scoreInternalCorrosionJS(risk, input);
     const externalResult = scoreExternalCorrosionJS(risk, input);
@@ -1167,6 +1210,7 @@ $(function () {
     delete clone.recommendation_immediate_actions;
     delete clone.recommendation_inspection_monitoring;
     delete clone.recommendation_long_term_mitigation;
+    if (clone.risk_input) delete clone.risk_input.engineering_notes;
     if (clone.RiskInput) delete clone.RiskInput.engineering_notes;
     return JSON.stringify(clone);
   }
@@ -1572,8 +1616,8 @@ $(function () {
       generic_failure_frequency: numberValue($("[name='generic_failure_frequency']").val()),
       operating_pressure_psi: numberValue($("input[name='operating_pressure_psi']").val()),
       coating_damage_level: $("[name='coating_damage_level']").val(),
-      insulation_damage_level: $("[name='insulation_damage_level']").val(),
-      ext_coating_damage_level: $("[name='ext_coating_damage_level']").val(),
+      insulation_damage_level: selectedDamageLevel("insulation_condition", "insulation_damage_level"),
+      ext_coating_damage_level: selectedDamageLevel("ext_coating_condition", "ext_coating_damage_level"),
       pressure_cycle_count: numberValue($("input[name='pressure_cycle_count']").val()),
       pressure_range_pct: numberValue($("input[name='pressure_range_pct']").val()),
     };
@@ -1766,6 +1810,14 @@ $(function () {
     const numeric = parseLocalizedNumber(value);
     if (!Number.isFinite(numeric)) return value || "-";
     return numeric.toLocaleString("id-ID", { useGrouping: false, minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  }
+
+  function fmtEngineering(value) {
+    const numeric = parseLocalizedNumber(value);
+    if (!Number.isFinite(numeric)) return value || "-";
+    const abs = Math.abs(numeric);
+    const digits = abs > 0 && abs < 1 ? 8 : 4;
+    return numeric.toLocaleString("id-ID", { useGrouping: false, minimumFractionDigits: 0, maximumFractionDigits: digits });
   }
 
   function parseLocalizedNumber(value) {

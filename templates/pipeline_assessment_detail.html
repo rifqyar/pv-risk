@@ -201,9 +201,9 @@
         <div class="card shadow-sm border-0 rounded-4 h-100">
           <div class="card-header bg-transparent border-bottom pt-3 pb-2"><h6 class="fw-bold mb-0 text-warning"><i class="mdi mdi-chart-bell-curve-cumulative me-2"></i>Probability of Failure</h6></div>
           <ul class="list-group list-group-flush small">
-            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">GFF</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.GenericFailureFrequency }}</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">GFF</span><span class="fw-bold text-end">{{ fmtEng .Assessment.Result.GenericFailureFrequency }}</span></li>
             <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Governing DM</span><span class="fw-bold text-end">{{ .Assessment.Result.GoverningDamageMechanism }}</span></li>
-            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Final PoF</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.PoFValue }}</span></li>
+            <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">Final PoF</span><span class="fw-bold text-end">{{ fmtEng .Assessment.Result.PoFValue }}</span></li>
             {{ if isPipelineGasService .Assessment.Input.Service }}
             <li class="list-group-item d-flex justify-content-between px-3 py-2"><span class="text-muted">PIR</span><span class="fw-bold text-end">{{ fmtNum .Assessment.Result.PIRFeet }} ft</span></li>
             {{ else }}
@@ -450,7 +450,7 @@
     <div class="pipeline-pdf-block">
     <div class="pipeline-pdf-section">III. SAVED RISK INPUTS</div>
     <table class="pipeline-pdf-table">
-      <tr><th>GFF</th><td>{{ fmtNum .Assessment.Input.RiskInput.GenericFailureFrequency }}</td><th>Management Score</th><td>{{ fmtNum .Assessment.Input.RiskInput.ManagementSystemScore }}</td></tr>
+      <tr><th>GFF</th><td>{{ fmtEng .Assessment.Input.RiskInput.GenericFailureFrequency }}</td><th>Management Score</th><td>{{ fmtNum .Assessment.Input.RiskInput.ManagementSystemScore }}</td></tr>
       <tr><th>Stored Damage Mechanism</th><td>{{ .Assessment.Input.RiskInput.DamageMechanism }}</td><th>Release Fluid</th><td>{{ .Assessment.Input.RiskInput.ReleaseFluid }}</td></tr>
       <tr><th>Base TPD / External / Internal</th><td>{{ fmtNum .Assessment.Input.RiskInput.BaseTPDRate }} / {{ fmtNum .Assessment.Input.RiskInput.BaseExternalCorrRate }} / {{ fmtNum .Assessment.Input.RiskInput.BaseInternalCorrRate }}</td><th>Inspection Effectivity</th><td>{{ .Assessment.Input.RiskInput.InspectionEffectivity }}</td></tr>
       <tr><th>Cover / Patrol / ROW</th><td>{{ .Assessment.Input.RiskInput.DepthOfCover }} / {{ .Assessment.Input.RiskInput.PatrolFrequency }} / {{ .Assessment.Input.RiskInput.ROWCondition }}</td><th>Soil / Coating / CP</th><td>{{ .Assessment.Input.RiskInput.SoilResistivity }} / {{ .Assessment.Input.RiskInput.CoatingCondition }} / {{ .Assessment.Input.RiskInput.CPStatus }}</td></tr>
@@ -468,7 +468,7 @@
     <table class="pipeline-pdf-table">
       <tr><th>Risk Code</th><td>{{ .Assessment.Result.FinalRiskCode }}</td><th>Risk Level</th><td>{{ .Assessment.Result.FinalRiskLevel }}</td></tr>
       <tr><th>PoF Category</th><td>{{ .Assessment.Result.PoF }}</td><th>CoF Category</th><td>{{ .Assessment.Result.CoF }}</td></tr>
-      <tr><th>PoF Value</th><td>{{ fmtNum .Assessment.Result.PoFValue }}</td><th>Risk Value</th><td>{{ fmtNum .Assessment.Result.RiskValue }}</td></tr>
+      <tr><th>PoF Value</th><td>{{ fmtEng .Assessment.Result.PoFValue }}</td><th>Risk Value</th><td>{{ fmtNum .Assessment.Result.RiskValue }}</td></tr>
       <tr><th>Governing Driver</th><td colspan="3">{{ .Assessment.Result.GoverningDamageMechanism }}</td></tr>
       {{ if isPipelineGasService .Assessment.Input.Service }}
       <tr><th>Potential Impact Radius</th><td>{{ fmtNum .Assessment.Result.PIRFeet }} ft</td><th>Buildings inside PIR</th><td>{{ .Assessment.Input.RiskInput.BuildingCountInsidePIR }}</td></tr>
