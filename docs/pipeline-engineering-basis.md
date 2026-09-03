@@ -35,7 +35,7 @@ Reference URLs:
 
 Partial pressure:
 
-- CO2 partial pressure: `pCO2 = (CO2 mole percent / 100) * operating pressure psig`
+- CO2 partial pressure: `pCO2 = CO2 content * operating pressure psig` following the pipeline workbook decimal-fraction convention.
 - H2S partial pressure: `pH2S = (H2S mole percent / 100) * operating pressure psig`
 
 Mechanical appraisal:

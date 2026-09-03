@@ -1,4 +1,4 @@
-package models
+﻿package models
 
 import (
 	"database/sql"
@@ -85,8 +85,7 @@ var (
 	// pCO2 partial pressure thresholds for sweet corrosion severity (psig)
 	pipelineCO2PartialPressureSeverity = map[string]float64{
 		"Low":      5.0,
-		"Moderate": 20.0,
-		"High":     1e9,
+		"Moderate": 30.0,
 	}
 
 	// Sourced: NACE MR0175 / PV SSC logic
@@ -1394,7 +1393,7 @@ func applyPipelineIndexRisk(input PipelineOilInput, result *PipelineOilResult) {
 	result.RecommendationRuleName = advisory.RuleName
 	result.RecommendationConfidence = "Low"
 	result.FormulaTrace = append(result.FormulaTrace,
-		trace("co2_partial_pressure", "Pipeline DM Input", "pCO2 = (CO2 mole% / 100) * operating_pressure_psig", map[string]interface{}{"co2_content": input.RiskInput.CO2Content, "operating_pressure_psi": input.OperatingPressurePsi}, input.RiskInput.CO2PartialPressurePSIG, ""),
+		trace("co2_partial_pressure", "Pipeline DM Input", "pCO2 = CO2 content * operating_pressure_psig", map[string]interface{}{"co2_content": input.RiskInput.CO2Content, "operating_pressure_psi": input.OperatingPressurePsi}, input.RiskInput.CO2PartialPressurePSIG, "CO2 content follows workbook decimal-fraction convention; no /100 divisor is applied."),
 		trace("h2s_partial_pressure", "Pipeline DM Input", "pH2S = (H2S ppm / 1,000,000) * operating_pressure_psig", map[string]interface{}{"h2s_content_ppm": input.RiskInput.H2SContent, "operating_pressure_psi": input.OperatingPressurePsi}, input.RiskInput.H2SPartialPressurePSIG, ""),
 		trace("wall_thickness_ratio", "Pipeline DM Input", "wall_thickness_ratio = min(actual_thickness_mm) / min(required_thickness_mm)", map[string]interface{}{"inspection_points": len(input.InspectionPoints)}, input.RiskInput.WallThicknessRatio, ""),
 		trace("smys_utilization", "Pipeline DM Input", "SMYS utilization = (P * OD) / (2 * actual_thickness_in * SMYS) * 100", map[string]interface{}{"operating_pressure_psi": input.OperatingPressurePsi, "outside_diameter_in": input.OutsideDiameterIn, "smys_psi": input.SMYSPsi}, input.RiskInput.SMYSUtilizationPct, ""),
@@ -2449,7 +2448,7 @@ func isGasService(service string) bool {
 
 func pipelineServiceFormulaFamily(service string) string {
 	switch strings.ToLower(strings.TrimSpace(service)) {
-	case "gas", "natural gas", "dwr gas", "wet gas":
+	case "gas", "natural gas", "dry gas", "wet gas":
 		return "gas"
 	case "liquid", "piping", "produce water", "produced water", "liquid hydrocarbon", "chemical":
 		return "liquid"
@@ -2460,7 +2459,7 @@ func pipelineServiceFormulaFamily(service string) string {
 
 func isValidPipelineService(service string) bool {
 	switch strings.ToLower(strings.TrimSpace(service)) {
-	case "gas", "natural gas", "dwr gas", "wet gas", "oil", "liquid", "piping", "produce water", "produced water", "liquid hydrocarbon", "chemical":
+	case "gas", "natural gas", "dry gas", "wet gas", "oil", "liquid", "piping", "produce water", "produced water", "liquid hydrocarbon", "chemical":
 		return true
 	default:
 		return false
@@ -2540,7 +2539,7 @@ func ValidatePipelineOilDraft(input PipelineOilInput) []PipelineOilValidationErr
 		}
 	}
 	if input.Service != "" && !isValidPipelineService(input.Service) {
-		errs = append(errs, PipelineOilValidationError{Field: "service", Message: "must be one of Natural gas, Dwr gas, Wet gas, Oil, Produce water, Liquid hydrocarbon, or Chemical"})
+		errs = append(errs, PipelineOilValidationError{Field: "service", Message: "must be one of Natural gas, Dry gas, Wet gas, Oil, Produce water, Liquid hydrocarbon, or Chemical"})
 	}
 	if input.RiskInput.DamageMechanism != "" && !IsValidPipelineDamageMechanism(input.RiskInput.DamageMechanism) {
 		errs = append(errs, PipelineOilValidationError{Field: "RiskInput.damage_mechanism", Message: "invalid pipeline damage mechanism"})
@@ -2621,6 +2620,9 @@ func ValidatePipelineOilCalculation(input PipelineOilInput) []PipelineOilValidat
 	validateOption("RiskInput.flow_velocity_condition", input.RiskInput.FlowVelocityCondition, pipelineFlowVelocityModifiers)
 	validateOption("RiskInput.solid_content", input.RiskInput.SolidContent, pipelineSolidContentModifiers)
 	validateOption("RiskInput.one_call_system", input.RiskInput.OneCallSystem, pipelineOneCallModifiers)
+	if input.RiskInput.CoatingCondition == "Damaged" {
+		validateOption("RiskInput.coating_damage_level", input.RiskInput.CoatingDamageLevel, map[string]float64{"Small": 1, "Medium": 1, "Large": 1, "Severe": 1})
+	}
 	validateOption("RiskInput.ext_coating_condition", input.RiskInput.ExtCoatingCondition, pipelineCoatingConditionFactors)
 	validateOption("RiskInput.insulation_condition", input.RiskInput.InsulationCondition, map[string]float64{"Not Applicable": 1, "Good": 1, "Damaged": 1, "Not Inspectable": 1})
 	if input.RiskInput.ChlorideContent < 0 || input.RiskInput.ChlorideContent > 5 {
@@ -2694,9 +2696,9 @@ func ValidatePipelineOilCalculation(input PipelineOilInput) []PipelineOilValidat
 		if point.MeasuredYear.Float() <= input.YearUsed.Float() {
 			errs = append(errs, PipelineOilValidationError{Field: prefix + ".measured_year", Message: "must be after year used to avoid divide-by-zero"})
 		}
-		if point.ActualThicknessMM > point.NominalThicknessMM {
-			errs = append(errs, PipelineOilValidationError{Field: prefix + ".actual_thickness_mm", Message: "cannot exceed nominal thickness for workbook corrosion-rate formula"})
-		}
+		// if point.ActualThicknessMM > point.NominalThicknessMM {
+		// 	errs = append(errs, PipelineOilValidationError{Field: prefix + ".actual_thickness_mm", Message: "cannot exceed nominal thickness for workbook corrosion-rate formula"})
+		// }
 	}
 	return errs
 }
@@ -2754,6 +2756,11 @@ func applyPipelineOilDefaults(input *PipelineOilInput) {
 	}
 	if input.RiskInput.CoatingCondition == "" {
 		input.RiskInput.CoatingCondition = "Good"
+	}
+	if input.RiskInput.CoatingCondition != "Damaged" {
+		input.RiskInput.CoatingDamageLevel = ""
+	} else if input.RiskInput.CoatingDamageLevel == "" {
+		input.RiskInput.CoatingDamageLevel = "Small"
 	}
 	if input.RiskInput.CPStatus == "" {
 		input.RiskInput.CPStatus = "normal"
@@ -3236,10 +3243,10 @@ func isASMECode(applicableCode, code string) bool {
 
 // --- Partial Pressure Calculation Helpers (Sourced) ---
 
-// Sourced: API 581 Section 6 / PV CO2 corrosion logic
-// pCO2 = mole% CO2 ├ù operating pressure (psig) / 100
-func calculateCO2PartialPressure(co2ContentMolePct, operatingPressurePSIG float64) float64 {
-	return (co2ContentMolePct / 100.0) * operatingPressurePSIG
+// Sourced: Pipeline workbook "CO2 Content Analizing" decimal-fraction convention.
+// pCO2 = CO2 content * operating pressure (psig)
+func calculateCO2PartialPressure(co2Content, operatingPressurePSIG float64) float64 {
+	return co2Content * operatingPressurePSIG
 }
 
 // Sourced: NACE MR0175 / PV SSC logic
@@ -3302,10 +3309,7 @@ func pCO2Severity(pCO2 float64) string {
 	if pCO2 <= pipelineCO2PartialPressureSeverity["Low"] {
 		return "Low"
 	}
-	if pCO2 <= pipelineCO2PartialPressureSeverity["Moderate"] {
-		return "Moderate"
-	}
-	return "High"
+	return "Moderate"
 }
 
 // Sourced: NACE MR0175 — pH2S partial pressure thresholds

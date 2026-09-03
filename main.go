@@ -190,7 +190,7 @@ func appTemplateFuncs() template.FuncMap {
 
 func isPipelineGasService(service string) bool {
 	switch strings.ToLower(strings.TrimSpace(service)) {
-	case "gas", "natural gas", "dwr gas", "wet gas":
+	case "gas", "natural gas", "dry gas", "wet gas":
 		return true
 	default:
 		return false

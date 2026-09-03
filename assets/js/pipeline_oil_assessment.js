@@ -263,7 +263,7 @@ $(function () {
       coating_condition: $("[name='coating_condition']").val(),
       cp_status: $("[name='cp_status']").val(),
       cp_potential_mv: numberValue($("input[name='cp_potential_mv']").val()),
-      coating_damage_level: $("[name='coating_damage_level']").val(),
+      coating_damage_level: selectedDamageLevel("coating_condition", "coating_damage_level"),
       one_call_system: $("[name='one_call_system']").val(),
       ph_level: $("[name='ph_level']").val(),
       fluid_corrosivity_mpy: $("[name='fluid_corrosivity_mpy']").val(),
@@ -363,6 +363,7 @@ $(function () {
   }
 
   function updatePreviousConditionDamageLevelVisibility() {
+    toggleDamageLevelField("coating_condition", "coating_damage_level");
     toggleDamageLevelField("insulation_condition", "insulation_damage_level");
     toggleDamageLevelField("ext_coating_condition", "ext_coating_damage_level");
   }
@@ -750,8 +751,7 @@ $(function () {
   function pCO2SeverityJS(pCO2) {
     if (pCO2 <= 0) return "NOT";
     if (pCO2 <= 5) return "Low";
-    if (pCO2 <= 20) return "Moderate";
-    return "High";
+    return "Moderate";
   }
 
   function pH2SSeverityJS(pH2S) {
@@ -984,7 +984,7 @@ $(function () {
     const co2 = numberValue(risk.co2_content);
     const opPressure = numberValue(input.operating_pressure_psi);
     if (co2 <= 0 || opPressure <= 0) return 0;
-    return (co2 / 100) * opPressure;
+    return co2 * opPressure;
   }
 
   function calculateH2SPartialPressureJS(risk, input) {
@@ -1451,7 +1451,7 @@ $(function () {
 
   function serviceFormulaFamily(service) {
     const key = String(service || "").trim().toLowerCase();
-    if (["gas", "natural gas", "dwr gas", "wet gas"].includes(key)) return "gas";
+    if (["gas", "natural gas", "dry gas", "wet gas"].includes(key)) return "gas";
     if (["liquid", "piping", "produce water", "produced water", "liquid hydrocarbon", "chemical"].includes(key)) return "liquid";
     return "oil";
   }
@@ -1581,7 +1581,7 @@ $(function () {
       coating_condition: $("[name='coating_condition']").val(),
       cp_status: $("[name='cp_status']").val(),
       cp_potential_mv: numberValue($("input[name='cp_potential_mv']").val()),
-      coating_damage_level: $("[name='coating_damage_level']").val(),
+      coating_damage_level: selectedDamageLevel("coating_condition", "coating_damage_level"),
       one_call_system: $("[name='one_call_system']").val(),
       ph_level: $("[name='ph_level']").val(),
       fluid_corrosivity_mpy: $("[name='fluid_corrosivity_mpy']").val(),

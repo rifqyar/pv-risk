@@ -304,8 +304,6 @@
             <form id="pipelineOilForm" data-mode="{{ .Mode }}" data-assessment-id="{{ .AssessmentID }}" onsubmit="return false;">
               <script type="application/json" id="pipelineSavedResult">{{ toJSON .Assessment.Result }}</script>
               <script type="application/json" id="pipelineMaterialData">{{ toJSON .Material }}</script>
-              <input type="hidden" name="previous_skpp" value="{{ .Input.PreviousSKPP }}">
-              <input type="hidden" name="expiration_date" value="{{ .Input.ExpirationDate }}">
 
               <div id="pipeline-step-1" class="content">
                 <div class="row g-4">
@@ -326,6 +324,8 @@
                               <div class="col-md-4"><label class="form-label">Owner / User</label><input class="form-control" name="owner_user" value="{{ .Input.OwnerUser }}" placeholder="Owner / user"></div>
                               <div class="col-md-4"><label class="form-label">Contractor</label><input class="form-control" name="contractor" value="{{ .Input.Contractor }}" placeholder="Contractor"></div>
                               <div class="col-md-4"><label class="form-label">Location</label><input class="form-control" name="location" value="{{ .Input.Location }}" placeholder="Tanjung Jabung Barat, Jambi"></div>
+                              <div class="col-md-4"><label class="form-label">Previous SKPP</label><input class="form-control" name="previous_skpp" value="{{ .Input.PreviousSKPP }}" placeholder="MIT-2021.1557-03072-PL"></div>
+                              <div class="col-md-4"><label class="form-label">SKPP Expiry Date</label><input class="form-control" name="expiration_date" value="{{ .Input.ExpirationDate }}" placeholder="July 2026"></div>
                             </div>
                           </div>
                         </div>
@@ -341,7 +341,7 @@
                           <div class="accordion-body">
                             <div class="row g-3 pipeline-form-grid">
                               <div class="col-md-8"><label class="form-label">Line Identification <span class="text-danger">*</span></label><input class="form-control" name="line_identification" value="{{ .Input.LineIdentification }}" placeholder="NPS 12 Main Gas Trunkline..." required data-required-msg="Please enter the pipeline name."></div>
-                              <div class="col-md-4"><label class="form-label">Service / Fluid Type <span class="text-danger">*</span></label><select class="form-select" name="service" required><option value="Natural gas" {{ if or (eq .Input.Service "Natural gas") (eq .Input.Service "Gas") }}selected{{ end }}>Natural gas</option><option value="Dwr gas" {{ if eq .Input.Service "Dwr gas" }}selected{{ end }}>Dwr gas</option><option value="Wet gas" {{ if eq .Input.Service "Wet gas" }}selected{{ end }}>Wet gas</option><option value="Oil" {{ if eq .Input.Service "Oil" }}selected{{ end }}>Oil</option><option value="Produce water" {{ if eq .Input.Service "Produce water" }}selected{{ end }}>Produce water</option><option value="Liquid hydrocarbon" {{ if or (eq .Input.Service "Liquid hydrocarbon") (eq .Input.Service "Liquid") }}selected{{ end }}>Liquid hydrocarbon</option><option value="Chemical" {{ if eq .Input.Service "Chemical" }}selected{{ end }}>Chemical</option></select></div>
+                              <div class="col-md-4"><label class="form-label">Service / Fluid Type <span class="text-danger">*</span></label><select class="form-select" name="service" required><option value="Natural gas" {{ if or (eq .Input.Service "Natural gas") (eq .Input.Service "Gas") }}selected{{ end }}>Natural gas</option><option value="Dry gas" {{ if eq .Input.Service "Dry gas" }}selected{{ end }}>Dry gas</option><option value="Wet gas" {{ if eq .Input.Service "Wet gas" }}selected{{ end }}>Wet gas</option><option value="Oil" {{ if eq .Input.Service "Oil" }}selected{{ end }}>Oil</option><option value="Produce water" {{ if eq .Input.Service "Produce water" }}selected{{ end }}>Produce water</option><option value="Liquid hydrocarbon" {{ if or (eq .Input.Service "Liquid hydrocarbon") (eq .Input.Service "Liquid") }}selected{{ end }}>Liquid hydrocarbon</option><option value="Chemical" {{ if eq .Input.Service "Chemical" }}selected{{ end }}>Chemical</option></select></div>
                               <div class="col-md-3"><label class="form-label">Year Built</label><input type="number" class="form-control" name="year_built" value="{{ .Input.YearBuilt }}" placeholder="2017"></div>
                               <div class="col-md-3"><label class="form-label">Year Used</label><input type="month" class="form-control" name="year_used" value="{{ .Input.YearUsed }}"></div>
                               <div class="col-md-6"><label class="form-label">Pipe Size Description</label><input class="form-control" name="pipe_size" value="{{ .Input.PipeSize }}" placeholder="323,85 mm OD x 10,31 mm T x 9966 m L"></div>
@@ -387,6 +387,7 @@
                               <div class="col-md-4"><label class="form-label">Material Stress</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control pipeline-autocalc-value" name="material_stress_psi" value="{{ .Input.MaterialStressPsi }}" placeholder="Derived" readonly><span class="input-group-text">psi</span></div><div class="form-text" id="pipelineMaterialStressSource">For B31.3, allowable stress is sourced from Pipeline Material Master.</div></div>
                               <div class="col-md-4"><label class="form-label">Quality Factor</label><input type="text" inputmode="decimal" class="form-control" name="quality_factor" value="{{ .Input.QualityFactor }}" placeholder="1"></div>
                               <div class="col-md-4"><label class="form-label">Design Factor / Coefficient Y</label><input type="text" inputmode="decimal" class="form-control" name="design_factor" value="{{ .Input.DesignFactor }}" placeholder="0,6"></div>
+                              <div class="col-md-4"><label class="form-label">Temperature Derating Factor</label><input type="text" inputmode="decimal" class="form-control" name="temperature_derating_factor" value="{{ .Input.TemperatureDeratingFactor }}" placeholder="1"></div>
                               <div class="col-md-4"><label class="form-label">Weld Joint Strength Factor</label><input type="text" inputmode="decimal" class="form-control" name="weld_joint_strength_factor" value="{{ .Input.WeldJointStrengthFactor }}" placeholder="1"></div>
                               <div class="col-md-4"><label class="form-label">Corrosion Allowance</label><div class="input-group"><input type="text" inputmode="decimal" class="form-control" name="allowance_in" value="{{ .Input.AllowanceIn }}" placeholder="0"><span class="input-group-text">in</span></div></div>
                               <div class="col-md-4"><label class="form-label">Method of Joining</label><input class="form-control" name="method_of_joining" value="{{ .Input.MethodOfJoining }}" placeholder="Welding"></div>
@@ -585,6 +586,17 @@
                             <option value="Damaged" {{ if eq .Input.RiskInput.CoatingCondition "Damaged" }}selected{{ end }}>Damaged</option>
                             <option value="Not Inspectable" {{ if eq .Input.RiskInput.CoatingCondition "Not Inspectable" }}selected{{ end }}>Not Inspectable</option>
                             <option value="Not Applicable" {{ if eq .Input.RiskInput.CoatingCondition "Not Applicable" }}selected{{ end }}>Not Applicable</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="col-lg-3 col-md-6 col-sm-12" data-damage-level-field="coating">
+                        <div class="form-group">
+                          <label class="form-label">Coating Damage Level</label>
+                          <select class="form-select" name="coating_damage_level">
+                            <option value="Small" {{ if eq .Input.RiskInput.CoatingDamageLevel "Small" }}selected{{ end }}>Small</option>
+                            <option value="Medium" {{ if eq .Input.RiskInput.CoatingDamageLevel "Medium" }}selected{{ end }}>Medium</option>
+                            <option value="Large" {{ if eq .Input.RiskInput.CoatingDamageLevel "Large" }}selected{{ end }}>Large</option>
+                            <option value="Severe" {{ if eq .Input.RiskInput.CoatingDamageLevel "Severe" }}selected{{ end }}>Severe</option>
                           </select>
                         </div>
                       </div>

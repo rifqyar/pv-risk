@@ -65,23 +65,26 @@ func TestPipelinePreviousConditionDamageLevelsOnlyApplyWhenDamaged(t *testing.T)
 	input := samplePipelineOilInput()
 	input.RiskInput.InsulationCondition = "Good"
 	input.RiskInput.InsulationDamageLevel = "Severe"
+	input.RiskInput.CoatingCondition = "Good"
+	input.RiskInput.CoatingDamageLevel = "Severe"
 	input.RiskInput.ExtCoatingCondition = "Not Inspectable"
 	input.RiskInput.ExtCoatingDamageLevel = "Large"
 
 	applyPipelineOilDefaults(&input)
 
-	if input.RiskInput.InsulationDamageLevel != "" || input.RiskInput.ExtCoatingDamageLevel != "" {
-		t.Fatalf("non-damaged condition levels should be ignored, got insulation=%q ext_coating=%q", input.RiskInput.InsulationDamageLevel, input.RiskInput.ExtCoatingDamageLevel)
+	if input.RiskInput.InsulationDamageLevel != "" || input.RiskInput.CoatingDamageLevel != "" || input.RiskInput.ExtCoatingDamageLevel != "" {
+		t.Fatalf("non-damaged condition levels should be ignored, got insulation=%q coating=%q ext_coating=%q", input.RiskInput.InsulationDamageLevel, input.RiskInput.CoatingDamageLevel, input.RiskInput.ExtCoatingDamageLevel)
 	}
 	if errs := ValidatePipelineOilCalculation(input); len(errs) > 0 {
 		t.Fatalf("hidden damage levels should not fail validation: %v", errs)
 	}
 
 	input.RiskInput.InsulationCondition = "Damaged"
+	input.RiskInput.CoatingCondition = "Damaged"
 	input.RiskInput.ExtCoatingCondition = "Damaged"
 	applyPipelineOilDefaults(&input)
-	if input.RiskInput.InsulationDamageLevel != "Small" || input.RiskInput.ExtCoatingDamageLevel != "Small" {
-		t.Fatalf("damaged conditions should default blank levels to Small, got insulation=%q ext_coating=%q", input.RiskInput.InsulationDamageLevel, input.RiskInput.ExtCoatingDamageLevel)
+	if input.RiskInput.InsulationDamageLevel != "Small" || input.RiskInput.CoatingDamageLevel != "Small" || input.RiskInput.ExtCoatingDamageLevel != "Small" {
+		t.Fatalf("damaged conditions should default blank levels to Small, got insulation=%q coating=%q ext_coating=%q", input.RiskInput.InsulationDamageLevel, input.RiskInput.CoatingDamageLevel, input.RiskInput.ExtCoatingDamageLevel)
 	}
 }
 
@@ -409,6 +412,26 @@ func TestPipelineCalculatesAllDamageMechanisms(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestPipelineInternalCorrosionPCO2CappedAtModerate(t *testing.T) {
+	in := samplePipelineOilInput()
+	in.OperatingPressurePsi = 640
+	in.RiskInput.CO2Content = 0.09
+	in.RiskInput.H2OContent = 10
+	in.RiskInput.PrevIntThinning = "No Finding"
+
+	result, errs := CalculatePipelineOil(in)
+	if len(errs) > 0 {
+		t.Fatalf("unexpected validation errors: %+v", errs)
+	}
+
+	internal := pipelineDMResultByCode(t, result, "internal_corrosion")
+	assertClose(t, calculateCO2PartialPressure(in.RiskInput.CO2Content, in.OperatingPressurePsi), 57.6, 1e-12)
+	if internal.Severity != "Moderate" {
+		t.Fatalf("expected high pCO2 to be capped at Moderate, got %q", internal.Severity)
+	}
+	assertClose(t, internal.Score, 2.0, 1e-12)
 }
 
 func TestPipelineDamageMechanismsCarryStandardsMetadata(t *testing.T) {
