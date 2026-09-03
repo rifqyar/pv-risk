@@ -298,11 +298,6 @@ func TestPipelineOilValidation(t *testing.T) {
 			in.InspectionPoints[0].ActualThicknessMM = 0
 			return in
 		}},
-		{"negative corrosion rate input", func() PipelineOilInput {
-			in := samplePipelineOilInput()
-			in.InspectionPoints[0].ActualThicknessMM = 9
-			return in
-		}},
 		{"missing required data", func() PipelineOilInput {
 			in := samplePipelineOilInput()
 			in.ReportNo = ""
@@ -330,6 +325,49 @@ func TestPipelineOilValidation(t *testing.T) {
 				t.Fatalf("expected validation errors")
 			}
 		})
+	}
+}
+
+func TestPipelineOilActualThicknessGreaterThanNominal(t *testing.T) {
+	in := samplePipelineOilInput()
+	in.YearUsed = "2020"
+	in.InspectionPoints = []PipelineOilInspectionPoint{
+		{InspectionPoint: "D#1", NominalThicknessMM: 9.30, RequiredThicknessMM: 4.35, ActualThicknessMM: 6.76, MeasuredYear: "2026-09"},
+		{InspectionPoint: "D#2", NominalThicknessMM: 11.10, RequiredThicknessMM: 4.35, ActualThicknessMM: 10.96, MeasuredYear: "2026-09"},
+		{InspectionPoint: "D#3", NominalThicknessMM: 9.30, RequiredThicknessMM: 4.35, ActualThicknessMM: 8.50, MeasuredYear: "2026-09"},
+		{InspectionPoint: "D#4", NominalThicknessMM: 9.30, RequiredThicknessMM: 4.35, ActualThicknessMM: 9.32, MeasuredYear: "2026-09"}, // Actual > Nominal
+		{InspectionPoint: "D#5", NominalThicknessMM: 9.30, RequiredThicknessMM: 4.35, ActualThicknessMM: 8.99, MeasuredYear: "2026-09"},
+	}
+
+	result, calcErrs := CalculatePipelineOil(in)
+	if len(calcErrs) > 0 {
+		t.Fatalf("unexpected calculation errors when actual > nominal: %+v", calcErrs)
+	}
+
+	// Point D#4 (Actual 9.32 > Nominal 9.30) should have CR = 0 and RL = 20.0 (max remaining life)
+	var pointD4 *PipelineOilPointResult
+	for i := range result.PointResults {
+		if result.PointResults[i].InspectionPoint == "D#4" {
+			pointD4 = &result.PointResults[i]
+			break
+		}
+	}
+	if pointD4 == nil {
+		t.Fatalf("point D#4 not found in point results")
+	}
+	if pointD4.CorrosionRateMMYear != 0 {
+		t.Errorf("expected D#4 corrosion rate to be 0 mm/year, got %f", pointD4.CorrosionRateMMYear)
+	}
+	if pointD4.RemainingLifeYears != maxPipelineRemainingLifeYears {
+		t.Errorf("expected D#4 remaining life to be %f years, got %f", maxPipelineRemainingLifeYears, pointD4.RemainingLifeYears)
+	}
+	if pointD4.ThicknessStatus != "ACCEPTABLE" {
+		t.Errorf("expected D#4 thickness status to be ACCEPTABLE, got %s", pointD4.ThicknessStatus)
+	}
+
+	// Governing remaining life should be governed by the corroding point D#1, NOT D#4
+	if result.RemainingLifeYears <= 0 || result.RemainingLifeYears > 7.0 {
+		t.Errorf("expected governing remaining life around 6.33 years (from D#1), got %f", result.RemainingLifeYears)
 	}
 }
 

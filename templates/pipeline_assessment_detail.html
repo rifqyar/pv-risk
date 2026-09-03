@@ -495,6 +495,9 @@
         <tr><td>{{ .InspectionPoint }}</td><td>{{ fmtNum .NominalThicknessMM }}</td><td>{{ fmtNum .ActualThicknessMM }}</td><td>{{ fmtNum .CorrosionRateMMYear }}</td><td>{{ fmtNum .RemainingLifeYears }}</td><td>{{ fmtNum .HoopStressPsi }}</td><td>{{ fmtNum .MAOPPsi }}</td><td>
           <span {{ if eq .ThicknessStatus "NOT ACCEPTABLE" }}style="color: red; font-weight: bold;"{{ end }}>{{ .ThicknessStatus }}</span> /
           <span {{ if eq .MAOPStatus "NOT ACCEPTABLE" }}style="color: red; font-weight: bold;"{{ end }}>{{ .MAOPStatus }}</span>
+          {{ if gt .ActualThicknessMM .NominalThicknessMM }}
+          <div class="small text-info mt-1" style="font-size: 8px;">Actual &gt; Nominal (No Corrosion)</div>
+          {{ end }}
         </td></tr>
         {{ end }}
       </tbody>

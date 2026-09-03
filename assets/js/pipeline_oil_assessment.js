@@ -236,7 +236,7 @@ $(function () {
       }
       data[item.name] = numericOrString(item.value);
     });
-    if (numberValue(data.nominal_wall_thickness_mm) > 0 && (numberValue(data.actual_wall_thickness_mm) <= 0 || numberValue(data.actual_wall_thickness_mm) > numberValue(data.nominal_wall_thickness_mm))) {
+    if (numberValue(data.nominal_wall_thickness_mm) > 0 && numberValue(data.actual_wall_thickness_mm) <= 0) {
       data.actual_wall_thickness_mm = data.nominal_wall_thickness_mm;
     }
     if (numberValue(data.internal_design_pressure_psi) <= 0) {
@@ -581,11 +581,21 @@ $(function () {
 
   function technicalStatusCauses(point) {
     const causes = [];
+    const notes = [];
     if (String(point.thickness_status || "").toUpperCase() === "NOT ACCEPTABLE") causes.push("Actual thickness below required/minimum thickness");
     if (String(point.hoop_stress_status || "").toUpperCase() === "NOT ACCEPTABLE") causes.push("Hoop stress exceeds allowable stress basis");
     if (String(point.maop_status || "").toUpperCase() === "NOT ACCEPTABLE") causes.push("MAOP is below design pressure");
-    if (!causes.length) return "";
-    return `<div class="small text-danger mt-1">${causes.map(escapeHtml).join("<br>")}</div>`;
+    if (numberValue(point.actual_thickness_mm) > numberValue(point.nominal_thickness_mm)) {
+      notes.push("Actual thickness exceeds nominal (no corrosion loss detected)");
+    }
+    let html = "";
+    if (causes.length) {
+      html += `<div class="small text-danger mt-1">${causes.map(escapeHtml).join("<br>")}</div>`;
+    }
+    if (notes.length) {
+      html += `<div class="small text-info mt-1"><i class="mdi mdi-information-outline me-1"></i>${notes.map(escapeHtml).join("<br>")}</div>`;
+    }
+    return html;
   }
 
   function nonNegative(value) {
@@ -1063,7 +1073,9 @@ $(function () {
       const cr = corrosionRate(point, input);
       const appraisalRequiredIn = index > 0 ? roundToPlaces(requiredIn, 3) : requiredIn;
       const requiredMM = numberValue(point.required_thickness_mm) > 0 ? numberValue(point.required_thickness_mm) : appraisalRequiredIn * 25.4;
-      const rl = cr > 0 ? capRemainingLife((numberValue(point.actual_thickness_mm) - requiredMM) / cr) : 0;
+      const rl = cr > 0
+        ? capRemainingLife(Math.max((numberValue(point.actual_thickness_mm) - requiredMM) / cr, 0))
+        : (numberValue(point.actual_thickness_mm) >= requiredMM ? 20 : 0);
       const hs = actualIn > 0 ? (numberValue(input.internal_design_pressure_psi) * numberValue(input.outside_diameter_in)) / (2 * actualIn) : 0;
       const maop = maopPsi(input, actualIn);
       const allowableStress = allowableStressPsi(input);
@@ -1081,7 +1093,7 @@ $(function () {
         remaining_life_years: rl,
         hoop_stress_psi: hs,
         maop_psi: maop,
-        thickness_status: actualIn > appraisalRequiredIn ? "ACCEPTABLE" : "NOT ACCEPTABLE",
+        thickness_status: actualIn >= appraisalRequiredIn ? "ACCEPTABLE" : "NOT ACCEPTABLE",
         hoop_stress_status: hs <= allowableStress ? "ACCEPTABLE" : "NOT ACCEPTABLE",
         maop_status: maop > numberValue(input.internal_design_pressure_psi) ? "ACCEPTABLE" : "NOT ACCEPTABLE",
       };
@@ -1288,10 +1300,6 @@ $(function () {
       const measuredValue = String($(this).find("[name='measured_year']").val() || "");
       if (!pointName || nominal <= 0 || actual <= 0 || !measuredValue) return;
       validPointCount += 1;
-      if (actual > nominal) {
-        setFieldError($(this).find("[name='point_actual_thickness_mm']"), "Actual thickness cannot exceed nominal thickness.");
-        valid = false;
-      }
       const $measured = $(this).find("[name='measured_year']");
       const measured = parseMonthYearToFloatJS($measured.val());
       const used = parseMonthYearToFloatJS($("[name='year_used']").val() || $("[name='year_built']").val());
@@ -1655,7 +1663,7 @@ $(function () {
     const yUsed = parseMonthYearToFloatJS(String(input.year_used || input.year_built || ""));
     const diff = yMeasured - yUsed;
     if (diff <= 0 || nominal <= 0) return 0;
-    return Math.max((nominal - actual) / diff, 0);
+    return (nominal - actual) / diff;
   }
 
   function capRemainingLife(value) {

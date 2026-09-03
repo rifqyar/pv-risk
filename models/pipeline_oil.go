@@ -1,4 +1,4 @@
-﻿package models
+package models
 
 import (
 	"database/sql"
@@ -3131,9 +3131,12 @@ func corrosionRateMMYear(nominal, actual float64, yearUsed, measuredYear Flexibl
 
 func remainingLifeYears(actual, required, corrosionRate float64) float64 {
 	if corrosionRate <= 0 {
+		if actual >= required {
+			return maxPipelineRemainingLifeYears
+		}
 		return 0
 	}
-	return math.Min((actual-required)/corrosionRate, maxPipelineRemainingLifeYears)
+	return math.Min(math.Max((actual-required)/corrosionRate, 0), maxPipelineRemainingLifeYears)
 }
 
 func acceptable(ok bool) string {
