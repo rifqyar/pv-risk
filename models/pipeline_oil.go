@@ -489,21 +489,23 @@ type PipelineDamageMechanismResult struct {
 }
 
 type PipelineInspectionPlanInput struct {
-	NonIntrusiveMethod string `json:"non_intrusive_method"`
-	IntrusiveMethod    string `json:"intrusive_method"`
+	NonIntrusiveMethod   string  `json:"non_intrusive_method"`
+	IntrusiveMethod      string  `json:"intrusive_method"`
+	ManualIntervalMonths float64 `json:"manual_interval_months"`
 }
 
 type PipelineInspectionPlanResult struct {
-	Code                       string `json:"code"`
-	Label                      string `json:"label"`
-	Severity                   string `json:"severity"`
-	NonIntrusiveMethod         string `json:"non_intrusive_method"`
-	NonIntrusiveEffectivity    string `json:"non_intrusive_effectivity"`
-	NonIntrusiveIntervalMonths int    `json:"non_intrusive_interval_months"`
-	IntrusiveMethod            string `json:"intrusive_method"`
-	IntrusiveEffectivity       string `json:"intrusive_effectivity"`
-	IntrusiveIntervalMonths    int    `json:"intrusive_interval_months"`
-	Source                     string `json:"source"`
+	Code                       string  `json:"code"`
+	Label                      string  `json:"label"`
+	Severity                   string  `json:"severity"`
+	NonIntrusiveMethod         string  `json:"non_intrusive_method"`
+	NonIntrusiveEffectivity    string  `json:"non_intrusive_effectivity"`
+	NonIntrusiveIntervalMonths int     `json:"non_intrusive_interval_months"`
+	IntrusiveMethod            string  `json:"intrusive_method"`
+	IntrusiveEffectivity       string  `json:"intrusive_effectivity"`
+	IntrusiveIntervalMonths    int     `json:"intrusive_interval_months"`
+	ManualIntervalMonths       float64 `json:"manual_interval_months"`
+	Source                     string  `json:"source"`
 }
 
 type PipelineOilPointResult struct {
@@ -1441,6 +1443,7 @@ func calculatePipelineInspectionPlanResults(input PipelineOilInput, mechanisms [
 			IntrusiveMethod:            plan.IntrusiveMethod,
 			IntrusiveEffectivity:       intEff,
 			IntrusiveIntervalMonths:    pipelineInspectionIntervalMonths(mechanism.Severity, intEff, true),
+			ManualIntervalMonths:       plan.ManualIntervalMonths,
 			Source:                     PipelineDamageMechanismSource,
 		})
 	}
@@ -2864,7 +2867,7 @@ func applyPipelineOilDefaults(input *PipelineOilInput) {
 	if input.RiskInput.DetectionTimeHours == 0 {
 		input.RiskInput.DetectionTimeHours = 1
 	}
-	if input.RiskInput.SegmentLengthBetweenValvesM == 0 {
+	if isGasService(input.Service) || input.RiskInput.SegmentLengthBetweenValvesM <= 0 {
 		input.RiskInput.SegmentLengthBetweenValvesM = input.PipeLengthM
 	}
 	if input.RiskInput.EnvironmentalSensitivity == "" {

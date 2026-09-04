@@ -1047,6 +1047,58 @@ func TestConfirmedPipelineModifierMapsRemainNeutral(t *testing.T) {
 	}
 }
 
+func TestPipelineManualInspectionInterval(t *testing.T) {
+	in := samplePipelineOilInput()
+	if in.RiskInput.InspectionPlanByDM == nil {
+		in.RiskInput.InspectionPlanByDM = make(map[string]PipelineInspectionPlanInput)
+	}
+	in.RiskInput.InspectionPlanByDM["external_corrosion"] = PipelineInspectionPlanInput{
+		NonIntrusiveMethod:   "Visual + CP / Coating Survey",
+		ManualIntervalMonths: 36.0,
+	}
+
+	result, errs := CalculatePipelineOil(in)
+	if len(errs) > 0 {
+		t.Fatalf("unexpected calculation error: %v", errs)
+	}
+	var found bool
+	for _, item := range result.InspectionPlanResults {
+		if item.Code == "external_corrosion" {
+			found = true
+			if item.ManualIntervalMonths != 36.0 {
+				t.Fatalf("expected item.ManualIntervalMonths to be 36.0, got %f", item.ManualIntervalMonths)
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("external_corrosion not found in inspection plan results")
+	}
+}
+
+func TestPipelineGasAndOilSegmentLengthSync(t *testing.T) {
+	// For gas service, segment length should always sync with pipe length
+	gasInput := samplePipelineOilInput()
+	gasInput.Service = "Natural gas"
+	gasInput.PipeLengthM = 17500
+	gasInput.RiskInput.SegmentLengthBetweenValvesM = 9966 // Old leftover value
+
+	applyPipelineOilDefaults(&gasInput)
+	if gasInput.RiskInput.SegmentLengthBetweenValvesM != 17500 {
+		t.Fatalf("expected gas segment length to sync to 17500, got %f", gasInput.RiskInput.SegmentLengthBetweenValvesM)
+	}
+
+	// For liquid service with unset/zero segment length, should default to pipe length
+	liquidInput := samplePipelineOilInput()
+	liquidInput.Service = "Oil"
+	liquidInput.PipeLengthM = 17500
+	liquidInput.RiskInput.SegmentLengthBetweenValvesM = 0
+
+	applyPipelineOilDefaults(&liquidInput)
+	if liquidInput.RiskInput.SegmentLengthBetweenValvesM != 17500 {
+		t.Fatalf("expected liquid segment length to default to 17500, got %f", liquidInput.RiskInput.SegmentLengthBetweenValvesM)
+	}
+}
+
 func assertClose(t *testing.T, actual, expected, tolerance float64) {
 	t.Helper()
 	if math.Abs(actual-expected) > tolerance {

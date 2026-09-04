@@ -268,7 +268,7 @@
                     <td class="fw-bold text-muted ps-4">{{ .Label }}</td>
                     <td><span class="badge bg-label-secondary">{{ .Severity }}</span></td>
                     <td>
-                      <div><strong>Non intrusive:</strong> {{ .NonIntrusiveMethod }} every {{ .NonIntrusiveIntervalMonths }} months {{ if ne .Severity "NOT" }}<span class="text-muted small">({{ .NonIntrusiveEffectivity }})</span>{{ end }}</div>
+                      <div><strong>Non intrusive:</strong> {{ .NonIntrusiveMethod }} every {{ .NonIntrusiveIntervalMonths }} months {{ if ne .Severity "NOT" }}<span class="text-muted small">({{ .NonIntrusiveEffectivity }})</span>{{ end }}{{ if gt .ManualIntervalMonths 0.0 }} <span class="badge bg-label-info ms-1"><i class="mdi mdi-account-cog-outline me-1"></i>Manual Justification: {{ fmtNum .ManualIntervalMonths }} months</span>{{ end }}</div>
                       <div><strong>Intrusive:</strong> {{ .IntrusiveMethod }} every {{ .IntrusiveIntervalMonths }} months {{ if ne .Severity "NOT" }}<span class="text-muted small">({{ .IntrusiveEffectivity }})</span>{{ end }}</div>
                     </td>
                   </tr>
@@ -458,7 +458,7 @@
       <tr><th>CO2 / H2S / H2O Content</th><td>{{ fmtNum .Assessment.Input.RiskInput.CO2Content }} mol% / {{ fmtNum .Assessment.Input.RiskInput.H2SContent }} ppm / {{ fmtNum .Assessment.Input.RiskInput.H2OContent }} lb/mmscf</td><th>pCO2 / pH2S</th><td>{{ fmtNum .Assessment.Input.RiskInput.CO2PartialPressurePSIG }} / {{ fmtNum .Assessment.Input.RiskInput.H2SPartialPressurePSIG }} psig</td></tr>
       <tr><th>H2S ppm / Biocide / Monitoring</th><td>{{ .Assessment.Input.RiskInput.H2SPpm }} / {{ .Assessment.Input.RiskInput.BiocideTreatment }} / {{ .Assessment.Input.RiskInput.CorrosionMonitoringResult }}</td><th>PWHT / Weld / Flow Velocity</th><td>{{ .Assessment.Input.RiskInput.PWHTStatus }} / {{ .Assessment.Input.RiskInput.WeldJointType }} / {{ .Assessment.Input.RiskInput.FlowVelocityCondition }}</td></tr>
       <tr><th>Solid Content / Cracking Env</th><td>{{ .Assessment.Input.RiskInput.SolidContent }} / {{ .Assessment.Input.RiskInput.EnvExtCracking }}</td><th>Prev Ext Corr / Prev Thinning</th><td>{{ .Assessment.Input.RiskInput.PrevExtCorrosion }} / {{ .Assessment.Input.RiskInput.PrevIntThinning }}</td></tr>
-      <tr><th>Oil/Liquid Inputs</th><td>Flow {{ fmtNum .Assessment.Input.RiskInput.FlowRate }} bbl/hr, Detection {{ fmtNum .Assessment.Input.RiskInput.DetectionTimeHours }} hr</td><th>Segment / Environment</th><td>{{ fmtNum .Assessment.Input.RiskInput.SegmentLengthBetweenValvesM }} m / {{ .Assessment.Input.RiskInput.EnvironmentalSensitivity }}</td></tr>
+      <tr><th>{{ if isPipelineGasService .Assessment.Input.Service }}Gas Consequence Inputs{{ else }}Oil/Liquid Inputs{{ end }}</th><td>{{ if isPipelineGasService .Assessment.Input.Service }}Class: {{ .Assessment.Input.RiskInput.ClassLocation }}, Buildings in PIR: {{ .Assessment.Input.RiskInput.BuildingCountInsidePIR }}{{ else }}Flow {{ fmtNum .Assessment.Input.RiskInput.FlowRate }} bbl/hr, Detection {{ fmtNum .Assessment.Input.RiskInput.DetectionTimeHours }} hr{{ end }}</td><th>Segment / Environment</th><td>{{ if and (not (isPipelineGasService .Assessment.Input.Service)) (gt .Assessment.Input.RiskInput.SegmentLengthBetweenValvesM 0.0) }}{{ fmtNum .Assessment.Input.RiskInput.SegmentLengthBetweenValvesM }}{{ else }}{{ fmtNum .Assessment.Input.PipeLengthM }}{{ end }} m / {{ .Assessment.Input.RiskInput.EnvironmentalSensitivity }}</td></tr>
       <tr><th>Sensitive Receptor / Isolation Valve</th><td>{{ .Assessment.Input.RiskInput.NearbySensitiveReceptor }} / {{ .Assessment.Input.RiskInput.IsolationValveAvailable }}</td><th>Assessment By</th><td>{{ .Assessment.Input.AssessmentBy }}</td></tr>
     </table>
     </div>
@@ -520,7 +520,16 @@
       <tbody>
         {{ range .Assessment.Result.InspectionPlanResults }}
         {{ if ne .Severity "NOT" }}
-        <tr><td>{{ .Label }}</td><td>{{ .NonIntrusiveMethod }}</td><td>{{ .NonIntrusiveIntervalMonths }} months</td></tr>
+        <tr>
+          <td>{{ .Label }}</td>
+          <td>{{ .NonIntrusiveMethod }}</td>
+          <td>
+            {{ .NonIntrusiveIntervalMonths }} months
+            {{ if gt .ManualIntervalMonths 0.0 }}
+            <br><span style="color: #0b5ed7; font-weight: bold;">(Manual: {{ fmtNum .ManualIntervalMonths }} months)</span>
+            {{ end }}
+          </td>
+        </tr>
         {{ end }}
         {{ end }}
       </tbody>

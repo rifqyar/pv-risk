@@ -65,6 +65,14 @@ $(function () {
       syncApplicableCodeAndMaterialStress(false);
     } else if (this.name === "applicable_code" || this.name === "smys_psi") {
       syncApplicableCodeAndMaterialStress(false);
+    } else if (this.name === "pipe_length_m") {
+      const pipeVal = $(this).val();
+      const $seg = $("input[name='segment_length_between_valves_m']");
+      if (isGasService($("[name='service']").val()) || !$seg.val() || $seg.data("user-customized") !== true) {
+        $seg.val(pipeVal);
+      }
+    } else if (this.name === "segment_length_between_valves_m") {
+      $(this).data("user-customized", true);
     }
     updateConsequenceFields();
     updatePreviousConditionDamageLevelVisibility();
@@ -302,7 +310,14 @@ $(function () {
       class_location: $("[name='class_location']").val(),
       flow_rate: numberValue($("input[name='flow_rate']").val()),
       detection_time_hours: numberValue($("input[name='detection_time_hours']").val()),
-      segment_length_between_valves_m: numberValue($("input[name='segment_length_between_valves_m']").val()),
+      segment_length_between_valves_m: (() => {
+        const rawSeg = numberValue($("input[name='segment_length_between_valves_m']").val());
+        const rawPipe = numberValue(data.pipe_length_m);
+        if (isGasService(data.service) || rawSeg <= 0) {
+          return rawPipe;
+        }
+        return rawSeg;
+      })(),
       environmental_sensitivity: $("[name='environmental_sensitivity']").val(),
       nearby_sensitive_receptor: $("input[name='nearby_sensitive_receptor']").is(":checked"),
       isolation_valve_available: $("input[name='isolation_valve_available']").is(":checked"),
@@ -329,7 +344,7 @@ $(function () {
       "flow_rate", "detection_time_hours", "segment_length_between_valves_m", "environmental_sensitivity",
       "nearby_sensitive_receptor", "isolation_valve_available", "engineering_notes"
     ].forEach((key) => delete data[key]);
-    Object.keys(data).filter((key) => key.startsWith("inspection_effectivity_") || key.startsWith("inspection_nonintrusive_") || key.startsWith("inspection_intrusive_")).forEach((key) => delete data[key]);
+    Object.keys(data).filter((key) => key.startsWith("inspection_effectivity_") || key.startsWith("inspection_nonintrusive_") || key.startsWith("inspection_intrusive_") || key.startsWith("inspection_manual_interval_")).forEach((key) => delete data[key]);
 
     data.inspection_points = [];
     $("#pipelinePointsTable tbody tr").each(function () {
@@ -1338,6 +1353,12 @@ $(function () {
     $(".pipeline-gas-fields").toggleClass("d-none", !isGas);
     $(".pipeline-liquid-fields").toggleClass("d-none", isGas);
     $("[name='flow_rate']").closest(".col-md-4").toggleClass("d-none", isGas);
+    if (isGas) {
+      const pipeVal = $("input[name='pipe_length_m']").val();
+      if (pipeVal) {
+        $("input[name='segment_length_between_valves_m']").val(pipeVal);
+      }
+    }
   }
 
   function updateReviewSummary() {
@@ -1539,6 +1560,9 @@ $(function () {
         if (!plan) return;
         $(`.pipeline-inspection-method[data-dm-code='${code}'][data-scope='nonintrusive']`).val(plan.non_intrusive_method || "None");
         $(`.pipeline-inspection-method[data-dm-code='${code}'][data-scope='intrusive']`).val(plan.intrusive_method || "None");
+        if (plan.manual_interval_months > 0) {
+          $(`.pipeline-inspection-manual-interval[data-dm-code='${code}']`).val(plan.manual_interval_months);
+        }
       });
     } catch (err) {
       // Keep default inspection methods when older records do not contain plan JSON.
@@ -1553,6 +1577,11 @@ $(function () {
       if (!values[code]) values[code] = {};
       if (scope === "intrusive") values[code].intrusive_method = $(this).val() || "None";
       if (scope === "nonintrusive") values[code].non_intrusive_method = $(this).val() || "None";
+    });
+    $(".pipeline-inspection-manual-interval").each(function () {
+      const code = $(this).data("dm-code");
+      if (!values[code]) values[code] = {};
+      values[code].manual_interval_months = numberValue($(this).val());
     });
     return values;
   }
